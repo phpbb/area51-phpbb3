@@ -23,7 +23,7 @@ if (!defined('E_DEPRECATED'))
 {
 	define('E_DEPRECATED', 8192);
 }
-error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 
 // @todo Review this test and see if we can find out what it is which prevents PHP 4.2.x from even displaying the page with requirements on it
 if (version_compare(PHP_VERSION, '4.3.3') < 0)
@@ -652,7 +652,7 @@ class module
 		echo '		</div>';
 		echo '	</div>';
 		echo '	<div id="page-footer">';
-		echo '		Powered by phpBB &copy; 2000, 2002, 2005, 2007 <a href="http://www.phpbb.com/">phpBB Group</a>';
+		echo '		Powered by <a href="http://www.phpbb.com/">phpBB</a> &copy; phpBB Group';
 		echo '	</div>';
 		echo '</div>';
 		echo '</body>';

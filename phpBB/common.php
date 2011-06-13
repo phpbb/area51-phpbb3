@@ -24,7 +24,7 @@ if (!defined('E_DEPRECATED'))
 {
 	define('E_DEPRECATED', 8192);
 }
-error_reporting(E_ALL ^ E_NOTICE ^ E_DEPRECATED);
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 
 /*
 * Remove variables created by register_globals from the global scope
@@ -69,7 +69,7 @@ function deregister_globals()
 	{
 		if (isset($not_unset[$varname]))
 		{
-			// Hacking attempt. No point in continuing unless it's a COOKIE
+			// Hacking attempt. No point in continuing unless it's a COOKIE (so a cookie called GLOBALS doesn't lock users out completely)
 			if ($varname !== 'GLOBALS' || isset($_GET['GLOBALS']) || isset($_POST['GLOBALS']) || isset($_SERVER['GLOBALS']) || isset($_SESSION['GLOBALS']) || isset($_ENV['GLOBALS']) || isset($_FILES['GLOBALS']))
 			{
 				exit;
@@ -79,6 +79,11 @@ function deregister_globals()
 				$cookie = &$_COOKIE;
 				while (isset($cookie['GLOBALS']))
 				{
+					if (!is_array($cookie['GLOBALS']))
+					{
+						break;
+					}
+
 					foreach ($cookie['GLOBALS'] as $registered_var => $value)
 					{
 						if (!isset($not_unset[$registered_var]))
@@ -116,11 +121,6 @@ else
 	}
 
 	define('STRIP', (get_magic_quotes_gpc()) ? true : false);
-}
-
-if (defined('IN_CRON'))
-{
-	$phpbb_root_path = dirname(__FILE__) . DIRECTORY_SEPARATOR;
 }
 
 if (file_exists($phpbb_root_path . 'config.' . $phpEx))
