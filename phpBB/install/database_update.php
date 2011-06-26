@@ -8,7 +8,7 @@
 *
 */
 
-define('UPDATES_TO_VERSION', '3.0.9-RC2');
+define('UPDATES_TO_VERSION', '3.0.9-RC3');
 
 // Enter any version to update from to test updates. The version within the db will not be updated.
 define('DEBUG_FROM_VERSION', false);
@@ -34,7 +34,27 @@ define('IN_INSTALL', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './../';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
 
-require($phpbb_root_path . 'includes/startup.' . $phpEx);
+if (!function_exists('phpbb_require_updated'))
+{
+	function phpbb_require_updated($path, $optional = false)
+	{
+		global $phpbb_root_path;
+
+		$new_path = $phpbb_root_path . 'install/update/new/' . $path;
+		$old_path = $phpbb_root_path . $path;
+
+		if (file_exists($new_path))
+		{
+			require($new_path);
+		}
+		else if (!$optional || file_exists($old_path))
+		{
+			require($old_path);
+		}
+	}
+}
+
+phpbb_require_updated('includes/startup.' . $phpEx);
 
 $updates_to_version = UPDATES_TO_VERSION;
 $debug_from_version = DEBUG_FROM_VERSION;
@@ -72,10 +92,7 @@ require($phpbb_root_path . 'includes/auth.' . $phpEx);
 
 require($phpbb_root_path . 'includes/functions.' . $phpEx);
 
-if (file_exists($phpbb_root_path . 'includes/functions_content.' . $phpEx))
-{
-	require($phpbb_root_path . 'includes/functions_content.' . $phpEx);
-}
+phpbb_require_updated('includes/functions_content.' . $phpEx, true);
 
 require($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
 require($phpbb_root_path . 'includes/constants.' . $phpEx);
@@ -955,6 +972,8 @@ function database_update_info()
 		),
 		// No changes from 3.0.9-RC1 to 3.0.9-RC2
 		'3.0.9-RC1'		=> array(),
+		// No changes from 3.0.9-RC2 to 3.0.9-RC3
+		'3.0.9-RC2'		=> array(),
 	);
 }
 
@@ -1949,6 +1968,10 @@ function change_database_data(&$no_updates, $version)
 
 		// No changes from 3.0.9-RC1 to 3.0.9-RC2
 		case '3.0.9-RC1':
+		break;
+
+		// No changes from 3.0.9-RC2 to 3.0.9-RC3
+		case '3.0.9-RC2':
 		break;
 	}
 }

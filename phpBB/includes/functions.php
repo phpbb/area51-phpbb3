@@ -3758,25 +3758,11 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 
 			if (strpos($errfile, 'cache') === false && strpos($errfile, 'template.') === false)
 			{
-				// flush the content, else we get a white page if output buffering is on
-				if (ob_get_level() > 0)
-				{
-					@ob_flush();
-				}
-
-				// Another quick fix for those having gzip compression enabled, but do not flush if the coder wants to catch "something". ;)
-				if (!empty($config['gzip_compress']))
-				{
-					if (@extension_loaded('zlib') && !headers_sent() && !ob_get_level())
-					{
-						@ob_flush();
-					}
-				}
-
 				// remove complete path to installation, with the risk of changing backslashes meant to be there
 				$errfile = str_replace(array(phpbb_realpath($phpbb_root_path), '\\'), array('', '/'), $errfile);
 				$msg_text = str_replace(array(phpbb_realpath($phpbb_root_path), '\\'), array('', '/'), $msg_text);
-				echo '<b>[phpBB Debug] PHP Notice</b>: in file <b>' . $errfile . '</b> on line <b>' . $errline . '</b>: <b>' . $msg_text . '</b><br />' . "\n";
+				$error_name = ($errno === E_WARNING) ? 'PHP Warning' : 'PHP Notice';
+				echo '<b>[phpBB Debug] ' . $error_name . '</b>: in file <b>' . $errfile . '</b> on line <b>' . $errline . '</b>: <b>' . $msg_text . '</b><br />' . "\n";
 
 				// we are writing an image - the user won't see the debug, so let's place it in the log
 				if (defined('IMAGE_OUTPUT') || defined('IN_CRON'))
@@ -4331,7 +4317,21 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 	// gzip_compression
 	if ($config['gzip_compress'])
 	{
-		if (@extension_loaded('zlib') && !headers_sent())
+		// to avoid partially compressed output resulting in blank pages in
+		// the browser or error messages, compression is disabled in a few cases:
+		//
+		// 1) if headers have already been sent, this indicates plaintext output
+		//    has been started so further content must not be compressed
+		// 2) the length of the current output buffer is non-zero. This means
+		//    there is already some uncompressed content in this output buffer
+		//    so further output must not be compressed
+		// 3) if more than one level of output buffering is used because we
+		//    cannot test all output buffer level content lengths. One level
+		//    could be caused by php.ini output_buffering. Anything
+		//    beyond that is manual, so the code wrapping phpBB in output buffering
+		//    can easily compress the output itself.
+		//
+		if (@extension_loaded('zlib') && !headers_sent() && ob_get_level() <= 1 && ob_get_length() == 0)
 		{
 			ob_start('ob_gzhandler');
 		}
