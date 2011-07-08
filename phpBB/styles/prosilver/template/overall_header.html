@@ -8,7 +8,6 @@
 <meta http-equiv="imagetoolbar" content="no" />
 <meta name="resource-type" content="document" />
 <meta name="distribution" content="global" />
-<meta name="copyright" content="2000, 2002, 2005, 2007 phpBB Group" />
 <meta name="keywords" content="" />
 <meta name="description" content="" />
 <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7; IE=EmulateIE9" />
@@ -99,19 +98,53 @@
 	<link href="{T_THEME_PATH}/bidi.css" rel="stylesheet" type="text/css" media="screen, projection" />
 <!-- ENDIF -->
 
+<link href="/header.css" media="all" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/analytics.js"></script>
 </head>
 
 <body id="phpbb" class="section-{SCRIPT_NAME} {S_CONTENT_DIRECTION}">
 
-<div id="wrap">
+<div id="phpbb-header-bar">
+	<ul class="phpbb-menu">
+		<li class="phpbb-logo"><a href="http://area51.phpbb.com/"><img src="/images/area51.png" alt="area51 @ phpBB" title="area51.phpbb.com" /></a></li>
+		<li><a href="http://area51.phpbb.com">Home</a></li>
+		<li><a href="http://tracker.phpbb.com/secure/Dashboard.jspa">Tracker</a></li>
+		<li><a href="http://wiki.phpbb.com/">Wiki</a></li>
+		<li><a href="http://bamboo.phpbb.com/">Builds</a></li>
+		<li><a href="http://code.phpbb.com/">Code Forge</a></li>
+		<li class="active"><a href="http://area51.phpbb.com/phpBB/">Discussion</a></li>
+	</ul>
+	<div id="exit-phpbb">
+		<a href="http://www.phpbb.com/"><img src="/images/back_phpbb.png" alt="phpBB" title="www.phpbb.com" /></a>
+	</div>
+</div>
+<div id="phpbb-sub-header">
+<h1 style="float:left;margin-right:0px;margin-top:0px;">Development Discussion Board</h1>
+<div style="float:left;margin-left:30px;margin-top:4px;font-size:12px;">phpBB's testing ground of bleeding edge code</div>
+                <!-- IF S_DISPLAY_SEARCH and not S_IN_SEARCH -->
+			<div style="float:right;margin-left:10px;">
+				<a href="{U_SEARCH}" title="{L_SEARCH_ADV_EXPLAIN}" style="font-size:12px;font-weight:normal;font-family:Verdana,Helvetica,Arial,sans-serif;">{L_SEARCH_ADV}</a>
+			</div>
+                        <div id="search-box" style="margin-top:2px;">
+                                <form action="{U_SEARCH}" method="post" id="search">
+                                <fieldset>
+                                        <input name="keywords" id="keywords" type="text" maxlength="128" title="{L_SEARCH_KEYWORDS}" class="inputbox search" value="<!-- IF SEARCH_WORDS-->{SEARCH_WORDS}<!-- ELSE -->{L_SEARCH_MINI}<!-- ENDIF -->" onclick="if(this.value=='{LA_SEARCH_MINI}')this.value='';" onblur="if(this.value=='')this.value='{LA_SEARCH_MINI}';" />
+                                        <input class="button2" value="{L_SEARCH}" type="submit" /> {S_SEARCH_HIDDEN_FIELDS}
+                                </fieldset>
+                                </form>
+                        </div>
+                <!-- ENDIF -->
+
+</div>
+<div id="wrap" style="clear:both;margin-top:20px;">
 	<a id="top" name="top" accesskey="t"></a>
 	<div id="page-header">
-		<div class="headerbar">
+<!--		<div class="headerbar">
 			<div class="inner"><span class="corners-top"><span></span></span>
 
-			<div id="site-description">
-				<a href="{U_INDEX}" title="{L_INDEX}" id="logo">{SITE_LOGO_IMG}</a>
-				<h1>{SITENAME}</h1>
+			<div id="site-description" style="margin-left:20px;">
+				<!- - <a href="{U_INDEX}" title="{L_INDEX}" id="logo">{SITE_LOGO_IMG}</a> - ->
+				<h1><a href="{U_INDEX}" style="color:#fff;text-decoration:none;" title="{L_INDEX}">{SITENAME}</a></h1>
 				<p>{SITE_DESCRIPTION}</p>
 				<p class="skiplink"><a href="#start_here">{L_SKIP}</a></p>
 			</div>
@@ -130,7 +163,7 @@
 
 			<span class="corners-bottom"><span></span></span></div>
 		</div>
-
+-->
 		<div class="navbar">
 			<div class="inner"><span class="corners-top"><span></span></span>
 
