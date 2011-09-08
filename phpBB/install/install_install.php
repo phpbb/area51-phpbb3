@@ -141,7 +141,7 @@ class install_install extends module
 		// Test the minimum PHP version
 		$php_version = PHP_VERSION;
 
-		if (version_compare($php_version, '4.3.3') < 0)
+		if (version_compare($php_version, '5.2.0') < 0)
 		{
 			$result = '<strong style="color:red">' . $lang['NO'] . '</strong>';
 		}
@@ -999,7 +999,7 @@ class install_install extends module
 	*/
 	function obtain_advanced_settings($mode, $sub)
 	{
-		global $lang, $template, $phpEx;
+		global $lang, $template, $phpEx, $request;
 
 		$this->page_title = $lang['STAGE_ADVANCED'];
 
@@ -1017,7 +1017,7 @@ class install_install extends module
 		$s_hidden_fields .= '<input type="hidden" name="language" value="' . $data['language'] . '" />';
 
 		// HTTP_HOST is having the correct browser url in most cases...
-		$server_name = (!empty($_SERVER['HTTP_HOST'])) ? strtolower($_SERVER['HTTP_HOST']) : ((!empty($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : getenv('SERVER_NAME'));
+		$server_name = strtolower(htmlspecialchars_decode($request->header('Host', $request->server('SERVER_NAME'))));
 
 		// HTTP HOST can carry a port number...
 		if (strpos($server_name, ':') !== false)
@@ -1027,16 +1027,16 @@ class install_install extends module
 
 		$data['email_enable'] = ($data['email_enable'] !== '') ? $data['email_enable'] : true;
 		$data['server_name'] = ($data['server_name'] !== '') ? $data['server_name'] : $server_name;
-		$data['server_port'] = ($data['server_port'] !== '') ? $data['server_port'] : ((!empty($_SERVER['SERVER_PORT'])) ? (int) $_SERVER['SERVER_PORT'] : (int) getenv('SERVER_PORT'));
-		$data['server_protocol'] = ($data['server_protocol'] !== '') ? $data['server_protocol'] : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https://' : 'http://');
-		$data['cookie_secure'] = ($data['cookie_secure'] !== '') ? $data['cookie_secure'] : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? true : false);
+		$data['server_port'] = ($data['server_port'] !== '') ? $data['server_port'] : $request->server('SERVER_PORT', 0);
+		$data['server_protocol'] = ($data['server_protocol'] !== '') ? $data['server_protocol'] : ($request->is_secure() ? 'https://' : 'http://');
+		$data['cookie_secure'] = ($data['cookie_secure'] !== '') ? $data['cookie_secure'] : $request->is_secure();
 
 		if ($data['script_path'] === '')
 		{
-			$name = (!empty($_SERVER['PHP_SELF'])) ? $_SERVER['PHP_SELF'] : getenv('PHP_SELF');
+			$name = htmlspecialchars_decode($request->server('PHP_SELF'));
 			if (!$name)
 			{
-				$name = (!empty($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : getenv('REQUEST_URI');
+				$name = htmlspecialchars_decode($request->server('REQUEST_URI'));
 			}
 
 			// Replace backslashes and doubled slashes (could happen on some proxy setups)
@@ -1101,7 +1101,7 @@ class install_install extends module
 	*/
 	function load_schema($mode, $sub)
 	{
-		global $db, $lang, $template, $phpbb_root_path, $phpEx;
+		global $db, $lang, $template, $phpbb_root_path, $phpEx, $request;
 
 		$this->page_title = $lang['STAGE_CREATE_TABLE'];
 		$s_hidden_fields = '';
@@ -1117,8 +1117,8 @@ class install_install extends module
 		}
 
 		// HTTP_HOST is having the correct browser url in most cases...
-		$server_name = (!empty($_SERVER['HTTP_HOST'])) ? strtolower($_SERVER['HTTP_HOST']) : ((!empty($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : getenv('SERVER_NAME'));
-		$referer = (!empty($_SERVER['HTTP_REFERER'])) ? strtolower($_SERVER['HTTP_REFERER']) : getenv('HTTP_REFERER');
+		$server_name = strtolower(htmlspecialchars_decode($request->header('Host', $request->server('SERVER_NAME'))));
+		$referer = strtolower($request->header('Referer'));
 
 		// HTTP HOST can carry a port number...
 		if (strpos($server_name, ':') !== false)
@@ -1235,8 +1235,7 @@ class install_install extends module
 
 		$current_time = time();
 
-		$user_ip = (!empty($_SERVER['REMOTE_ADDR'])) ? htmlspecialchars($_SERVER['REMOTE_ADDR']) : '';
-		$user_ip = (stripos($user_ip, '::ffff:') === 0) ? substr($user_ip, 7) : $user_ip;
+		$user_ip = $request->server('REMOTE_ADDR') ? phpbb_ip_normalise($request->server('REMOTE_ADDR')) : '';
 
 		if ($data['script_path'] !== '/')
 		{
@@ -1461,17 +1460,10 @@ class install_install extends module
 		include_once($phpbb_root_path . 'includes/constants.' . $phpEx);
 		include_once($phpbb_root_path . 'includes/search/fulltext_native.' . $phpEx);
 
-		// Fill the config array - it is needed by those functions we call
-		$sql = 'SELECT *
-			FROM ' . CONFIG_TABLE;
-		$result = $db->sql_query($sql);
-
-		$config = array();
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$config[$row['config_name']] = $row['config_value'];
-		}
-		$db->sql_freeresult($result);
+		// We need to fill the config to let internal functions correctly work
+		$config = new phpbb_config_db($db, new phpbb_cache_driver_null, CONFIG_TABLE);
+		set_config(null, null, null, $config);
+		set_config_count(null, null, null, $config);
 
 		$error = false;
 		$search = new fulltext_native($error);
@@ -1831,17 +1823,10 @@ class install_install extends module
 		// Obtain any submitted data
 		$data = $this->get_submitted_data();
 
-		// Fill the config array - it is needed by those functions we call
-		$sql = 'SELECT *
-			FROM ' . CONFIG_TABLE;
-		$result = $db->sql_query($sql);
-
-		$config = array();
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$config[$row['config_name']] = $row['config_value'];
-		}
-		$db->sql_freeresult($result);
+		// We need to fill the config to let internal functions correctly work
+		$config = new phpbb_config_db($db, new phpbb_cache_driver_null, CONFIG_TABLE);
+		set_config(null, null, null, $config);
+		set_config_count(null, null, null, $config);
 
 		$sql = 'SELECT group_id
 			FROM ' . GROUPS_TABLE . "
@@ -1908,19 +1893,10 @@ class install_install extends module
 
 		$this->page_title = $lang['STAGE_FINAL'];
 
-		// Obtain any submitted data
-		$data = $this->get_submitted_data();
-
-		$sql = 'SELECT *
-			FROM ' . CONFIG_TABLE;
-		$result = $db->sql_query($sql);
-
-		$config = array();
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$config[$row['config_name']] = $row['config_value'];
-		}
-		$db->sql_freeresult($result);
+		// We need to fill the config to let internal functions correctly work
+		$config = new phpbb_config_db($db, new phpbb_cache_driver_null, CONFIG_TABLE);
+		set_config(null, null, null, $config);
+		set_config_count(null, null, null, $config);
 
 		$user->session_begin();
 		$auth->login($data['admin_name'], $data['admin_pass1'], false, true, true);
@@ -2242,5 +2218,3 @@ class install_install extends module
 		),
 	);
 }
-
-?>

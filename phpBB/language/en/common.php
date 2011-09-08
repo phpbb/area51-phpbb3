@@ -340,7 +340,7 @@ $lang = array_merge($lang, array(
 	'MODERATORS'			=> 'Moderators',
 	'MONTH'					=> 'Month',
 	'MOVE'					=> 'Move',
-	'MSNM'					=> 'MSNM/WLM',
+	'MSNM'					=> 'WLM',
 
 	'NA'						=> 'N/A',
 	'NEWEST_USER'				=> 'Our newest member <strong>%s</strong>',
@@ -419,6 +419,7 @@ $lang = array_merge($lang, array(
 	'OPTIONS'					=> 'Options',
 
 	'PAGE_OF'				=> 'Page <strong>%1$d</strong> of <strong>%2$d</strong>',
+	'PAGE_TITLE_NUMBER'		=> 'Page %s',
 	'PASSWORD'				=> 'Password',
 	'PIXEL'					=> 'px',
 	'PLAY_QUICKTIME_FILE'	=> 'Play Quicktime file',
@@ -581,7 +582,7 @@ $lang = array_merge($lang, array(
 	'TOO_LONG_INTERESTS'			=> 'The interests you entered is too long.',
 	'TOO_LONG_JABBER'				=> 'The Jabber account name you entered is too long.',
 	'TOO_LONG_LOCATION'				=> 'The location you entered is too long.',
-	'TOO_LONG_MSN'					=> 'The MSNM/WLM name you entered is too long.',
+	'TOO_LONG_MSN'					=> 'The WLM name you entered is too long.',
 	'TOO_LONG_NEW_PASSWORD'			=> 'The password you entered is too long.',
 	'TOO_LONG_OCCUPATION'			=> 'The occupation you entered is too long.',
 	'TOO_LONG_PASSWORD_CONFIRM'		=> 'The password confirmation you entered is too long.',
@@ -603,7 +604,7 @@ $lang = array_merge($lang, array(
 	'TOO_SHORT_INTERESTS'			=> 'The interests you entered is too short.',
 	'TOO_SHORT_JABBER'				=> 'The Jabber account name you entered is too short.',
 	'TOO_SHORT_LOCATION'			=> 'The location you entered is too short.',
-	'TOO_SHORT_MSN'					=> 'The MSNM/WLM name you entered is too short.',
+	'TOO_SHORT_MSN'					=> 'The WLM name you entered is too short.',
 	'TOO_SHORT_NEW_PASSWORD'		=> 'The password you entered is too short.',
 	'TOO_SHORT_OCCUPATION'			=> 'The occupation you entered is too short.',
 	'TOO_SHORT_PASSWORD_CONFIRM'	=> 'The password confirmation you entered is too short.',
@@ -652,6 +653,10 @@ $lang = array_merge($lang, array(
 	'UNREAD_PMS'			=> '<strong>%d</strong> unread messages',
 	'UNREAD_POST'			=> 'Unread post',
 	'UNREAD_POSTS'			=> 'Unread posts',
+	'UNWATCH_FORUM_CONFIRM'		=> 'Are you sure you wish to unsubscribe from this forum?',
+	'UNWATCH_FORUM_DETAILED'	=> 'Are you sure you wish to unsubscribe from the forum “%s”?',
+	'UNWATCH_TOPIC_CONFIRM'		=> 'Are you sure you wish to unsubscribe from this topic?',
+	'UNWATCH_TOPIC_DETAILED'	=> 'Are you sure you wish to unsubscribe from the topic “%s”?',
 	'UNWATCHED_FORUMS'			=> 'You are no longer subscribed to the selected forums.',
 	'UNWATCHED_TOPICS'			=> 'You are no longer subscribed to the selected topics.',
 	'UNWATCHED_FORUMS_TOPICS'	=> 'You are no longer subscribed to the selected entries.',
@@ -700,6 +705,10 @@ $lang = array_merge($lang, array(
 
 	'WARNINGS'			=> 'Warnings',
 	'WARN_USER'			=> 'Warn user',
+	'WATCH_FORUM_CONFIRM'	=> 'Are you sure you wish to subscribe to this forum?',
+	'WATCH_FORUM_DETAILED'	=> 'Are you sure you wish to subscribe to the forum “%s”?',
+	'WATCH_TOPIC_CONFIRM'	=> 'Are you sure you wish to subscribe to this topic?',
+	'WATCH_TOPIC_DETAILED'	=> 'Are you sure you wish to subscribe to the topic “%s”?',
 	'WELCOME_SUBJECT'	=> 'Welcome to %s forums',
 	'WEBSITE'			=> 'Website',
 	'WHOIS'				=> 'Whois',
@@ -878,5 +887,3 @@ $lang = array_merge($lang, array(
 	'default_dateformat'	=> 'D M d, Y g:i a', // Mon Jan 01, 2007 1:37 pm
 
 ));
-
-?>

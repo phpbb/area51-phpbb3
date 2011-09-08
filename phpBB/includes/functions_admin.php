@@ -2208,6 +2208,7 @@ function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync
 	if (!($prune_flags & FORUM_FLAG_PRUNE_ANNOUNCE))
 	{
 		$sql_and .= ' AND topic_type <> ' . POST_ANNOUNCE;
+		$sql_and .= ' AND topic_type <> ' . POST_GLOBAL;
 	}
 
 	if (!($prune_flags & FORUM_FLAG_PRUNE_STICKY))
@@ -2595,6 +2596,31 @@ function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id 
 		$sql_keywords .= 'LOWER(l.log_data) ' . implode(' OR LOWER(l.log_data) ', $keywords) . ')';
 	}
 
+	if ($log_count !== false)
+	{
+		$sql = 'SELECT COUNT(l.log_id) AS total_entries
+			FROM ' . LOG_TABLE . ' l, ' . USERS_TABLE . " u
+			WHERE l.log_type = $log_type
+				AND l.user_id = u.user_id
+				AND l.log_time >= $limit_days
+				$sql_keywords
+				$sql_forum";
+		$result = $db->sql_query($sql);
+		$log_count = (int) $db->sql_fetchfield('total_entries');
+		$db->sql_freeresult($result);
+	}
+
+	if ($log_count == 0)
+	{
+		// Save the queries, because there are no logs to display
+		return 0;
+	}
+
+	if ($offset >= $log_count)
+	{
+		$offset = ($offset - $limit < 0) ? 0 : $offset - $limit;
+	}
+
 	$sql = "SELECT l.*, u.username, u.username_clean, u.user_colour
 		FROM " . LOG_TABLE . " l, " . USERS_TABLE . " u
 		WHERE l.log_type = $log_type
@@ -2695,29 +2721,9 @@ function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id 
 
 		while ($row = $db->sql_fetchrow($result))
 		{
-			if (!$row['forum_id'])
+			if ($auth->acl_get('f_read', $row['forum_id']))
 			{
-				if ($auth->acl_getf_global('f_read'))
-				{
-					if (!$default_forum_id)
-					{
-						$sql = 'SELECT forum_id
-							FROM ' . FORUMS_TABLE . '
-							WHERE forum_type = ' . FORUM_POST;
-						$f_result = $db->sql_query_limit($sql, 1);
-						$default_forum_id = (int) $db->sql_fetchfield('forum_id', false, $f_result);
-						$db->sql_freeresult($f_result);
-					}
-
-					$is_auth[$row['topic_id']] = $default_forum_id;
-				}
-			}
-			else
-			{
-				if ($auth->acl_get('f_read', $row['forum_id']))
-				{
-					$is_auth[$row['topic_id']] = $row['forum_id'];
-				}
+				$is_auth[$row['topic_id']] = $row['forum_id'];
 			}
 
 			if ($auth->acl_gets('a_', 'm_', $row['forum_id']))
@@ -2762,21 +2768,7 @@ function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id 
 		}
 	}
 
-	if ($log_count !== false)
-	{
-		$sql = 'SELECT COUNT(l.log_id) AS total_entries
-			FROM ' . LOG_TABLE . ' l, ' . USERS_TABLE . " u
-			WHERE l.log_type = $log_type
-				AND l.user_id = u.user_id
-				AND l.log_time >= $limit_days
-				$sql_keywords
-				$sql_forum";
-		$result = $db->sql_query($sql);
-		$log_count = (int) $db->sql_fetchfield('total_entries');
-		$db->sql_freeresult($result);
-	}
-
-	return;
+	return $offset;
 }
 
 /**
@@ -2907,6 +2899,12 @@ function view_inactive_users(&$users, &$user_count, $limit = 0, $offset = 0, $li
 	$result = $db->sql_query($sql);
 	$user_count = (int) $db->sql_fetchfield('user_count');
 	$db->sql_freeresult($result);
+
+	if ($user_count == 0)
+	{
+		// Save the queries, because there are no users to display
+		return 0;
+	}
 
 	if ($offset >= $user_count)
 	{
@@ -3341,5 +3339,3 @@ function enable_bitfield_column_flag($table_name, $column_name, $flag, $sql_more
 		' . $sql_more;
 	$db->sql_query($sql);
 }
-
-?>

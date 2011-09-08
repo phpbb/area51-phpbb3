@@ -444,7 +444,8 @@ CREATE TABLE phpbb_groups (
 	group_receive_pm INTEGER DEFAULT 0 NOT NULL,
 	group_message_limit INTEGER DEFAULT 0 NOT NULL,
 	group_max_recipients INTEGER DEFAULT 0 NOT NULL,
-	group_legend INTEGER DEFAULT 1 NOT NULL
+	group_legend INTEGER DEFAULT 0 NOT NULL,
+	group_teampage INTEGER DEFAULT 0 NOT NULL
 );;
 
 ALTER TABLE phpbb_groups ADD PRIMARY KEY (group_id);;
@@ -529,6 +530,7 @@ CREATE TABLE phpbb_log (
 ALTER TABLE phpbb_log ADD PRIMARY KEY (log_id);;
 
 CREATE INDEX phpbb_log_log_type ON phpbb_log(log_type);;
+CREATE INDEX phpbb_log_log_time ON phpbb_log(log_time);;
 CREATE INDEX phpbb_log_forum_id ON phpbb_log(forum_id);;
 CREATE INDEX phpbb_log_topic_id ON phpbb_log(topic_id);;
 CREATE INDEX phpbb_log_reportee_id ON phpbb_log(reportee_id);;
@@ -807,6 +809,7 @@ CREATE TABLE phpbb_profile_fields (
 	field_validation VARCHAR(20) CHARACTER SET UTF8 DEFAULT '' NOT NULL COLLATE UNICODE,
 	field_required INTEGER DEFAULT 0 NOT NULL,
 	field_show_on_reg INTEGER DEFAULT 0 NOT NULL,
+	field_show_on_pm INTEGER DEFAULT 0 NOT NULL,
 	field_show_on_vt INTEGER DEFAULT 0 NOT NULL,
 	field_show_profile INTEGER DEFAULT 0 NOT NULL,
 	field_hide INTEGER DEFAULT 0 NOT NULL,

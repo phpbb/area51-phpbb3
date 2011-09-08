@@ -173,6 +173,12 @@ if (defined('DEBUG_EXTRA') && request_var('explain', 0) && $auth->acl_get('a_'))
 header("Content-Type: application/atom+xml; charset=UTF-8");
 header("Last-Modified: " . gmdate('D, d M Y H:i:s', $feed_updated_time) . ' GMT');
 
+if (!empty($user->data['is_bot']))
+{
+	// Let reverse proxies know we detected a bot.
+	header('X-PHPBB-IS-BOT: yes');
+}
+
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 echo '<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="' . $global_vars['FEED_LANG'] . '">' . "\n";
 echo '<link rel="self" type="application/atom+xml" href="' . $global_vars['SELF_LINK'] . '" />' . "\n\n";
@@ -604,30 +610,9 @@ class phpbb_feed_base
 
 	function get_passworded_forums()
 	{
-		global $db, $user;
+		global $user;
 
-		// Exclude passworded forums
-		$sql = 'SELECT f.forum_id, fa.user_id
-			FROM ' . FORUMS_TABLE . ' f
-			LEFT JOIN ' . FORUMS_ACCESS_TABLE . " fa
-				ON (fa.forum_id = f.forum_id
-					AND fa.session_id = '" . $db->sql_escape($user->session_id) . "')
-			WHERE f.forum_password <> ''";
-		$result = $db->sql_query($sql);
-
-		$forum_ids = array();
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$forum_id = (int) $row['forum_id'];
-
-			if ($row['user_id'] != $user->data['user_id'])
-			{
-				$forum_ids[$forum_id] = $forum_id;
-			}
-		}
-		$db->sql_freeresult($result);
-
-		return $forum_ids;
+		return $user->get_passworded_forums();
 	}
 
 	function get_item()
@@ -775,9 +760,6 @@ class phpbb_feed_overall extends phpbb_feed_post_base
 			return false;
 		}
 
-		// Add global forum id
-		$forum_ids[] = 0;
-
 		// m_approve forums
 		$fid_m_approve = $this->get_moderator_approve_forums();
 		$sql_m_approve = (!empty($fid_m_approve)) ? 'OR ' . $db->sql_in_set('forum_id', $fid_m_approve) : '';
@@ -915,12 +897,11 @@ class phpbb_feed_forum extends phpbb_feed_post_base
 		global $auth, $db;
 
 		$m_approve = ($auth->acl_get('m_approve', $this->forum_id)) ? true : false;
-		$forum_ids = array(0, $this->forum_id);
 
 		// Determine topics with recent activity
 		$sql = 'SELECT topic_id, topic_last_post_time
 			FROM ' . TOPICS_TABLE . '
-			WHERE ' . $db->sql_in_set('forum_id', $forum_ids) . '
+			WHERE forum_id = ' . $this->forum_id . '
 				AND topic_moved_id = 0
 				' . ((!$m_approve) ? 'AND topic_approved = 1' : '') . '
 			ORDER BY topic_last_post_time DESC';
@@ -1009,96 +990,37 @@ class phpbb_feed_topic extends phpbb_feed_post_base
 			trigger_error('NO_TOPIC');
 		}
 
-		if ($this->topic_data['topic_type'] == POST_GLOBAL)
+		$this->forum_id = (int) $this->topic_data['forum_id'];
+
+		// Make sure topic is either approved or user authed
+		if (!$this->topic_data['topic_approved'] && !$auth->acl_get('m_approve', $this->forum_id))
 		{
-			// We need to find at least one postable forum where feeds are enabled,
-			// that the user can read and maybe also has approve permissions.
-			$in_fid_ary = $this->get_readable_forums();
-
-			if (empty($in_fid_ary))
-			{
-				// User cannot read any forums
-				trigger_error('SORRY_AUTH_READ');
-			}
-
-			if (!$this->topic_data['topic_approved'])
-			{
-				// Also require m_approve
-				$in_fid_ary = array_intersect($in_fid_ary, $this->get_moderator_approve_forums());
-
-				if (empty($in_fid_ary))
-				{
-					trigger_error('SORRY_AUTH_READ');
-				}
-			}
-
-			// Diff excluded forums
-			$in_fid_ary = array_diff($in_fid_ary, $this->get_excluded_forums());
-
-			if (empty($in_fid_ary))
-			{
-				trigger_error('SORRY_AUTH_READ');
-			}
-
-			// Also exclude passworded forums
-			$in_fid_ary = array_diff($in_fid_ary, $this->get_passworded_forums());
-
-			if (empty($in_fid_ary))
-			{
-				trigger_error('SORRY_AUTH_READ');
-			}
-
-			$sql = 'SELECT forum_id, left_id
-				FROM ' . FORUMS_TABLE . '
-				WHERE forum_type = ' . FORUM_POST . '
-					AND ' . $db->sql_in_set('forum_id', $in_fid_ary) . '
-				ORDER BY left_id ASC';
-			$result = $db->sql_query_limit($sql, 1);
-			$this->forum_data = $db->sql_fetchrow($result);
-			$db->sql_freeresult($result);
-
-			if (empty($this->forum_data))
-			{
-				// No forum found.
-				trigger_error('SORRY_AUTH_READ');
-			}
-
-			unset($in_fid_ary);
+			trigger_error('SORRY_AUTH_READ');
 		}
-		else
+
+		// Make sure forum is not excluded from feed
+		if (phpbb_optionget(FORUM_OPTION_FEED_EXCLUDE, $this->topic_data['forum_options']))
 		{
-			$this->forum_id = (int) $this->topic_data['forum_id'];
+			trigger_error('NO_FEED');
+		}
 
-			// Make sure topic is either approved or user authed
-			if (!$this->topic_data['topic_approved'] && !$auth->acl_get('m_approve', $this->forum_id))
+		// Make sure we can read this forum
+		if (!$auth->acl_get('f_read', $this->forum_id))
+		{
+			trigger_error('SORRY_AUTH_READ');
+		}
+
+		// Make sure forum is not passworded or user is authed
+		if ($this->topic_data['forum_password'])
+		{
+			$forum_ids_passworded = $this->get_passworded_forums();
+
+			if (isset($forum_ids_passworded[$this->forum_id]))
 			{
 				trigger_error('SORRY_AUTH_READ');
 			}
 
-			// Make sure forum is not excluded from feed
-			if (phpbb_optionget(FORUM_OPTION_FEED_EXCLUDE, $this->topic_data['forum_options']))
-			{
-				trigger_error('NO_FEED');
-			}
-
-			// Make sure we can read this forum
-			if (!$auth->acl_get('f_read', $this->forum_id))
-			{
-				trigger_error('SORRY_AUTH_READ');
-			}
-
-			// Make sure forum is not passworded or user is authed
-			if ($this->topic_data['forum_password'])
-			{
-				$forum_ids_passworded = $this->get_passworded_forums();
-
-				if (isset($forum_ids_passworded[$this->forum_id]))
-				{
-					trigger_error('SORRY_AUTH_READ');
-				}
-
-				unset($forum_ids_passworded);
-			}
+			unset($forum_ids_passworded);
 		}
 	}
 
@@ -1245,9 +1167,6 @@ class phpbb_feed_news extends phpbb_feed_topic_base
 			return false;
 		}
 
-		// Add global forum
-		$in_fid_ary[] = 0;
-
 		// We really have to get the post ids first!
 		$sql = 'SELECT topic_first_post_id, topic_time
 			FROM ' . TOPICS_TABLE . '
@@ -1317,9 +1236,6 @@ class phpbb_feed_topics extends phpbb_feed_topic_base
 		{
 			return false;
 		}
-
-		// Add global forum
-		$in_fid_ary[] = 0;
 
 		// We really have to get the post ids first!
 		$sql = 'SELECT topic_first_post_id, topic_time
@@ -1410,9 +1326,6 @@ class phpbb_feed_topics_active extends phpbb_feed_topic_base
 			return false;
 		}
 
-		// Add global forum
-		$in_fid_ary[] = 0;
-
 		// Search for topics in last X days
 		$last_post_time_sql = ($this->sort_days) ? ' AND topic_last_post_time > ' . (time() - ($this->sort_days * 24 * 3600)) : '';
 
@@ -1497,6 +1410,3 @@ class phpbb_feed_topics_active extends phpbb_feed_topic_base
 		$item_row['title'] = (isset($row['forum_name']) && $row['forum_name'] !== '') ? $row['forum_name'] . ' ' . $this->separator . ' ' . $item_row['title'] : $item_row['title'];
 	}
 }
-
-
-?>

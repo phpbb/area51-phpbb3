@@ -45,7 +45,7 @@ class acp_styles
 		$bitfield->set(9);
 		$bitfield->set(11);
 		$bitfield->set(12);
-		define('TEMPLATE_BITFIELD', $bitfield->get_base64());
+		$this->template_bitfield = $bitfield->get_base64();
 		unset($bitfield);
 
 		$user->add_lang('acp/styles');
@@ -3497,7 +3497,7 @@ parse_css_file = {PARSE_CSS_FILE}
 				}
 				else
 				{
-					$sql_ary['bbcode_bitfield'] = TEMPLATE_BITFIELD;
+					$sql_ary['bbcode_bitfield'] = $this->template_bitfield;
 				}
 
 				// We set a pre-defined bitfield here which we may use further in 3.2
@@ -3947,5 +3947,3 @@ parse_css_file = {PARSE_CSS_FILE}
 	}
 
 }
-
-?>

@@ -316,7 +316,8 @@ CREATE TABLE phpbb_groups (
 	group_receive_pm tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
 	group_message_limit mediumint(8) UNSIGNED DEFAULT '0' NOT NULL,
 	group_max_recipients mediumint(8) UNSIGNED DEFAULT '0' NOT NULL,
-	group_legend tinyint(1) UNSIGNED DEFAULT '1' NOT NULL,
+	group_legend mediumint(8) UNSIGNED DEFAULT '0' NOT NULL,
+	group_teampage mediumint(8) UNSIGNED DEFAULT '0' NOT NULL,
 	PRIMARY KEY (group_id),
 	KEY group_legend_name (group_legend, group_name)
 ) CHARACTER SET `utf8` COLLATE `utf8_bin`;
@@ -362,6 +363,7 @@ CREATE TABLE phpbb_log (
 	log_data mediumtext NOT NULL,
 	PRIMARY KEY (log_id),
 	KEY log_type (log_type),
+	KEY log_time (log_time),
 	KEY forum_id (forum_id),
 	KEY topic_id (topic_id),
 	KEY reportee_id (reportee_id),
@@ -571,6 +573,7 @@ CREATE TABLE phpbb_profile_fields (
 	field_validation varchar(20) DEFAULT '' NOT NULL,
 	field_required tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
 	field_show_on_reg tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
+	field_show_on_pm tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
 	field_show_on_vt tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
 	field_show_profile tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
 	field_hide tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,

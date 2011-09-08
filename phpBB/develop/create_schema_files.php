@@ -1160,7 +1160,8 @@ function get_schema_struct()
 			'group_receive_pm'		=> array('BOOL', 0),
 			'group_message_limit'	=> array('UINT', 0),
 			'group_max_recipients'	=> array('UINT', 0),
-			'group_legend'			=> array('BOOL', 1),
+			'group_legend'			=> array('UINT', 0),
+			'group_teampage'		=> array('UINT', 0),
 		),
 		'PRIMARY_KEY'	=> 'group_id',
 		'KEYS'			=> array(
@@ -1214,6 +1215,7 @@ function get_schema_struct()
 		'PRIMARY_KEY'	=> 'log_id',
 		'KEYS'			=> array(
 			'log_type'				=> array('INDEX', 'log_type'),
+			'log_time'				=> array('INDEX', 'log_time'),
 			'forum_id'				=> array('INDEX', 'forum_id'),
 			'topic_id'				=> array('INDEX', 'topic_id'),
 			'reportee_id'			=> array('INDEX', 'reportee_id'),
@@ -1443,6 +1445,7 @@ function get_schema_struct()
 			'field_validation'		=> array('VCHAR_UNI:20', ''),
 			'field_required'		=> array('BOOL', 0),
 			'field_show_on_reg'		=> array('BOOL', 0),
+			'field_show_on_pm'		=> array('BOOL', 0),
 			'field_show_on_vt'		=> array('BOOL', 0),
 			'field_show_profile'	=> array('BOOL', 0),
 			'field_hide'			=> array('BOOL', 0),
@@ -2078,4 +2081,3 @@ EOF;
 }
 
 echo 'done';
-

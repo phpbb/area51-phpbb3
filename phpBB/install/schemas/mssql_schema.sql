@@ -546,7 +546,8 @@ CREATE TABLE [phpbb_groups] (
 	[group_receive_pm] [int] DEFAULT (0) NOT NULL ,
 	[group_message_limit] [int] DEFAULT (0) NOT NULL ,
 	[group_max_recipients] [int] DEFAULT (0) NOT NULL ,
-	[group_legend] [int] DEFAULT (1) NOT NULL 
+	[group_legend] [int] DEFAULT (0) NOT NULL ,
+	[group_teampage] [int] DEFAULT (0) NOT NULL 
 ) ON [PRIMARY]
 GO
 
@@ -634,6 +635,9 @@ ALTER TABLE [phpbb_log] WITH NOCHECK ADD
 GO
 
 CREATE  INDEX [log_type] ON [phpbb_log]([log_type]) ON [PRIMARY]
+GO
+
+CREATE  INDEX [log_time] ON [phpbb_log]([log_time]) ON [PRIMARY]
 GO
 
 CREATE  INDEX [forum_id] ON [phpbb_log]([forum_id]) ON [PRIMARY]
@@ -973,6 +977,7 @@ CREATE TABLE [phpbb_profile_fields] (
 	[field_validation] [varchar] (20) DEFAULT ('') NOT NULL ,
 	[field_required] [int] DEFAULT (0) NOT NULL ,
 	[field_show_on_reg] [int] DEFAULT (0) NOT NULL ,
+	[field_show_on_pm] [int] DEFAULT (0) NOT NULL ,
 	[field_show_on_vt] [int] DEFAULT (0) NOT NULL ,
 	[field_show_profile] [int] DEFAULT (0) NOT NULL ,
 	[field_hide] [int] DEFAULT (0) NOT NULL ,

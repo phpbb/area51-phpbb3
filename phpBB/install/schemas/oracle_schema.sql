@@ -605,7 +605,8 @@ CREATE TABLE phpbb_groups (
 	group_receive_pm number(1) DEFAULT '0' NOT NULL,
 	group_message_limit number(8) DEFAULT '0' NOT NULL,
 	group_max_recipients number(8) DEFAULT '0' NOT NULL,
-	group_legend number(1) DEFAULT '1' NOT NULL,
+	group_legend number(8) DEFAULT '0' NOT NULL,
+	group_teampage number(8) DEFAULT '0' NOT NULL,
 	CONSTRAINT pk_phpbb_groups PRIMARY KEY (group_id)
 )
 /
@@ -714,6 +715,8 @@ CREATE TABLE phpbb_log (
 /
 
 CREATE INDEX phpbb_log_log_type ON phpbb_log (log_type)
+/
+CREATE INDEX phpbb_log_log_time ON phpbb_log (log_time)
 /
 CREATE INDEX phpbb_log_forum_id ON phpbb_log (forum_id)
 /
@@ -1084,6 +1087,7 @@ CREATE TABLE phpbb_profile_fields (
 	field_validation varchar2(60) DEFAULT '' ,
 	field_required number(1) DEFAULT '0' NOT NULL,
 	field_show_on_reg number(1) DEFAULT '0' NOT NULL,
+	field_show_on_pm number(1) DEFAULT '0' NOT NULL,
 	field_show_on_vt number(1) DEFAULT '0' NOT NULL,
 	field_show_profile number(1) DEFAULT '0' NOT NULL,
 	field_hide number(1) DEFAULT '0' NOT NULL,

@@ -649,6 +649,23 @@ class phpbb_db_tools
 			$sqlite = true;
 		}
 
+		// Drop tables?
+		if (!empty($schema_changes['drop_tables']))
+		{
+			foreach ($schema_changes['drop_tables'] as $table)
+			{
+				// only drop table if it exists
+				if ($this->sql_table_exists($table))
+				{
+					$result = $this->sql_table_drop($table);
+					if ($this->return_statements)
+					{
+						$statements = array_merge($statements, $result);
+					}
+				}
+			}
+		}
+
 		// Add tables?
 		if (!empty($schema_changes['add_tables']))
 		{
@@ -1788,7 +1805,7 @@ class phpbb_db_tools
 			break;
 
 			case 'oracle':
-				$statements[] = 'ALTER TABLE ' . $table_name . ' DROP ' . $column_name;
+				$statements[] = 'ALTER TABLE ' . $table_name . ' DROP COLUMN ' . $column_name;
 			break;
 
 			case 'postgres':
@@ -1939,6 +1956,7 @@ class phpbb_db_tools
 					$statements[] = "DROP SEQUENCE {$row['referenced_name']}";
 				}
 				$this->db->sql_freeresult($result);
+			break;
 
 			case 'postgres':
 				// PGSQL does not "tightly" bind sequences and tables, we must guess...
@@ -2059,7 +2077,7 @@ class phpbb_db_tools
 		$table_prefix = substr(CONFIG_TABLE, 0, -6); // strlen(config)
 		if (strlen($table_name . $index_name) - strlen($table_prefix) > 24)
 		{
-			$max_length = $table_prefix + 24;
+			$max_length = strlen($table_prefix) + 24;
 			trigger_error("Index name '{$table_name}_$index_name' on table '$table_name' is too long. The maximum is $max_length characters.", E_USER_ERROR);
 		}
 
@@ -2096,7 +2114,7 @@ class phpbb_db_tools
 		$table_prefix = substr(CONFIG_TABLE, 0, -6); // strlen(config)
 		if (strlen($table_name . $index_name) - strlen($table_prefix) > 24)
 		{
-			$max_length = $table_prefix + 24;
+			$max_length = strlen($table_prefix) + 24;
 			trigger_error("Index name '{$table_name}_$index_name' on table '$table_name' is too long. The maximum is $max_length characters.", E_USER_ERROR);
 		}
 
@@ -2416,5 +2434,3 @@ class phpbb_db_tools
 		return $this->_sql_run_sql($statements);
 	}
 }
-
-?>

@@ -34,6 +34,7 @@ if (!empty($load_extensions) && function_exists('dl'))
 	}
 }
 
+// no $request here because it is not loaded yet
 $id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
 
 // This is a simple script to grab and output the requested CSS data stored in the DB
@@ -44,14 +45,24 @@ $id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
 if ($id)
 {
 	// Include files
-	require($phpbb_root_path . 'includes/acm/acm_' . $acm_type . '.' . $phpEx);
-	require($phpbb_root_path . 'includes/cache.' . $phpEx);
+	require($phpbb_root_path . 'includes/class_loader.' . $phpEx);
 	require($phpbb_root_path . 'includes/db/' . $dbms . '.' . $phpEx);
 	require($phpbb_root_path . 'includes/constants.' . $phpEx);
 	require($phpbb_root_path . 'includes/functions.' . $phpEx);
 
+	$class_loader = new phpbb_class_loader($phpbb_root_path, '.' . $phpEx);
+	$class_loader->register();
+
+	// set up caching
+	$cache_factory = new phpbb_cache_factory($acm_type);
+	$cache = $cache_factory->get_service();
+	$class_loader->set_cache($cache->get_driver());
+
+	$request = new phpbb_request();
 	$db = new $sql_db();
-	$cache = new cache();
+
+	// make sure request_var uses this request instance
+	request_var('', 0, false, false, $request); // "dependency injection" for a function
 
 	// Connect to DB
 	if (!@$db->sql_connect($dbhost, $dbuser, $dbpasswd, $dbname, $dbport, false, false))
@@ -60,7 +71,10 @@ if ($id)
 	}
 	unset($dbpasswd);
 
-	$config = $cache->obtain_config();
+	$config = new phpbb_config_db($db, $cache->get_driver(), CONFIG_TABLE);
+	set_config(null, null, null, $config);
+	set_config_count(null, null, null, $config);
+
 	$user = false;
 
 	// try to get a session ID from REQUEST array
@@ -138,7 +152,7 @@ if ($id)
 	if ($config['gzip_compress'])
 	{
 		// IE6 is not able to compress the style (do not ask us why!)
-		$browser = (!empty($_SERVER['HTTP_USER_AGENT'])) ? strtolower(htmlspecialchars((string) $_SERVER['HTTP_USER_AGENT'])) : '';
+		$browser = strtolower($request->header('User-Agent'));
 
 		if ($browser && strpos($browser, 'msie 6.0') === false && @extension_loaded('zlib') && !headers_sent())
 		{
@@ -287,7 +301,3 @@ if ($id)
 	}
 	$db->sql_close();
 }
-
-exit;
-
-?>

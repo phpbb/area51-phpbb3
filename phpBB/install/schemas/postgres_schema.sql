@@ -459,7 +459,8 @@ CREATE TABLE phpbb_groups (
 	group_receive_pm INT2 DEFAULT '0' NOT NULL CHECK (group_receive_pm >= 0),
 	group_message_limit INT4 DEFAULT '0' NOT NULL CHECK (group_message_limit >= 0),
 	group_max_recipients INT4 DEFAULT '0' NOT NULL CHECK (group_max_recipients >= 0),
-	group_legend INT2 DEFAULT '1' NOT NULL CHECK (group_legend >= 0),
+	group_legend INT4 DEFAULT '0' NOT NULL CHECK (group_legend >= 0),
+	group_teampage INT4 DEFAULT '0' NOT NULL CHECK (group_teampage >= 0),
 	PRIMARY KEY (group_id)
 );
 
@@ -519,6 +520,7 @@ CREATE TABLE phpbb_log (
 );
 
 CREATE INDEX phpbb_log_log_type ON phpbb_log (log_type);
+CREATE INDEX phpbb_log_log_time ON phpbb_log (log_time);
 CREATE INDEX phpbb_log_forum_id ON phpbb_log (forum_id);
 CREATE INDEX phpbb_log_topic_id ON phpbb_log (topic_id);
 CREATE INDEX phpbb_log_reportee_id ON phpbb_log (reportee_id);
@@ -760,6 +762,7 @@ CREATE TABLE phpbb_profile_fields (
 	field_validation varchar(20) DEFAULT '' NOT NULL,
 	field_required INT2 DEFAULT '0' NOT NULL CHECK (field_required >= 0),
 	field_show_on_reg INT2 DEFAULT '0' NOT NULL CHECK (field_show_on_reg >= 0),
+	field_show_on_pm INT2 DEFAULT '0' NOT NULL CHECK (field_show_on_pm >= 0),
 	field_show_on_vt INT2 DEFAULT '0' NOT NULL CHECK (field_show_on_vt >= 0),
 	field_show_profile INT2 DEFAULT '0' NOT NULL CHECK (field_show_profile >= 0),
 	field_hide INT2 DEFAULT '0' NOT NULL CHECK (field_hide >= 0),

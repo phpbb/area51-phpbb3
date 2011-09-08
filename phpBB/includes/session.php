@@ -39,18 +39,20 @@ class session
 	*
 	* @param string $root_path current root path (phpbb_root_path)
 	*/
-	function extract_current_page($root_path)
+	static function extract_current_page($root_path)
 	{
+		global $request;
+
 		$page_array = array();
 
 		// First of all, get the request uri...
-		$script_name = (!empty($_SERVER['PHP_SELF'])) ? $_SERVER['PHP_SELF'] : getenv('PHP_SELF');
-		$args = (!empty($_SERVER['QUERY_STRING'])) ? explode('&', $_SERVER['QUERY_STRING']) : explode('&', getenv('QUERY_STRING'));
+		$script_name = htmlspecialchars_decode($request->server('PHP_SELF'));
+		$args = explode('&', htmlspecialchars_decode($request->server('QUERY_STRING')));
 
 		// If we are unable to get the script name we use REQUEST_URI as a failover and note it within the page array for easier support...
 		if (!$script_name)
 		{
-			$script_name = (!empty($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : getenv('REQUEST_URI');
+			$script_name = htmlspecialchars_decode($request->server('REQUEST_URI'));
 			$script_name = (($pos = strpos($script_name, '?')) !== false) ? substr($script_name, 0, $pos) : $script_name;
 			$page_array['failover'] = 1;
 		}
@@ -130,7 +132,7 @@ class session
 			'root_script_path'	=> str_replace(' ', '%20', htmlspecialchars($root_script_path)),
 
 			'page'				=> $page,
-			'forum'				=> (isset($_REQUEST['f']) && $_REQUEST['f'] > 0) ? (int) $_REQUEST['f'] : 0,
+			'forum'				=> request_var('f', 0),
 		);
 
 		return $page_array;
@@ -141,10 +143,10 @@ class session
 	*/
 	function extract_current_hostname()
 	{
-		global $config;
+		global $config, $request;
 
 		// Get hostname
-		$host = (!empty($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : ((!empty($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : getenv('SERVER_NAME'));
+		$host = htmlspecialchars_decode($request->header('Host', $request->server('SERVER_NAME')));
 
 		// Should be a string and lowered
 		$host = (string) strtolower($host);
@@ -206,14 +208,15 @@ class session
 	function session_begin($update_session_page = true)
 	{
 		global $phpEx, $SID, $_SID, $_EXTRA_URL, $db, $config, $phpbb_root_path;
+		global $request;
 
 		// Give us some basic information
 		$this->time_now				= time();
 		$this->cookie_data			= array('u' => 0, 'k' => '');
 		$this->update_session_page	= $update_session_page;
-		$this->browser				= (!empty($_SERVER['HTTP_USER_AGENT'])) ? htmlspecialchars((string) $_SERVER['HTTP_USER_AGENT']) : '';
-		$this->referer				= (!empty($_SERVER['HTTP_REFERER'])) ? htmlspecialchars((string) $_SERVER['HTTP_REFERER']) : '';
-		$this->forwarded_for		= (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) ? htmlspecialchars((string) $_SERVER['HTTP_X_FORWARDED_FOR']) : '';
+		$this->browser				= $request->header('User-Agent');
+		$this->referer				= $request->header('Referer');
+		$this->forwarded_for		= $request->header('X-Forwarded-For');
 
 		$this->host					= $this->extract_current_hostname();
 		$this->page					= $this->extract_current_page($phpbb_root_path);
@@ -241,7 +244,7 @@ class session
 			$this->forwarded_for = '';
 		}
 
-		if (isset($_COOKIE[$config['cookie_name'] . '_sid']) || isset($_COOKIE[$config['cookie_name'] . '_u']))
+		if ($request->is_set($config['cookie_name'] . '_sid', phpbb_request_interface::COOKIE) || $request->is_set($config['cookie_name'] . '_u', phpbb_request_interface::COOKIE))
 		{
 			$this->cookie_data['u'] = request_var($config['cookie_name'] . '_u', 0, false, true);
 			$this->cookie_data['k'] = request_var($config['cookie_name'] . '_k', '', false, true);
@@ -267,7 +270,7 @@ class session
 
 		// Why no forwarded_for et al? Well, too easily spoofed. With the results of my recent requests
 		// it's pretty clear that in the majority of cases you'll at least be left with a proxy/cache ip.
-		$this->ip = (!empty($_SERVER['REMOTE_ADDR'])) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+		$this->ip = htmlspecialchars_decode($request->server('REMOTE_ADDR'));
 		$this->ip = preg_replace('# {2,}#', ' ', str_replace(',', ' ', $this->ip));
 
 		// split the list of IPs
@@ -278,6 +281,24 @@ class session
 
 		foreach ($ips as $ip)
 		{
+			if (function_exists('phpbb_ip_normalise'))
+			{
+				// Normalise IP address
+				$ip = phpbb_ip_normalise($ip);
+
+				if (empty($ip))
+				{
+					// IP address is invalid.
+					break;
+				}
+
+				// IP address is valid.
+				$this->ip = $ip;
+
+				// Skip legacy code.
+				continue;
+			}
+
 			if (preg_match(get_preg_expression('ipv4'), $ip))
 			{
 				$this->ip = $ip;
@@ -323,7 +344,7 @@ class session
 		}
 
 		// Is session_id is set or session_id is set and matches the url param if required
-		if (!empty($this->session_id) && (!defined('NEED_SID') || (isset($_GET['sid']) && $this->session_id === $_GET['sid'])))
+		if (!empty($this->session_id) && (!defined('NEED_SID') || (isset($_GET['sid']) && $this->session_id === request_var('sid', ''))))
 		{
 			$sql = 'SELECT u.*, s.*
 				FROM ' . SESSIONS_TABLE . ' s, ' . USERS_TABLE . " u
@@ -363,7 +384,7 @@ class session
 				$referer_valid = true;
 
 				// we assume HEAD and TRACE to be foul play and thus only whitelist GET
-				if (@$config['referer_validation'] && isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) !== 'get')
+				if (@$config['referer_validation'] && strtolower($request->server('REQUEST_METHOD')) !== 'get')
 				{
 					$referer_valid = $this->validate_referer($check_referer_path);
 				}
@@ -417,9 +438,7 @@ class session
 
 							$db->sql_return_on_error(true);
 
-							$sql = 'UPDATE ' . SESSIONS_TABLE . ' SET ' . $db->sql_build_array('UPDATE', $sql_ary) . "
-								WHERE session_id = '" . $db->sql_escape($this->session_id) . "'";
-							$result = $db->sql_query($sql);
+							$this->update_session($sql_ary);
 
 							$db->sql_return_on_error(false);
 
@@ -429,9 +448,7 @@ class session
 							{
 								unset($sql_ary['session_forum_id']);
 
-								$sql = 'UPDATE ' . SESSIONS_TABLE . ' SET ' . $db->sql_build_array('UPDATE', $sql_ary) . "
-									WHERE session_id = '" . $db->sql_escape($this->session_id) . "'";
-								$db->sql_query($sql);
+								$this->update_session($sql_ary);
 							}
 
 							if ($this->data['user_id'] != ANONYMOUS && !empty($config['new_member_post_limit']) && $this->data['user_new'] && $config['new_member_post_limit'] <= $this->data['user_posts'])
@@ -698,9 +715,7 @@ class session
 						$sql_ary['session_forum_id'] = $this->page['forum'];
 					}
 
-					$sql = 'UPDATE ' . SESSIONS_TABLE . ' SET ' . $db->sql_build_array('UPDATE', $sql_ary) . "
-						WHERE session_id = '" . $db->sql_escape($this->session_id) . "'";
-					$db->sql_query($sql);
+					$this->update_session($sql_ary);
 
 					// Update the last visit time
 					$sql = 'UPDATE ' . USERS_TABLE . '
@@ -1001,7 +1016,7 @@ class session
 			}
 
 			// only called from CRON; should be a safe workaround until the infrastructure gets going
-			if (!class_exists('phpbb_captcha_factory'))
+			if (!class_exists('phpbb_captcha_factory', false))
 			{
 				include($phpbb_root_path . "includes/captcha/captcha_factory." . $phpEx);
 			}
@@ -1436,7 +1451,7 @@ class session
 	*/
 	function validate_referer($check_script_path = false)
 	{
-		global $config;
+		global $config, $request;
 
 		// no referer - nothing to validate, user's fault for turning it off (we only check on POST; so meta can't be the reason)
 		if (empty($this->referer) || empty($this->host))
@@ -1454,7 +1469,7 @@ class session
 		else if ($check_script_path && rtrim($this->page['root_script_path'], '/') !== '')
 		{
 			$ref = substr($ref, strlen($host));
-			$server_port = (!empty($_SERVER['SERVER_PORT'])) ? (int) $_SERVER['SERVER_PORT'] : (int) getenv('SERVER_PORT');
+			$server_port = $request->server('SERVER_PORT', 0);
 
 			if ($server_port !== 80 && $server_port !== 443 && stripos($ref, ":$server_port") === 0)
 			{
@@ -1477,6 +1492,23 @@ class session
 		$sql = 'UPDATE ' . SESSIONS_TABLE . '
 			SET session_admin = 0
 			WHERE session_id = \'' . $db->sql_escape($this->session_id) . '\'';
+		$db->sql_query($sql);
+	}
+
+	/**
+	* Update the session data
+	*
+	* @param array $session_data associative array of session keys to be updated
+	* @param string $session_id optional session_id, defaults to current user's session_id
+	*/
+	public function update_session($session_data, $session_id = null)
+	{
+		global $db;
+
+		$session_id = ($session_id) ? $session_id : $this->session_id;
+
+		$sql = 'UPDATE ' . SESSIONS_TABLE . ' SET ' . $db->sql_build_array('UPDATE', $session_data) . "
+			WHERE session_id = '" . $db->sql_escape($session_id) . "'";
 		$db->sql_query($sql);
 	}
 }
@@ -1562,9 +1594,9 @@ class user extends session
 			* If re-enabled we need to make sure only those languages installed are checked
 			* Commented out so we do not loose the code.
 
-			if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']))
+			if ($request->header('Accept-Language'))
 			{
-				$accept_lang_ary = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+				$accept_lang_ary = explode(',', $request->header('Accept-Language'));
 
 				foreach ($accept_lang_ary as $accept_lang)
 				{
@@ -1608,11 +1640,12 @@ class user extends session
 		$this->add_lang($lang_set);
 		unset($lang_set);
 
-		if (!empty($_GET['style']) && $auth->acl_get('a_styles') && !defined('ADMIN_START'))
+		$style_request = request_var('style', 0);
+		if ($style_request && $auth->acl_get('a_styles') && !defined('ADMIN_START'))
 		{
 			global $SID, $_EXTRA_URL;
 
-			$style = request_var('style', 0);
+			$style = $style_request;
 			$SID .= '&amp;style=' . $style;
 			$_EXTRA_URL = array('style=' . $style);
 		}
@@ -2410,6 +2443,38 @@ class user extends session
 
 		return true;
 	}
+
+	/**
+	* Returns all password protected forum ids the user is currently NOT authenticated for.
+	*
+	* @return array		Array of forum ids
+	* @access public
+	*/
+	function get_passworded_forums()
+	{
+		global $db;
+
+		$sql = 'SELECT f.forum_id, fa.user_id
+			FROM ' . FORUMS_TABLE . ' f
+			LEFT JOIN ' . FORUMS_ACCESS_TABLE . " fa
+				ON (fa.forum_id = f.forum_id
+					AND fa.session_id = '" . $db->sql_escape($this->session_id) . "')
+			WHERE f.forum_password <> ''";
+		$result = $db->sql_query($sql);
+
+		$forum_ids = array();
+		while ($row = $db->sql_fetchrow($result))
+		{
+			$forum_id = (int) $row['forum_id'];
+
+			if ($row['user_id'] != $this->data['user_id'])
+			{
+				$forum_ids[$forum_id] = $forum_id;
+			}
+		}
+		$db->sql_freeresult($result);
+
+		return $forum_ids;
+	}
 }
 
-?>
