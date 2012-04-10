@@ -3,18 +3,18 @@
 *
 * @package testing
 * @copyright (c) 2011 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
-require_once dirname(__FILE__) . '/template_test_case.php';
+require_once dirname(__FILE__) . '/template_test_case_with_tree.php';
 
-class phpbb_template_template_inheritance_test extends phpbb_template_template_test_case
+class phpbb_template_template_inheritance_test extends phpbb_template_template_test_case_with_tree
 {
 	/**
 	 * @todo put test data into templates/xyz.test
 	 */
-	public static function template_data()
+	public function template_data()
 	{
 		return array(
 			// First element of the array is test name - keep them distinct
@@ -60,16 +60,5 @@ class phpbb_template_template_inheritance_test extends phpbb_template_template_t
 		$this->setup_engine();
 
 		$this->run_template($file, $vars, $block_vars, $destroy, $expected, $cache_file);
-	}
-
-	protected function setup_engine()
-	{
-		global $phpbb_root_path, $phpEx, $config, $user;
-
-		$this->template_path = dirname(__FILE__) . '/templates';
-		$this->parent_template_path = dirname(__FILE__) . '/parent_templates';
-		$this->template_locator = new phpbb_template_locator();
-		$this->template = new phpbb_template($phpbb_root_path, $phpEx, $config, $user, $this->template_locator);
-		$this->template->set_custom_template($this->template_path, 'tests', $this->parent_template_path);
 	}
 }

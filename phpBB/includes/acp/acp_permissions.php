@@ -2,9 +2,8 @@
 /**
 *
 * @package acp
-* @version $Id$
 * @copyright (c) 2005 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -1106,7 +1105,7 @@ class acp_permissions
 		{
 			if ($user_id != $user->data['user_id'])
 			{
-				$auth2 = new auth();
+				$auth2 = new phpbb_auth();
 				$auth2->acl($userdata);
 				$auth_setting = $auth2->acl_get($permission);
 			}

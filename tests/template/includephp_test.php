@@ -3,7 +3,7 @@
 *
 * @package testing
 * @copyright (c) 2011 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -36,7 +36,7 @@ class phpbb_template_includephp_test extends phpbb_template_template_test_case
 
 		$this->setup_engine(array('tpl_allow_php' => true));
 
-		$this->template->set_custom_template($cache_dir, 'tests');
+		$this->style->set_custom_style('tests', $cache_dir);
 		$cache_file = $this->template->cachepath . 'includephp_absolute.html.php';
 
 		$this->run_template('includephp_absolute.html', array(), array(), array(), "Path is absolute.\ntesting included php", $cache_file);

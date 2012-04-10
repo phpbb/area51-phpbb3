@@ -2,9 +2,8 @@
 /**
 *
 * @package phpBB3
-* @version $Id$
 * @copyright (c) 2005 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -315,32 +314,32 @@ class custom_profile
 					case 'FIELD_INVALID_DATE':
 					case 'FIELD_INVALID_VALUE':
 					case 'FIELD_REQUIRED':
-						$error = sprintf($user->lang[$cp_result], $row['lang_name']);
+						$error = $user->lang($cp_result, $row['lang_name']);
 					break;
 
 					case 'FIELD_TOO_SHORT':
 					case 'FIELD_TOO_SMALL':
-						$error = sprintf($user->lang[$cp_result], $row['lang_name'], $row['field_minlen']);
+						$error = $user->lang($cp_result, (int) $row['field_minlen'], $row['lang_name']);
 					break;
 
 					case 'FIELD_TOO_LONG':
 					case 'FIELD_TOO_LARGE':
-						$error = sprintf($user->lang[$cp_result], $row['lang_name'], $row['field_maxlen']);
+						$error = $user->lang($cp_result, (int) $row['field_maxlen'], $row['lang_name']);
 					break;
 
 					case 'FIELD_INVALID_CHARS':
 						switch ($row['field_validation'])
 						{
 							case '[0-9]+':
-								$error = sprintf($user->lang[$cp_result . '_NUMBERS_ONLY'], $row['lang_name']);
+								$error = $user->lang($cp_result . '_NUMBERS_ONLY', $row['lang_name']);
 							break;
 
 							case '[\w]+':
-								$error = sprintf($user->lang[$cp_result . '_ALPHA_ONLY'], $row['lang_name']);
+								$error = $user->lang($cp_result . '_ALPHA_ONLY', $row['lang_name']);
 							break;
 
 							case '[\w_\+\. \-\[\]]+':
-								$error = sprintf($user->lang[$cp_result . '_SPACERS_ONLY'], $row['lang_name']);
+								$error = $user->lang($cp_result . '_SPACERS_ONLY', $row['lang_name']);
 							break;
 						}
 					break;
@@ -556,7 +555,7 @@ class custom_profile
 				{
 					global $user;
 					// Date should display as the same date for every user regardless of timezone, so remove offset
-					// to compensate for the offset added by user::format_date()
+					// to compensate for the offset added by phpbb_user::format_date()
 					return $user->format_date(gmmktime(0, 0, 0, $month, $day, $year) - ($user->timezone + $user->dst), $user->lang['DATE_FORMAT'], true);
 				}
 
@@ -571,7 +570,12 @@ class custom_profile
 					$this->get_option_lang($field_id, $lang_id, FIELD_DROPDOWN, false);
 				}
 
-				if ($value == $ident_ary['data']['field_novalue'])
+				// If a dropdown field is required, users
+				// cannot choose the "no value" option.
+				// They must choose one of the other options.
+				// Therefore, here we treat a value equal to
+				// the "no value" as a lack of value, i.e. NULL.
+				if ($value == $ident_ary['data']['field_novalue'] && $ident_ary['data']['field_required'])
 				{
 					return NULL;
 				}
@@ -626,10 +630,10 @@ class custom_profile
 
 		$profile_row['field_ident'] = (isset($profile_row['var_name'])) ? $profile_row['var_name'] : 'pf_' . $profile_row['field_ident'];
 		$user_ident = $profile_row['field_ident'];
-		// checkbox - only testing for isset
+		// checkbox - set the value to "true" if it has been set to 1
 		if ($profile_row['field_type'] == FIELD_BOOL && $profile_row['field_length'] == 2)
 		{
-			$value = (isset($_REQUEST[$profile_row['field_ident']])) ? true : ((!isset($user->profile_fields[$user_ident]) || $preview) ? $default_value : $user->profile_fields[$user_ident]);
+			$value = (isset($_REQUEST[$profile_row['field_ident']]) && request_var($profile_row['field_ident'], $default_value) == 1) ? true : ((!isset($user->profile_fields[$user_ident]) || $preview) ? $default_value : $user->profile_fields[$user_ident]);
 		}
 		else if ($profile_row['field_type'] == FIELD_INT)
 		{

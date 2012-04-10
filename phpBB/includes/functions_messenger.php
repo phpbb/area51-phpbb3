@@ -2,9 +2,8 @@
 /**
 *
 * @package phpBB3
-* @version $Id$
 * @copyright (c) 2005 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -163,6 +162,22 @@ class messenger
 	}
 
 	/**
+	* Adds X-AntiAbuse headers
+	*
+	* @param array $config		Configuration array
+	* @param user $user			A user object
+	*
+	* @return null
+	*/
+	function anti_abuse_headers($config, $user)
+	{
+		$this->headers('X-AntiAbuse: Board servername - ' . mail_encode($config['server_name']));
+		$this->headers('X-AntiAbuse: User_id - ' . $user->data['user_id']);
+		$this->headers('X-AntiAbuse: Username - ' . mail_encode($user->data['username']));
+		$this->headers('X-AntiAbuse: User IP - ' . $user->ip);
+	}
+
+	/**
 	* Set the email priority
 	*/
 	function set_mail_priority($priority = MAIL_NORMAL_PRIORITY)
@@ -175,7 +190,7 @@ class messenger
 	*/
 	function template($template_file, $template_lang = '', $template_path = '')
 	{
-		global $config, $phpbb_root_path, $phpEx, $user;
+		global $config, $phpbb_root_path, $phpEx, $user, $phpbb_extension_manager;
 
 		if (!trim($template_file))
 		{
@@ -186,16 +201,18 @@ class messenger
 		{
 			// fall back to board default language if the user's language is
 			// missing $template_file.  If this does not exist either,
-			// $tpl->set_custom_template will do a trigger_error
+			// $tpl->set_filenames will do a trigger_error
 			$template_lang = basename($config['default_lang']);
 		}
 
 		// tpl_msg now holds a template object we can use to parse the template file
 		if (!isset($this->tpl_msg[$template_lang . $template_file]))
 		{
-			$template_locator = new phpbb_template_locator();
-			$this->tpl_msg[$template_lang . $template_file] = new phpbb_template($phpbb_root_path, $phpEx, $config, $user, $template_locator);
-			$tpl = &$this->tpl_msg[$template_lang . $template_file];
+			$style_resource_locator = new phpbb_style_resource_locator();
+			$style_path_provider = new phpbb_style_extension_path_provider($phpbb_extension_manager, new phpbb_style_path_provider());
+			$tpl = new phpbb_style_template($phpbb_root_path, $phpEx, $config, $user, $style_resource_locator, $style_path_provider);
+			$style = new phpbb_style($phpbb_root_path, $phpEx, $config, $user, $style_resource_locator, $style_path_provider, $tpl);
+			$this->tpl_msg[$template_lang . $template_file] = $tpl;
 
 			$fallback_template_path = false;
 
@@ -213,7 +230,7 @@ class messenger
 				}
 			}
 
-			$tpl->set_custom_template($template_path, $template_lang . '_email', $fallback_template_path);
+			$style->set_custom_style($template_lang . '_email', array($template_path, $fallback_template_path), '');
 
 			$tpl->set_filenames(array(
 				'body'		=> $template_file . '.txt',
@@ -553,7 +570,7 @@ class messenger
 		if (!$use_queue)
 		{
 			include_once($phpbb_root_path . 'includes/functions_jabber.' . $phpEx);
-			$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], $config['jab_password'], $config['jab_use_ssl']);
+			$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], htmlspecialchars_decode($config['jab_password']), $config['jab_use_ssl']);
 
 			if (!$this->jabber->connect())
 			{
@@ -754,7 +771,7 @@ class queue
 					}
 
 					include_once($phpbb_root_path . 'includes/functions_jabber.' . $phpEx);
-					$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], $config['jab_password'], $config['jab_use_ssl']);
+					$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], htmlspecialchars_decode($config['jab_password']), $config['jab_use_ssl']);
 
 					if (!$this->jabber->connect())
 					{
@@ -1007,7 +1024,7 @@ function smtpmail($addresses, $subject, $message, &$err_msg, $headers = false)
 	}
 
 	// Let me in. This function handles the complete authentication process
-	if ($err_msg = $smtp->log_into_server($config['smtp_host'], $config['smtp_username'], $config['smtp_password'], $config['smtp_auth_method']))
+	if ($err_msg = $smtp->log_into_server($config['smtp_host'], $config['smtp_username'], htmlspecialchars_decode($config['smtp_password']), $config['smtp_auth_method']))
 	{
 		$smtp->close_session($err_msg);
 		return false;
@@ -1120,6 +1137,7 @@ class smtp_class
 {
 	var $server_response = '';
 	var $socket = 0;
+	protected $socket_tls = false;
 	var $responses = array();
 	var $commands = array();
 	var $numeric_response_code = 0;
@@ -1270,30 +1288,29 @@ class smtp_class
 			}
 		}
 
-		// Try EHLO first
-		$this->server_send("EHLO {$local_host}");
-		if ($err_msg = $this->server_parse('250', __LINE__))
+		$hello_result = $this->hello($local_host);
+		if (!is_null($hello_result))
 		{
-			// a 503 response code means that we're already authenticated
-			if ($this->numeric_response_code == 503)
-			{
-				return false;
-			}
-
-			// If EHLO fails, we try HELO
-			$this->server_send("HELO {$local_host}");
-			if ($err_msg = $this->server_parse('250', __LINE__))
-			{
-				return ($this->numeric_response_code == 503) ? false : $err_msg;
-			}
+			return $hello_result;
 		}
 
-		foreach ($this->responses as $response)
+		// SMTP STARTTLS (RFC 3207)
+		if (!$this->socket_tls)
 		{
-			$response = explode(' ', $response);
-			$response_code = $response[0];
-			unset($response[0]);
-			$this->commands[$response_code] = implode(' ', $response);
+			$this->socket_tls = $this->starttls();
+
+			if ($this->socket_tls)
+			{
+				// Switched to TLS
+				// RFC 3207: "The client MUST discard any knowledge obtained from the server, [...]"
+				// So say hello again
+				$hello_result = $this->hello($local_host);
+
+				if (!is_null($hello_result))
+				{
+					return $hello_result;
+				}
+			}
 		}
 
 		// If we are not authenticated yet, something might be wrong if no username and passwd passed
@@ -1337,6 +1354,79 @@ class smtp_class
 
 		$method = strtolower(str_replace('-', '_', $method));
 		return $this->$method($username, $password);
+	}
+
+	/**
+	* SMTP EHLO/HELO
+	*
+	* @return mixed		Null if the authentication process is supposed to continue
+	*					False if already authenticated
+	*					Error message (string) otherwise
+	*/
+	protected function hello($hostname)
+	{
+		// Try EHLO first
+		$this->server_send("EHLO $hostname");
+		if ($err_msg = $this->server_parse('250', __LINE__))
+		{
+			// a 503 response code means that we're already authenticated
+			if ($this->numeric_response_code == 503)
+			{
+				return false;
+			}
+
+			// If EHLO fails, we try HELO
+			$this->server_send("HELO $hostname");
+			if ($err_msg = $this->server_parse('250', __LINE__))
+			{
+				return ($this->numeric_response_code == 503) ? false : $err_msg;
+			}
+		}
+
+		foreach ($this->responses as $response)
+		{
+			$response = explode(' ', $response);
+			$response_code = $response[0];
+			unset($response[0]);
+			$this->commands[$response_code] = implode(' ', $response);
+		}
+	}
+
+	/**
+	* SMTP STARTTLS (RFC 3207)
+	*
+	* @return bool		Returns true if TLS was started
+	*					Otherwise false
+	*/
+	protected function starttls()
+	{
+		if (!function_exists('stream_socket_enable_crypto'))
+		{
+			return false;
+		}
+
+		if (!isset($this->commands['STARTTLS']))
+		{
+			return false;
+		}
+
+		$this->server_send('STARTTLS');
+
+		if ($err_msg = $this->server_parse('220', __LINE__))
+		{
+			return false;
+		}
+
+		$result = false;
+		$stream_meta = stream_get_meta_data($this->socket);
+
+		if (socket_set_blocking($this->socket, 1));
+		{
+			$result = stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+			socket_set_blocking($this->socket, (int) $stream_meta['blocked']);
+		}
+
+		return $result;
 	}
 
 	/**

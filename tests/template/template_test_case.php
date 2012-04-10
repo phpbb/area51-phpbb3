@@ -3,17 +3,20 @@
 *
 * @package testing
 * @copyright (c) 2011 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
 require_once dirname(__FILE__) . '/../../phpBB/includes/functions.php';
+require_once dirname(__FILE__) . '/../mock/extension_manager.php';
 
 class phpbb_template_template_test_case extends phpbb_test_case
 {
+	protected $style;
 	protected $template;
 	protected $template_path;
-	protected $template_locator;
+	protected $style_resource_locator;
+	protected $style_provider;
 
 	// Keep the contents of the cache for debugging?
 	const PRESERVE_CACHE = true;
@@ -44,21 +47,28 @@ class phpbb_template_template_test_case extends phpbb_test_case
 		return str_replace("\n\n", "\n", implode("\n", array_map('trim', explode("\n", trim($result)))));
 	}
 
-	protected function setup_engine(array $new_config = array())
+	protected function config_defaults()
 	{
-		global $phpbb_root_path, $phpEx, $user;
-
 		$defaults = array(
 			'load_tplcompile'	=> true,
 			'tpl_allow_php'		=> false,
 		);
+		return $defaults;
+	}
 
+	protected function setup_engine(array $new_config = array())
+	{
+		global $phpbb_root_path, $phpEx, $user;
+
+		$defaults = $this->config_defaults();
 		$config = new phpbb_config(array_merge($defaults, $new_config));
 
 		$this->template_path = dirname(__FILE__) . '/templates';
-		$this->template_locator = new phpbb_template_locator();
-		$this->template = new phpbb_template($phpbb_root_path, $phpEx, $config, $user, $this->template_locator);
-		$this->template->set_custom_template($this->template_path, 'tests');
+		$this->style_resource_locator = new phpbb_style_resource_locator();
+		$this->style_provider = new phpbb_style_path_provider();
+		$this->template = new phpbb_style_template($phpbb_root_path, $phpEx, $config, $user, $this->style_resource_locator, $this->style_provider);
+		$this->style = new phpbb_style($phpbb_root_path, $phpEx, $config, $user, $this->style_resource_locator, $this->style_provider, $this->template);
+		$this->style->set_custom_style('tests', $this->template_path, '');
 	}
 
 	protected function setUp()

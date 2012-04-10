@@ -3,7 +3,7 @@
 *
 * @package testing
 * @copyright (c) 2011 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -16,7 +16,7 @@ class phpbb_template_template_compile_test extends phpbb_test_case
 
 	protected function setUp()
 	{
-		$this->template_compile = new phpbb_template_compile(false);
+		$this->template_compile = new phpbb_style_template_compile(false, null, '');
 		$this->template_path = dirname(__FILE__) . '/templates';
 	}
 

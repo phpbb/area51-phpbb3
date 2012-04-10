@@ -2,9 +2,8 @@
 /**
 *
 * @package VC
-* @version $Id$
 * @copyright (c) 2006, 2008 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -40,7 +39,7 @@ class phpbb_captcha_gd_wave extends phpbb_default_captcha
 		}
 	}
 
-	function get_instance()
+	public static function get_instance()
 	{
 		return new phpbb_captcha_gd_wave();
 	}

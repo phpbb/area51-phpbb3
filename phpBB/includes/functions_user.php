@@ -2,9 +2,8 @@
 /**
 *
 * @package phpBB3
-* @version $Id$
 * @copyright (c) 2005 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -1949,6 +1948,27 @@ function validate_jabber($jid)
 }
 
 /**
+* Verifies whether a style ID corresponds to an active style.
+*
+* @param int $style_id The style_id of a style which should be checked if activated or not.
+* @return boolean
+*/
+function phpbb_style_is_active($style_id)
+{
+	global $db;
+
+	$sql = 'SELECT style_active
+		FROM ' . STYLES_TABLE . '
+		WHERE style_id = '. (int) $style_id;
+	$result = $db->sql_query($sql);
+
+	$style_is_active = (bool) $db->sql_fetchfield('style_active');
+	$db->sql_freeresult($result);
+
+	return $style_is_active;
+}
+
+/**
 * Remove avatar
 */
 function avatar_delete($mode, $row, $clean_db = false)
@@ -2039,7 +2059,7 @@ function avatar_remote($data, &$error)
 	{
 		if ($width > $config['avatar_max_width'] || $height > $config['avatar_max_height'])
 		{
-			$error[] = sprintf($user->lang['AVATAR_WRONG_SIZE'], $config['avatar_min_width'], $config['avatar_min_height'], $config['avatar_max_width'], $config['avatar_max_height'], $width, $height);
+			$error[] = phpbb_avatar_error_wrong_size($width, $height);
 			return false;
 		}
 	}
@@ -2048,7 +2068,7 @@ function avatar_remote($data, &$error)
 	{
 		if ($width < $config['avatar_min_width'] || $height < $config['avatar_min_height'])
 		{
-			$error[] = sprintf($user->lang['AVATAR_WRONG_SIZE'], $config['avatar_min_width'], $config['avatar_min_height'], $config['avatar_max_width'], $config['avatar_max_height'], $width, $height);
+			$error[] = phpbb_avatar_error_wrong_size($width, $height);
 			return false;
 		}
 	}
@@ -2388,7 +2408,7 @@ function avatar_process_user(&$error, $custom_userdata = false, $can_upload = nu
 		{
 			if ($data['width'] > $config['avatar_max_width'] || $data['height'] > $config['avatar_max_height'])
 			{
-				$error[] = sprintf($user->lang['AVATAR_WRONG_SIZE'], $config['avatar_min_width'], $config['avatar_min_height'], $config['avatar_max_width'], $config['avatar_max_height'], $data['width'], $data['height']);
+				$error[] = phpbb_avatar_error_wrong_size($data['width'], $data['height']);
 			}
 		}
 
@@ -2398,7 +2418,7 @@ function avatar_process_user(&$error, $custom_userdata = false, $can_upload = nu
 			{
 				if ($data['width'] < $config['avatar_min_width'] || $data['height'] < $config['avatar_min_height'])
 				{
-					$error[] = sprintf($user->lang['AVATAR_WRONG_SIZE'], $config['avatar_min_width'], $config['avatar_min_height'], $config['avatar_max_width'], $config['avatar_max_height'], $data['width'], $data['height']);
+					$error[] = phpbb_avatar_error_wrong_size($data['width'], $data['height']);
 				}
 			}
 		}
@@ -2442,6 +2462,41 @@ function avatar_process_user(&$error, $custom_userdata = false, $can_upload = nu
 	}
 
 	return (sizeof($error)) ? false : true;
+}
+
+/**
+* Returns a language string with the avatar size of the new avatar and the allowed maximum and minimum
+*
+* @param $width		int		The width of the new uploaded/selected avatar
+* @param $height	int		The height of the new uploaded/selected avatar
+* @return string
+*/
+function phpbb_avatar_error_wrong_size($width, $height)
+{
+	global $config, $user;
+
+	return $user->lang('AVATAR_WRONG_SIZE',
+		$user->lang('PIXELS', (int) $config['avatar_min_width']),
+		$user->lang('PIXELS', (int) $config['avatar_min_height']),
+		$user->lang('PIXELS', (int) $config['avatar_max_width']),
+		$user->lang('PIXELS', (int) $config['avatar_max_height']),
+		$user->lang('PIXELS', (int) $width),
+		$user->lang('PIXELS', (int) $height));
+}
+
+/**
+* Returns an explanation string with maximum avatar settings
+*
+* @return string
+*/
+function phpbb_avatar_explanation_string()
+{
+	global $config, $user;
+
+	return $user->lang('AVATAR_EXPLAIN',
+		$user->lang('PIXELS', (int) $config['avatar_max_width']),
+		$user->lang('PIXELS', (int) $config['avatar_max_height']),
+		round($config['avatar_filesize'] / 1024));
 }
 
 //
@@ -3656,4 +3711,37 @@ function remove_newly_registered($user_id, $user_data = false)
 	}
 
 	return $user_data['group_id'];
+}
+
+/**
+* Gets user ids of currently banned registered users.
+*
+* @param array $user_ids Array of users' ids to check for banning,
+*						leave empty to get complete list of banned ids
+* @return array	Array of banned users' ids if any, empty array otherwise
+*/
+function phpbb_get_banned_user_ids($user_ids = array())
+{
+	global $db;
+
+	$sql_user_ids = (!empty($user_ids)) ? $db->sql_in_set('ban_userid', $user_ids) : 'ban_userid <> 0';
+
+	// Get banned User ID's
+	// Ignore stale bans which were not wiped yet
+	$banned_ids_list = array();
+	$sql = 'SELECT ban_userid
+		FROM ' . BANLIST_TABLE . "
+		WHERE $sql_user_ids
+			AND ban_exclude <> 1
+			AND (ban_end > " . time() . '
+				OR ban_end = 0)';
+	$result = $db->sql_query($sql);
+	while ($row = $db->sql_fetchrow($result))
+	{
+		$user_id = (int) $row['ban_userid'];
+		$banned_ids_list[$user_id] = $user_id;
+	}
+	$db->sql_freeresult($result);
+
+	return $banned_ids_list;
 }

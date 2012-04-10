@@ -4,9 +4,8 @@
 * help_faq [English]
 *
 * @package language
-* @version $Id$
 * @copyright (c) 2005 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -60,7 +59,7 @@ $help = array(
 	),
 	array(
 		0 => 'I registered in the past but cannot login any more?!',
-		1 => 'Attempt to locate the e-mail sent to you when you first registered, check your username and password and try again. It is possible an administrator has deactivated or deleted your account for some reason. Also, many boards periodically remove users who have not posted for a long time to reduce the size of the database. If this has happened, try registering again and being more involved in discussions.'
+		1 => 'It is possible an administrator has deactivated or deleted your account for some reason. Also, many boards periodically remove users who have not posted for a long time to reduce the size of the database. If this has happened, try registering again and being more involved in discussions.'
 	),
 	array(
 		0 => 'What is COPPA?',
@@ -333,7 +332,7 @@ $help = array(
 	),
 	array(
 		0 => 'Why isn’t X feature available?',
-		1 => 'This software was written by and licensed through phpBB Group. If you believe a feature needs to be added, please visit the phpbb.com website and see what phpBB Group have to say. Please do not post feature requests to the board at phpbb.com, the group uses SourceForge to handle tasking of new features. Please read through the forums and see what, if any, our position may already be for a feature and then follow the procedure given there.'
+		1 => 'This software was written by and licensed through phpBB Group. If you believe a feature needs to be added, or you want to report a bug, please visit the phpBB <a href="http://area51.phpbb.com/">Area51</a> website, where you will find resources to do so.'
 	),
 	array(
 		0 => 'Who do I contact about abusive and/or legal matters related to this board?',

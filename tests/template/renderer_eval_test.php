@@ -3,7 +3,7 @@
 *
 * @package testing
 * @copyright (c) 2011 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -13,8 +13,8 @@ class phpbb_template_renderer_eval_test extends phpbb_test_case
 	{
 		$compiled_code = '<a href="<?php echo \'Test\'; ?>">';
 		$valid_code = '<a href="Test">';
-		$context = new phpbb_template_context();
-		$template = new phpbb_template_renderer_eval($compiled_code, NULL);
+		$context = new phpbb_style_template_context();
+		$template = new phpbb_style_template_renderer_eval($compiled_code, NULL);
 		ob_start();
 		try
 		{
