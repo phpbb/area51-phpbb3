@@ -237,7 +237,7 @@ $supported_dbms = array('firebird', 'mssql', 'mysql_40', 'mysql_41', 'oracle', '
 
 foreach ($supported_dbms as $dbms)
 {
-	$fp = fopen($schema_path . $dbms . '_schema.sql', 'wt');
+	$fp = fopen($schema_path . $dbms . '_schema.sql', 'wb');
 
 	$line = '';
 
@@ -397,7 +397,7 @@ foreach ($supported_dbms as $dbms)
 				}
 			}
 
-			// Adjust default value if db-dependant specified
+			// Adjust default value if db-dependent specified
 			if (is_array($column_data[1]))
 			{
 				$column_data[1] = (isset($column_data[1][$dbms])) ? $column_data[1][$dbms] : $column_data[1]['default'];

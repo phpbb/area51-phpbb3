@@ -245,6 +245,7 @@ phpbb.ajaxify = function(options) {
 	var elements = $(options.selector),
 		refresh = options.refresh,
 		callback = options.callback,
+		overlay = (typeof options.overlay !== 'undefined') ? options.overlay : true,
 		is_form = elements.is('form'),
 		event_name = is_form ? 'submit' : 'click';
 
@@ -382,7 +383,10 @@ phpbb.ajaxify = function(options) {
 			return;
 		}
 
-		phpbb.loading_alert();
+		if (overlay)
+		{
+			phpbb.loading_alert();
+		}
 
 		$.ajax({
 			url: action,
@@ -432,14 +436,47 @@ phpbb.add_ajax_callback = function(id, callback)
  * the alt-text data attribute, and replaces the text in the attribute with the
  * current text so that the process can be repeated.
  */
-phpbb.add_ajax_callback('alt_text', function(data) {
+phpbb.add_ajax_callback('alt_text', function() {
 	var el = $(this),
 		alt_text;
 
 	alt_text = el.attr('data-alt-text');
+	el.attr('data-alt-text', el.text());
 	el.attr('title', alt_text);
 	el.text(alt_text);
 });
 
+/**
+ * This callback is based on the alt_text callback.
+ *
+ * It replaces the current text with the text in the alt-text data attribute,
+ * and replaces the text in the attribute with the current text so that the
+ * process can be repeated.
+ * Additionally it replaces the class of the link's parent
+ * and changes the link itself.
+ */
+phpbb.add_ajax_callback('toggle_link', function() {
+	var el = $(this),
+		toggle_text,
+		toggle_url,
+		toggle_class;
+
+	// Toggle link text
+
+	toggle_text = el.attr('data-toggle-text');
+	el.attr('data-toggle-text', el.text());
+	el.attr('title', toggle_text);
+	el.text(toggle_text);
+
+	// Toggle link url
+	toggle_url = el.attr('data-toggle-url');
+	el.attr('data-toggle-url', el.attr('href'));
+	el.attr('href', toggle_url);
+
+	// Toggle class of link parent
+	toggle_class = el.attr('data-toggle-class');
+	el.attr('data-toggle-class', el.parent().attr('class'));
+	el.parent().attr('class', toggle_class);
+});
 
 })(jQuery); // Avoid conflicts with other libraries
