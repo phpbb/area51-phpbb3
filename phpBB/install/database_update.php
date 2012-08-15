@@ -1071,6 +1071,14 @@ function database_update_info()
 		'3.0.10-RC3'	=> array(),
 		// No changes from 3.0.10 to 3.0.11-RC1
 		'3.0.10'		=> array(),
+		// Changes from 3.0.11-RC1 to 3.0.11-RC2
+		'3.0.11-RC1'	=> array(
+			'add_columns'		=> array(
+				PROFILE_FIELDS_TABLE			=> array(
+					'field_show_novalue'		=> array('BOOL', 0),
+				),
+			),
+		),
 
 		/** @todo DROP LOGIN_ATTEMPT_TABLE.attempt_id in 3.0.12-RC1 */
 
@@ -2210,6 +2218,10 @@ function change_database_data(&$no_updates, $version)
 			$no_updates = false;
 		break;
 
+		// No changes from 3.0.11-RC1 to 3.0.11-RC2
+		case '3.0.11-RC1':
+		break;
+
 		// Changes from 3.1.0-dev to 3.1.0-A1
 		case '3.1.0-dev':
 
@@ -2263,6 +2275,16 @@ function change_database_data(&$no_updates, $version)
 			if (!isset($config['fulltext_postgres_max_word_len']))
 			{
 				set_config('fulltext_postgres_max_word_len', 254);
+			}
+
+			if (!isset($config['fulltext_sphinx_stopwords']))
+			{
+				set_config('fulltext_sphinx_stopwords', 0);
+			}
+
+			if (!isset($config['fulltext_sphinx_indexer_mem_limit']))
+			{
+				set_config('fulltext_sphinx_indexer_mem_limit', 512);
 			}
 
 			if (!isset($config['load_jquery_cdn']))

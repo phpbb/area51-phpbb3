@@ -54,7 +54,7 @@ class phpbb_template
 	* PHP file extension
 	* @var string
 	*/
-	private $phpEx;
+	private $php_ext;
 
 	/**
 	* phpBB config instance
@@ -87,10 +87,10 @@ class phpbb_template
 	* @param user $user current user
 	* @param phpbb_template_locator $locator template locator
 	*/
-	public function __construct($phpbb_root_path, $phpEx, $config, $user, phpbb_template_locator $locator)
+	public function __construct($phpbb_root_path, $php_ext, $config, $user, phpbb_template_locator $locator)
 	{
 		$this->phpbb_root_path = $phpbb_root_path;
-		$this->phpEx = $phpEx;
+		$this->php_ext = $php_ext;
 		$this->config = $config;
 		$this->user = $user;
 		$this->locator = $locator;
@@ -139,7 +139,7 @@ class phpbb_template
 	*/
 	public function display($handle)
 	{
-		$result = $this->call_hook($handle);
+		$result = $this->call_hook($handle, __FUNCTION__);
 		if ($result !== false)
 		{
 			return $result[0];
@@ -174,16 +174,17 @@ class phpbb_template
 	* Calls hook if any is defined.
 	*
 	* @param string $handle Template handle being displayed.
+	* @param string $method Method name of the caller.
 	*/
-	private function call_hook($handle)
+	private function call_hook($handle, $method)
 	{
 		global $phpbb_hook;
 
-		if (!empty($phpbb_hook) && $phpbb_hook->call_hook(array(__CLASS__, __FUNCTION__), $handle, $this))
+		if (!empty($phpbb_hook) && $phpbb_hook->call_hook(array(__CLASS__, $method), $handle, $this))
 		{
-			if ($phpbb_hook->hook_return(array(__CLASS__, __FUNCTION__)))
+			if ($phpbb_hook->hook_return(array(__CLASS__, $method)))
 			{
-				$result = $phpbb_hook->hook_return_result(array(__CLASS__, __FUNCTION__));
+				$result = $phpbb_hook->hook_return_result(array(__CLASS__, $method));
 				return array($result);
 			}
 		}
@@ -313,7 +314,7 @@ class phpbb_template
 	private function _compiled_file_for_handle($handle)
 	{
 		$source_file = $this->locator->get_filename_for_handle($handle);
-		$compiled_file = $this->cachepath . str_replace('/', '.', $source_file) . '.' . $this->phpEx;
+		$compiled_file = $this->cachepath . str_replace('/', '.', $source_file) . '.' . $this->php_ext;
 		return $compiled_file;
 	}
 

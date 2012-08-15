@@ -50,7 +50,7 @@ abstract class phpbb_extension_controller implements phpbb_extension_controller_
 	/**
 	* @var string PHP Extension
 	*/
-	protected $phpEx;
+	protected $php_ext;
 
 	/**
 	* @var string Relative path to board root
@@ -71,7 +71,7 @@ abstract class phpbb_extension_controller implements phpbb_extension_controller_
 		$this->user = $user;
 		$this->template = $template;
 		$this->config = $config;
-		$this->phpEx = $phpEx;
+		$this->php_ext = $phpEx;
 		$this->phpbb_root_path = $phpbb_root_path;
 	}
 }
