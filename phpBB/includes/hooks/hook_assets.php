@@ -29,25 +29,14 @@ function rewrite_images(&$object, $key)
 {
 	if (!empty($object[$key]))
 	{
-		if (preg_match_all('#<img src="([^"]+)" [^/]+ />#', $object[$key], $matches))
+		if (preg_match_all('#<img src="(http://[^"]+)" [^/]+ />#', $object[$key], $matches))
 		{
 			foreach ($matches[1] as $url)
 			{
-				// Skip smilies
-				if ($url[0] == '.')
-				{
-					continue;
-				}
-
 				// Don't rewrite requests for .com to camo, just change the protocol
 				if (stripos($url, 'http://www.phpbb.com/') !== false)
 				{
 					$object[$key] = preg_replace('#http:#', 'https:', $object[$key]);
-				}
-				// Nothing cyclical please
-				else if (stripos($url, 'https://camo.phpbb.com/') !== false || stripos($url, 'https://www.phpbb.com/') !== false)
-				{
-					continue;
 				}
 				else
 				{
