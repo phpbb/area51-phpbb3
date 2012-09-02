@@ -193,8 +193,12 @@ if ($forum_data['forum_topics_per_page'])
 // Do the forum Prune thang - cron type job ...
 if (!$config['use_system_cron'])
 {
-	$task = $cron->instantiate_task('cron_task_core_prune_forum', $forum_data);
-	if ($task && $task->is_ready())
+	$cron = $phpbb_container->get('cron.manager');
+
+	$task = $cron->find_task('cron.task.core.prune_forum');
+	$task->set_forum_data($forum_data);
+
+	if ($task->is_ready())
 	{
 		$url = $task->get_url();
 		$template->assign_var('RUN_CRON_TASK', '<img src="' . $url . '" width="1" height="1" alt="cron" />');
@@ -690,7 +694,7 @@ if (sizeof($topic_list))
 		$u_mcp_queue = ($topic_unapproved || $posts_unapproved) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=' . (($topic_unapproved) ? 'approve_details' : 'unapproved_posts') . "&amp;t=$topic_id", true, $user->session_id) : '';
 
 		// Send vars to template
-		$template->assign_block_vars('topicrow', array(
+		$topic_row = array(
 			'FORUM_ID'					=> $row['forum_id'],
 			'TOPIC_ID'					=> $topic_id,
 			'TOPIC_AUTHOR'				=> get_username_string('username', $row['topic_poster'], $row['topic_first_poster_name'], $row['topic_first_poster_colour']),
@@ -742,11 +746,24 @@ if (sizeof($topic_list))
 			'U_MCP_REPORT'			=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=reports&amp;f=' . $row['forum_id'] . '&amp;t=' . $topic_id, true, $user->session_id),
 			'U_MCP_QUEUE'			=> $u_mcp_queue,
 
-			'S_TOPIC_TYPE_SWITCH'	=> ($s_type_switch == $s_type_switch_test) ? -1 : $s_type_switch_test)
+			'S_TOPIC_TYPE_SWITCH'	=> ($s_type_switch == $s_type_switch_test) ? -1 : $s_type_switch_test,
 		);
 
+		/**
+		* Modify the topic data before it is assigned to the template
+		*
+		* @event core.viewforum_modify_topicrow
+		* @var	array	row			Array with topic data
+		* @var	array	topic_row	Template array with topic data
+		* @since 3.1-A1
+		*/
+		$vars = array('row', 'topic_row');
+		extract($phpbb_dispatcher->trigger_event('core.viewforum_modify_topicrow', compact($vars)));
+
+		$template->assign_block_vars('topicrow', $topic_row);
+
 		phpbb_generate_template_pagination($template, $view_topic_url, 'topicrow.pagination', 'start', $replies + 1, $config['posts_per_page'], 1, true, true);
-		
+
 		$s_type_switch = ($row['topic_type'] == POST_ANNOUNCE || $row['topic_type'] == POST_GLOBAL) ? 1 : 0;
 
 		if ($unread_topic)

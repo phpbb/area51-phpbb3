@@ -683,12 +683,12 @@ function _write_result($no_updates, $errored, $error_ary)
 
 function _add_modules($modules_to_install)
 {
-	global $phpbb_root_path, $phpEx, $db, $phpbb_extension_manager;
+	global $phpbb_root_path, $phpEx, $db, $phpbb_extension_manager, $config;
 
 	// modules require an extension manager
 	if (empty($phpbb_extension_manager))
 	{
-		$phpbb_extension_manager = new phpbb_extension_manager($db, EXT_TABLE, $phpbb_root_path, ".$phpEx");
+		$phpbb_extension_manager = new phpbb_extension_manager($db, $config, EXT_TABLE, $phpbb_root_path, ".$phpEx");
 	}
 
 	include_once($phpbb_root_path . 'includes/acp/acp_modules.' . $phpEx);
@@ -1079,6 +1079,8 @@ function database_update_info()
 				),
 			),
 		),
+		// No changes from 3.0.11-RC2 to 3.0.11
+		'3.0.11-RC2'	=> array(),
 
 		/** @todo DROP LOGIN_ATTEMPT_TABLE.attempt_id in 3.0.12-RC1 */
 
@@ -2220,6 +2222,10 @@ function change_database_data(&$no_updates, $version)
 
 		// No changes from 3.0.11-RC1 to 3.0.11-RC2
 		case '3.0.11-RC1':
+		break;
+
+		// No changes from 3.0.11-RC2 to 3.0.11
+		case '3.0.11-RC2':
 		break;
 
 		// Changes from 3.1.0-dev to 3.1.0-A1
