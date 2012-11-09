@@ -58,13 +58,16 @@ function rewrite_images(&$object, $key)
 function assets_template_hook(&$hook, $handle, $template)
 {
 	global $request;
+	global $phpbb_container;
+
 	if (!$request->is_secure())
 	{
 		return;
 	}
 
-	$rootref = &$template->context->get_root_ref();
-	$tpldata = &$template->context->get_data_ref();
+	$context = $phpbb_container->get('template_context');
+	$rootref = &$context->get_root_ref();
+	$tpldata = &$context->get_data_ref();
 
 	//Viewtopic
 	if (isset($tpldata['postrow']))
@@ -76,7 +79,7 @@ function assets_template_hook(&$hook, $handle, $template)
 			rewrite_images($postrow, 'POSTER_AVATAR');
 		}
 	}
-	
+
 	rewrite_images($rootref, 'AVATAR');				//UCP - Profile - Avatar
 	rewrite_images($rootref, 'SIGNATURE_PREVIEW');	//UCP - Profile - Signature
 	rewrite_images($rootref, 'PREVIEW_MESSAGE');	//UCP - PM - Compose - Message
