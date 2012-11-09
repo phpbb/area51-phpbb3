@@ -7,6 +7,10 @@
 *
 */
 
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+
 define('UPDATES_TO_VERSION', '3.1.0-dev');
 
 // Enter any version to update from to test updates. The version within the db will not be updated.
@@ -59,8 +63,6 @@ $updates_to_version = UPDATES_TO_VERSION;
 $debug_from_version = DEBUG_FROM_VERSION;
 $oldest_from_version = OLDEST_FROM_VERSION;
 
-error_reporting(E_ALL);
-
 @set_time_limit(0);
 
 // Include essential scripts
@@ -107,21 +109,37 @@ if (!defined('EXT_TABLE'))
 	define('EXT_TABLE', $table_prefix . 'ext');
 }
 
-$phpbb_class_loader_ext = new phpbb_class_loader('phpbb_ext_', $phpbb_root_path . 'ext/', ".$phpEx");
-$phpbb_class_loader_ext->register();
-$phpbb_class_loader = new phpbb_class_loader('phpbb_', $phpbb_root_path . 'includes/', ".$phpEx");
-$phpbb_class_loader->register();
+$phpbb_container = new ContainerBuilder();
+$loader = new YamlFileLoader($phpbb_container, new FileLocator(__DIR__.'/../config'));
+$loader->load('services.yml');
+
+// We must include the DI processor class files because the class loader
+// is not yet set up
+require($phpbb_root_path . 'includes/di/processor/interface.' . $phpEx);
+require($phpbb_root_path . 'includes/di/processor/config.' . $phpEx);
+$processor = new phpbb_di_processor_config($phpbb_root_path . 'config.' . $phpEx, $phpbb_root_path, $phpEx);
+$processor->process($phpbb_container);
+
+// Setup class loader first
+$phpbb_class_loader = $phpbb_container->get('class_loader');
+$phpbb_class_loader_ext = $phpbb_container->get('class_loader.ext');
 
 // set up caching
-$cache_factory = new phpbb_cache_factory($acm_type);
-$cache = $cache_factory->get_service();
-$phpbb_class_loader_ext->set_cache($cache->get_driver());
-$phpbb_class_loader->set_cache($cache->get_driver());
+$cache = $phpbb_container->get('cache');
 
-$phpbb_dispatcher = new phpbb_event_dispatcher();
-$request = new phpbb_request();
-$user = new phpbb_user();
-$db = new $sql_db();
+// Instantiate some basic classes
+$phpbb_dispatcher = $phpbb_container->get('dispatcher');
+$request	= $phpbb_container->get('request');
+$user		= $phpbb_container->get('user');
+$auth		= $phpbb_container->get('auth');
+$db			= $phpbb_container->get('dbal.conn');
+
+$ids = array_keys($phpbb_container->findTaggedServiceIds('container.processor'));
+foreach ($ids as $id)
+{
+	$processor = $phpbb_container->get($id);
+	$processor->process($phpbb_container);
+}
 
 // make sure request_var uses this request instance
 request_var('', 0, false, false, $request); // "dependency injection" for a function
@@ -597,7 +615,7 @@ function _print_footer()
 	</div>
 
 	<div id="page-footer">
-		Powered by <a href="http://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Group
+		Powered by <a href="https://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Group
 	</div>
 </div>
 
@@ -1081,6 +1099,8 @@ function database_update_info()
 		),
 		// No changes from 3.0.11-RC2 to 3.0.11
 		'3.0.11-RC2'	=> array(),
+		// No changes from 3.0.11 to 3.0.12-RC1
+		'3.0.11'		=> array(),
 
 		/** @todo DROP LOGIN_ATTEMPT_TABLE.attempt_id in 3.0.12-RC1 */
 
@@ -1112,7 +1132,9 @@ function database_update_info()
 					'style_parent_tree'		=> array('TEXT', ''),
 				),
 				REPORTS_TABLE		=> array(
-					'reported_post_text'	=> array('MTEXT_UNI', ''),
+					'reported_post_text'		=> array('MTEXT_UNI', ''),
+					'reported_post_uid'			=> array('VCHAR:8', ''),
+					'reported_post_bitfield'	=> array('VCHAR:255', ''),
 				),
 			),
 			'change_columns'	=> array(
@@ -2228,6 +2250,71 @@ function change_database_data(&$no_updates, $version)
 		case '3.0.11-RC2':
 		break;
 
+		// Changes from 3.0.11 to 3.0.12-RC1
+		case '3.0.11':
+			$sql = 'UPDATE ' . MODULES_TABLE . '
+				SET module_auth = \'acl_u_sig\'
+				WHERE module_class = \'ucp\'
+					AND module_basename = \'profile\'
+					AND module_mode = \'signature\'';
+			_sql($sql, $errored, $error_ary);
+
+			// Update bots
+			if (!function_exists('user_delete'))
+			{
+				include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			}
+
+			$bots_updates = array(
+				// Bot Deletions
+				'NG-Search [Bot]'		=> false,
+				'Nutch/CVS [Bot]'		=> false,
+				'OmniExplorer [Bot]'	=> false,
+				'Seekport [Bot]'		=> false,
+				'Synoo [Bot]'			=> false,
+				'WiseNut [Bot]'			=> false,
+
+				// Bot Updates
+				// Bot name to bot user agent map
+				'Baidu [Spider]'	=> 'Baiduspider',
+				'Exabot [Bot]'		=> 'Exabot',
+				'Voyager [Bot]'		=> 'voyager/',
+				'W3C [Validator]'	=> 'W3C_Validator',
+			);
+
+			foreach ($bots_updates as $bot_name => $bot_agent)
+			{
+				$sql = 'SELECT user_id
+					FROM ' . USERS_TABLE . '
+					WHERE user_type = ' . USER_IGNORE . "
+						AND username_clean = '" . $db->sql_escape(utf8_clean_string($bot_name)) . "'";
+				$result = $db->sql_query($sql);
+				$bot_user_id = (int) $db->sql_fetchfield('user_id');
+				$db->sql_freeresult($result);
+
+				if ($bot_user_id)
+				{
+					if ($bot_agent === false)
+					{
+						$sql = 'DELETE FROM ' . BOTS_TABLE . "
+							WHERE user_id = $bot_user_id";
+						_sql($sql, $errored, $error_ary);
+
+						user_delete('remove', $bot_user_id);
+					}
+					else
+					{
+						$sql = 'UPDATE ' . BOTS_TABLE . "
+							SET bot_agent = '" .  $db->sql_escape($bot_agent) . "'
+							WHERE user_id = $bot_user_id";
+						_sql($sql, $errored, $error_ary);
+					}
+				}
+			}
+
+			$no_updates = false;
+		break;
+
 		// Changes from 3.1.0-dev to 3.1.0-A1
 		case '3.1.0-dev':
 
@@ -2664,6 +2751,12 @@ function change_database_data(&$no_updates, $version)
 
 				// After we have calculated the timezones we can delete user_dst column from user table.
 				$db_tools->sql_column_remove(USERS_TABLE, 'user_dst');
+			}
+			
+			if (!isset($config['site_home_url']))
+			{
+				$config->set('site_home_url', '');
+				$config->set('site_home_text', '');
 			}
 
 		break;

@@ -213,7 +213,7 @@ $config = new phpbb_config(array(
 
 $phpbb_style_resource_locator = new phpbb_style_resource_locator();
 $phpbb_style_path_provider = new phpbb_style_path_provider();
-$template = new phpbb_template($phpbb_root_path, $phpEx, $config, $user, $phpbb_style_resource_locator);
+$template = new phpbb_template($phpbb_root_path, $phpEx, $config, $user, $phpbb_style_resource_locator, new phpbb_template_context());
 $phpbb_style = new phpbb_style($phpbb_root_path, $phpEx, $config, $user, $phpbb_style_resource_locator, $phpbb_style_path_provider, $template);
 $phpbb_style->set_ext_dir_prefix('adm/');
 $phpbb_style->set_custom_style('admin', '../adm/style', '');
@@ -594,7 +594,7 @@ class module
 		echo '		</div>';
 		echo '	</div>';
 		echo '	<div id="page-footer">';
-		echo '		Powered by <a href="http://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Group';
+		echo '		Powered by <a href="https://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Group';
 		echo '	</div>';
 		echo '</div>';
 		echo '</body>';
