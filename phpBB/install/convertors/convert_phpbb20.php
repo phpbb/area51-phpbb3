@@ -24,6 +24,8 @@ if (!defined('IN_PHPBB'))
 include($phpbb_root_path . 'config.' . $phpEx);
 unset($dbpasswd);
 
+$dbms = phpbb_convert_30_dbms_to_31($dbms);
+
 /**
 * $convertor_data provides some basic information about this convertor which is
 * used on the initial list of convertors and to populate the default settings
@@ -894,7 +896,6 @@ if (!$get_info)
 				array('user_occ',				'users.user_occ',					array('function1' => 'phpbb_set_encoding')),
 				array('user_website',			'users.user_website',				'validate_website'),
 				array('user_jabber',			'',									''),
-				array('user_msnm',				'users.user_msnm',					array('function1' => 'phpbb_set_encoding')),
 				array('user_yim',				'users.user_yim',					array('function1' => 'phpbb_set_encoding')),
 				array('user_aim',				'users.user_aim',					array('function1' => 'phpbb_set_encoding')),
 				array('user_icq',				'users.user_icq',					array('function1' => 'phpbb_set_encoding')),
