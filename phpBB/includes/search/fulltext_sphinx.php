@@ -258,13 +258,13 @@ class phpbb_search_fulltext_sphinx
 		$config_object = new phpbb_search_sphinx_config($this->config_file_data);
 		$config_data = array(
 			'source source_phpbb_' . $this->id . '_main' => array(
-				array('type',						$this->dbtype),
+				array('type',						$this->dbtype . ' # mysql or pgsql'),
 				// This config value sql_host needs to be changed incase sphinx and sql are on different servers
-				array('sql_host',					$dbhost),
+				array('sql_host',					$dbhost . ' # SQL server host sphinx connects to'),
 				array('sql_user',					$dbuser),
 				array('sql_pass',					$dbpasswd),
 				array('sql_db',						$dbname),
-				array('sql_port',					$dbport),
+				array('sql_port',					$dbport . ' # optional, default is 3306 for mysql and 5432 for pgsql'),
 				array('sql_query_pre',				'SET NAMES \'utf8\''),
 				array('sql_query_pre',				'UPDATE ' . SPHINX_TABLE . ' SET max_doc_id = (SELECT MAX(post_id) FROM ' . POSTS_TABLE . ') WHERE counter_id = 1'),
 				array('sql_query_range',			'SELECT MIN(post_id), MAX(post_id) FROM ' . POSTS_TABLE . ''),
@@ -274,6 +274,7 @@ class phpbb_search_fulltext_sphinx
 						p.forum_id,
 						p.topic_id,
 						p.poster_id,
+						p.post_visibility,
 						CASE WHEN p.post_id = t.topic_first_post_id THEN 1 ELSE 0 END as topic_first_post,
 						p.post_time,
 						p.post_subject,
@@ -291,6 +292,7 @@ class phpbb_search_fulltext_sphinx
 				array('sql_attr_uint',				'forum_id'),
 				array('sql_attr_uint',				'topic_id'),
 				array('sql_attr_uint',				'poster_id'),
+				array('sql_attr_uint',				'post_visibility'),
 				array('sql_attr_bool',				'topic_first_post'),
 				array('sql_attr_bool',				'deleted'),
 				array('sql_attr_timestamp'	,		'post_time'),
@@ -306,6 +308,7 @@ class phpbb_search_fulltext_sphinx
 						p.forum_id,
 						p.topic_id,
 						p.poster_id,
+						p.post_visibility,
 						CASE WHEN p.post_id = t.topic_first_post_id THEN 1 ELSE 0 END as topic_first_post,
 						p.post_time,
 						p.post_subject,
@@ -445,7 +448,7 @@ class phpbb_search_fulltext_sphinx
 	* @param	string		$sort_dir			is either a or d representing ASC and DESC
 	* @param	string		$sort_days			specifies the maximum amount of days a post may be old
 	* @param	array		$ex_fid_ary			specifies an array of forum ids which should not be searched
-	* @param	array		$m_approve_fid_ary	specifies an array of forum ids in which the searcher is allowed to view unapproved posts
+	* @param	string		$post_visibility	specifies which types of posts the user can view in which forums
 	* @param	int			$topic_id			is set to 0 or a topic id, if it is not 0 then only posts in this topic should be searched
 	* @param	array		$author_ary			an array of author ids if the author should be ignored during the search the array is empty
 	* @param	string		$author_name		specifies the author match, when ANONYMOUS is also a search-match
@@ -454,7 +457,7 @@ class phpbb_search_fulltext_sphinx
 	* @param	int			$per_page			number of ids each page is supposed to contain
 	* @return	boolean|int						total number of results
 	*/
-	public function keyword_search($type, $fields, $terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $m_approve_fid_ary, $topic_id, $author_ary, $author_name, &$id_ary, &$start, $per_page)
+	public function keyword_search($type, $fields, $terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $post_visibility, $topic_id, $author_ary, $author_name, &$id_ary, &$start, $per_page)
 	{
 		// No keywords? No posts.
 		if (!strlen($this->search_query) && !sizeof($author_ary))
@@ -569,6 +572,11 @@ class phpbb_search_fulltext_sphinx
 			$this->sphinx->SetFilter('poster_id', $author_ary);
 		}
 
+		// As this is not simply possible at the moment, we limit the result to approved posts.
+		// This will make it impossible for moderators to search unapproved and softdeleted posts,
+		// but at least it will also cause the same for normal users.
+		$this->sphinx->SetFilter('post_visibility', array(ITEM_APPROVED));
+
 		if (sizeof($ex_fid_ary))
 		{
 			// All forums that a user is allowed to access
@@ -611,7 +619,7 @@ class phpbb_search_fulltext_sphinx
 
 		$result_count = $result['total_found'];
 
-		if ($start >= $result_count)
+		if ($result_count && $start >= $result_count)
 		{
 			$start = floor(($result_count - 1) / $per_page) * $per_page;
 
@@ -663,7 +671,7 @@ class phpbb_search_fulltext_sphinx
 	* @param	string		$sort_dir			is either a or d representing ASC and DESC
 	* @param	string		$sort_days			specifies the maximum amount of days a post may be old
 	* @param	array		$ex_fid_ary			specifies an array of forum ids which should not be searched
-	* @param	array		$m_approve_fid_ary	specifies an array of forum ids in which the searcher is allowed to view unapproved posts
+	* @param	string		$post_visibility	specifies which types of posts the user can view in which forums
 	* @param	int			$topic_id			is set to 0 or a topic id, if it is not 0 then only posts in this topic should be searched
 	* @param	array		$author_ary			an array of author ids
 	* @param	string		$author_name		specifies the author match, when ANONYMOUS is also a search-match
@@ -672,14 +680,14 @@ class phpbb_search_fulltext_sphinx
 	* @param	int			$per_page			number of ids each page is supposed to contain
 	* @return	boolean|int						total number of results
 	*/
-	public function author_search($type, $firstpost_only, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $m_approve_fid_ary, $topic_id, $author_ary, $author_name, &$id_ary, $start, $per_page)
+	public function author_search($type, $firstpost_only, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $post_visibility, $topic_id, $author_ary, $author_name, &$id_ary, $start, $per_page)
 	{
 		$this->search_query = '';
 
 		$this->sphinx->SetMatchMode(SPH_MATCH_FULLSCAN);
 		$fields = ($firstpost_only) ? 'firstpost' : 'all';
 		$terms = 'all';
-		return $this->keyword_search($type, $fields, $terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $m_approve_fid_ary, $topic_id, $author_ary, $author_name, $id_ary, $start, $per_page);
+		return $this->keyword_search($type, $fields, $terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $post_visibility, $topic_id, $author_ary, $author_name, $id_ary, $start, $per_page);
 	}
 
 	/**
@@ -888,11 +896,11 @@ class phpbb_search_fulltext_sphinx
 		</dl>
 		<dl>
 			<dt><label for="fulltext_sphinx_port">' . $this->user->lang['FULLTEXT_SPHINX_PORT'] . $this->user->lang['COLON'] . '</label><br /><span>' . $this->user->lang['FULLTEXT_SPHINX_PORT_EXPLAIN'] . '</span></dt>
-			<dd><input id="fulltext_sphinx_port" type="text" size="4" maxlength="10" name="config[fulltext_sphinx_port]" value="' . $this->config['fulltext_sphinx_port'] . '" /></dd>
+			<dd><input id="fulltext_sphinx_port" type="number" size="4" maxlength="10" name="config[fulltext_sphinx_port]" value="' . $this->config['fulltext_sphinx_port'] . '" /></dd>
 		</dl>
 		<dl>
 			<dt><label for="fulltext_sphinx_indexer_mem_limit">' . $this->user->lang['FULLTEXT_SPHINX_INDEXER_MEM_LIMIT'] . $this->user->lang['COLON'] . '</label><br /><span>' . $this->user->lang['FULLTEXT_SPHINX_INDEXER_MEM_LIMIT_EXPLAIN'] . '</span></dt>
-			<dd><input id="fulltext_sphinx_indexer_mem_limit" type="text" size="4" maxlength="10" name="config[fulltext_sphinx_indexer_mem_limit]" value="' . $this->config['fulltext_sphinx_indexer_mem_limit'] . '" /> ' . $this->user->lang['MIB'] . '</dd>
+			<dd><input id="fulltext_sphinx_indexer_mem_limit" type="number" size="4" maxlength="10" name="config[fulltext_sphinx_indexer_mem_limit]" value="' . $this->config['fulltext_sphinx_indexer_mem_limit'] . '" /> ' . $this->user->lang['MIB'] . '</dd>
 		</dl>
 		<dl>
 			<dt><label for="fulltext_sphinx_config_file">' . $this->user->lang['FULLTEXT_SPHINX_CONFIG_FILE'] . $this->user->lang['COLON'] . '</label><br /><span>' . $this->user->lang['FULLTEXT_SPHINX_CONFIG_FILE_EXPLAIN'] . '</span></dt>

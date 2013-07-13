@@ -4,6 +4,8 @@ imports:
     - { resource: notifications.yml }
     - { resource: migrator.yml }
     - { resource: avatars.yml }
+    - { resource: feed.yml }
+    - { resource: auth_providers.yml }
 
 services:
     auth:
@@ -36,7 +38,7 @@ services:
         arguments:
             - phpbb_
             - %core.root_path%includes/
-            - .%core.php_ext%
+            - %core.php_ext%
         calls:
             - [register, []]
             - [set_cache, [@cache.driver]]
@@ -46,7 +48,7 @@ services:
         arguments:
             - phpbb_ext_
             - %core.root_path%ext/
-            - .%core.php_ext%
+            - %core.php_ext%
         calls:
             - [register, []]
             - [set_cache, [@cache.driver]]
@@ -64,20 +66,33 @@ services:
             - @dbal.conn
             - %tables.config_text%
 
+    content.visibility:
+        class: phpbb_content_visibility
+        arguments:
+            - @auth
+            - @dbal.conn
+            - @user
+            - %core.root_path%
+            - %core.php_ext%
+            - %tables.forums%
+            - %tables.posts%
+            - %tables.topics%
+            - %tables.users%
+
     controller.helper:
         class: phpbb_controller_helper
         arguments:
             - @template
             - @user
             - %core.root_path%
-            - .%core.php_ext%
+            - %core.php_ext%
 
     controller.resolver:
         class: phpbb_controller_resolver
         arguments:
             - @user
             - @service_container
-            - @ext.finder
+            - @style
 
     cron.task_collection:
         class: phpbb_di_service_collection
@@ -130,20 +145,24 @@ services:
             - @service_container
             - @dbal.conn
             - @config
-            - @migrator
+            - @filesystem
             - %tables.ext%
             - %core.root_path%
-            - .%core.php_ext%
+            - %core.php_ext%
             - @cache.driver
 
     ext.finder:
         class: phpbb_extension_finder
         arguments:
             - @ext.manager
+            - @filesystem
             - %core.root_path%
             - @cache.driver
-            - .%core.php_ext%
+            - %core.php_ext%
             - _ext_finder
+
+    filesystem:
+        class: phpbb_filesystem
 
     groupposition.legend:
         class: phpbb_groupposition_legend
@@ -168,7 +187,7 @@ services:
         class: phpbb_hook_finder
         arguments:
             - %core.root_path%
-            - .%core.php_ext%
+            - %core.php_ext%
             - @cache.driver
 
     kernel_request_subscriber:
@@ -176,7 +195,7 @@ services:
         arguments:
             - @ext.finder
             - %core.root_path%
-            - .%core.php_ext%
+            - %core.php_ext%
         tags:
             - { name: kernel.event_subscriber }
 
@@ -213,6 +232,7 @@ services:
             - @service_container
             - @user_loader
             - @dbal.conn
+            - @cache
             - @user
             - %core.root_path%
             - %core.php_ext%
@@ -242,20 +262,21 @@ services:
         arguments:
             - @ext.manager
             - @style.path_provider
+            - %core.root_path%
 
     style.path_provider:
         class: phpbb_style_path_provider
 
     template:
-        class: phpbb_template
+        class: phpbb_template_twig
         arguments:
             - %core.root_path%
             - %core.php_ext%
             - @config
             - @user
-            - @style.resource_locator
             - @template_context
             - @ext.manager
+            - %core.adm_relative_path%
 
     template_context:
         class: phpbb_template_context
