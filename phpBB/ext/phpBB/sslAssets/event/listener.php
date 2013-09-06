@@ -78,28 +78,28 @@ class phpbb_ext_phpBB_sslAssets_event_listener implements EventSubscriberInterfa
 		{
 			foreach ($tpldata['postrow'] as $index => &$postrow)
 			{
-				rewrite_images($postrow, 'MESSAGE');
-				rewrite_images($postrow, 'SIGNATURE');
-				rewrite_images($postrow, 'POSTER_AVATAR');
+				$this->rewrite_images($postrow, 'MESSAGE');
+				$this->rewrite_images($postrow, 'SIGNATURE');
+				$this->rewrite_images($postrow, 'POSTER_AVATAR');
 			}
 		}
 
-		rewrite_images($rootref, 'AVATAR');				//UCP - Profile - Avatar
-		rewrite_images($rootref, 'SIGNATURE_PREVIEW');	//UCP - Profile - Signature
-		rewrite_images($rootref, 'PREVIEW_MESSAGE');	//UCP - PM - Compose - Message
-		rewrite_images($rootref, 'PREVIEW_SIGNATURE');	//UCP - PM - Compose - Signature
-		rewrite_images($rootref, 'AUTHOR_AVATAR');		//UCP - PM - View - Author avatar
-		rewrite_images($rootref, 'MESSAGE');			//UCP - PM - View - Author message
-		rewrite_images($rootref, 'SIGNATURE');			//UCP - PM - View - Author signature, Memberlist - Profile - Signature
-		rewrite_images($rootref, 'POST_PREVIEW');		//MCP - Reported post
-		rewrite_images($rootref, 'AVATAR_IMG');			//Memberlist - Profile - Avatar
+		$this->rewrite_images($rootref, 'AVATAR');				//UCP - Profile - Avatar
+		$this->rewrite_images($rootref, 'SIGNATURE_PREVIEW');	//UCP - Profile - Signature
+		$this->rewrite_images($rootref, 'PREVIEW_MESSAGE');	//UCP - PM - Compose - Message
+		$this->rewrite_images($rootref, 'PREVIEW_SIGNATURE');	//UCP - PM - Compose - Signature
+		$this->rewrite_images($rootref, 'AUTHOR_AVATAR');		//UCP - PM - View - Author avatar
+		$this->rewrite_images($rootref, 'MESSAGE');			//UCP - PM - View - Author message
+		$this->rewrite_images($rootref, 'SIGNATURE');			//UCP - PM - View - Author signature, Memberlist - Profile - Signature
+		$this->rewrite_images($rootref, 'POST_PREVIEW');		//MCP - Reported post
+		$this->rewrite_images($rootref, 'AVATAR_IMG');			//Memberlist - Profile - Avatar
 
 		//UCP - PM - Message history, MCP - Reported Post - Topic Review
 		if (isset($tpldata['topic_review_row']))
 		{
 			foreach ($tpldata['topic_review_row'] as $index => &$topic_review_row)
 			{
-				rewrite_images($topic_review_row, 'MESSAGE');
+				$this->rewrite_images($topic_review_row, 'MESSAGE');
 			}
 		}
 
@@ -108,7 +108,7 @@ class phpbb_ext_phpBB_sslAssets_event_listener implements EventSubscriberInterfa
 		{
 			foreach ($tpldata['history_row'] as $index => &$history_row)
 			{
-				rewrite_images($history_row, 'MESSAGE');
+				$this->rewrite_images($history_row, 'MESSAGE');
 			}
 		}
 
@@ -117,7 +117,7 @@ class phpbb_ext_phpBB_sslAssets_event_listener implements EventSubscriberInterfa
 		{
 			foreach ($tpldata['searchresults'] as $index => &$search_results)
 			{
-				rewrite_images($search_results, 'MESSAGE');
+				$this->rewrite_images($search_results, 'MESSAGE');
 			}
 		}
 	}
