@@ -7,6 +7,8 @@
 *
 */
 
+namespace phpbb\di\extension;
+
 /**
 * @ignore
 */
@@ -23,22 +25,22 @@ use Symfony\Component\Config\FileLocator;
 /**
 * Container core extension
 */
-class phpbb_di_extension_core extends Extension
+class core extends Extension
 {
 	/**
-	* phpBB Root path
+	* Config path
 	* @var string
 	*/
-	protected $root_path;
+	protected $config_path;
 
 	/**
 	* Constructor
 	*
-	* @param string $root_path Root path
+	* @param string $config_path Config path
 	*/
-	public function __construct($root_path)
+	public function __construct($config_path)
 	{
-		$this->root_path = $root_path;
+		$this->config_path = $config_path;
 	}
 
 	/**
@@ -51,7 +53,7 @@ class phpbb_di_extension_core extends Extension
 	*/
 	public function load(array $config, ContainerBuilder $container)
 	{
-		$loader = new YamlFileLoader($container, new FileLocator(phpbb_realpath($this->root_path . 'config')));
+		$loader = new YamlFileLoader($container, new FileLocator(phpbb_realpath($this->config_path)));
 		$loader->load('services.yml');
 	}
 

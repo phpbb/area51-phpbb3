@@ -206,17 +206,8 @@ class mcp_queue
 				$post_unread = (isset($topic_tracking_info[$post_info['topic_id']]) && $post_info['post_time'] > $topic_tracking_info[$post_info['topic_id']]) ? true : false;
 
 				// Process message, leave it uncensored
-				$message = $post_info['post_text'];
-
-				if ($post_info['bbcode_bitfield'])
-				{
-					include_once($phpbb_root_path . 'includes/bbcode.' . $phpEx);
-					$bbcode = new bbcode($post_info['bbcode_bitfield']);
-					$bbcode->bbcode_second_pass($message, $post_info['bbcode_uid'], $post_info['bbcode_bitfield']);
-				}
-
-				$message = bbcode_nl2br($message);
-				$message = smiley_text($message);
+				$parse_flags = ($post_info['bbcode_bitfield'] ? OPTION_FLAG_BBCODE : 0) | OPTION_FLAG_SMILIES;
+				$message = generate_text_for_display($post_info['post_text'], $post_info['bbcode_uid'], $post_info['bbcode_bitfield'], $parse_flags, false);
 
 				if ($post_info['post_attachment'] && $auth->acl_get('u_download') && $auth->acl_get('f_download', $post_info['forum_id']))
 				{
@@ -738,7 +729,7 @@ class mcp_queue
 
 			if ($request->is_ajax())
 			{
-				$json_response = new phpbb_json_response;
+				$json_response = new \phpbb\json_response;
 				$json_response->send(array(
 					'MESSAGE_TITLE'		=> $user->lang['INFORMATION'],
 					'MESSAGE_TEXT'		=> $message,
@@ -886,7 +877,7 @@ class mcp_queue
 
 			if ($request->is_ajax())
 			{
-				$json_response = new phpbb_json_response;
+				$json_response = new \phpbb\json_response;
 				$json_response->send(array(
 					'MESSAGE_TITLE'		=> $user->lang['INFORMATION'],
 					'MESSAGE_TEXT'		=> $message,
@@ -946,9 +937,9 @@ class mcp_queue
 			{
 				$additional_msg = $user->lang['NO_REASON_DISAPPROVAL'];
 
-				$request->overwrite('confirm', null, phpbb_request_interface::POST);
-				$request->overwrite('confirm_key', null, phpbb_request_interface::POST);
-				$request->overwrite('confirm_key', null, phpbb_request_interface::REQUEST);
+				$request->overwrite('confirm', null, \phpbb\request\request_interface::POST);
+				$request->overwrite('confirm_key', null, \phpbb\request\request_interface::POST);
+				$request->overwrite('confirm_key', null, \phpbb\request\request_interface::REQUEST);
 			}
 			else
 			{
@@ -1221,7 +1212,7 @@ class mcp_queue
 
 			if ($request->is_ajax())
 			{
-				$json_response = new phpbb_json_response;
+				$json_response = new \phpbb\json_response;
 				$json_response->send(array(
 					'MESSAGE_TITLE'		=> $user->lang['INFORMATION'],
 					'MESSAGE_TEXT'		=> $message,

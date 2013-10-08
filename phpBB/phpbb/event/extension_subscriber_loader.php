@@ -7,6 +7,8 @@
 *
 */
 
+namespace phpbb\event;
+
 /**
 * @ignore
 */
@@ -17,12 +19,12 @@ if (!defined('IN_PHPBB'))
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-class phpbb_event_extension_subscriber_loader
+class extension_subscriber_loader
 {
 	private $dispatcher;
 	private $extension_manager;
 
-	public function __construct(EventDispatcherInterface $dispatcher, phpbb_extension_manager $extension_manager)
+	public function __construct(EventDispatcherInterface $dispatcher, \phpbb\extension\manager $extension_manager)
 	{
 		$this->dispatcher = $dispatcher;
 		$this->extension_manager = $extension_manager;
@@ -33,7 +35,6 @@ class phpbb_event_extension_subscriber_loader
 		$finder = $this->extension_manager->get_finder();
 		$subscriber_classes = $finder
 			->extension_directory('/event')
-			->suffix('listener')
 			->core_path('event/')
 			->get_classes();
 
