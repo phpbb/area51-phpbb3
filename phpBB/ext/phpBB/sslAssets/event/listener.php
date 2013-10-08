@@ -7,6 +7,8 @@
 *
 */
 
+namespace phpBB\sslAssets\event;
+
 /**
 * @ignore
 */
@@ -20,7 +22,7 @@ define('ASSETS_DOMAIN', 'camo.phpbb.com');
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class phpbb_ext_phpBB_sslAssets_event_listener implements EventSubscriberInterface
+class listener implements EventSubscriberInterface
 {
     static public function getSubscribedEvents()
     {
