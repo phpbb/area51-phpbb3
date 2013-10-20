@@ -222,6 +222,7 @@ INSERT INTO phpbb_config (config_name, config_value) VALUES ('new_member_post_li
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('new_member_group_default', '0');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('override_user_style', '0');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('pass_complex', 'PASS_TYPE_ANY');
+INSERT INTO phpbb_config (config_name, config_value) VALUES ('plupload_salt', 'phpbb_plupload');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('pm_edit_time', '0');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('pm_max_boxes', '4');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('pm_max_msgs', '50');
@@ -230,6 +231,9 @@ INSERT INTO phpbb_config (config_name, config_value) VALUES ('posts_per_page', '
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('print_pm', '1');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('queue_interval', '60');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('ranks_path', 'images/ranks');
+INSERT INTO phpbb_config (config_name, config_value) VALUES ('read_notification_expire_days', '30');
+INSERT INTO phpbb_config (config_name, config_value) VALUES ('read_notification_last_gc', '0');
+INSERT INTO phpbb_config (config_name, config_value) VALUES ('read_notification_gc', '86400');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('require_activation', '0');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('referer_validation', '1');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('script_path', '');
@@ -266,7 +270,7 @@ INSERT INTO phpbb_config (config_name, config_value) VALUES ('tpl_allow_php', '0
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('upload_icons_path', 'images/upload_icons');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('upload_path', 'files');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('use_system_cron', '0');
-INSERT INTO phpbb_config (config_name, config_value) VALUES ('version', '3.1.0-dev');
+INSERT INTO phpbb_config (config_name, config_value) VALUES ('version', '3.1.0-a2-dev');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('warnings_expire_days', '90');
 INSERT INTO phpbb_config (config_name, config_value) VALUES ('warnings_gc', '14400');
 
@@ -281,6 +285,7 @@ INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('num_fi
 INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('num_posts', '1', 1);
 INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('num_topics', '1', 1);
 INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('num_users', '1', 1);
+INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('plupload_last_gc', '0', 1);
 INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('rand_seed', '0', 1);
 INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('rand_seed_last_update', '0', 1);
 INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('record_online_date', '0', 1);
