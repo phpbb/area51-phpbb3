@@ -122,5 +122,23 @@ class listener implements EventSubscriberInterface
 				$this->rewrite_images($search_results, 'MESSAGE');
 			}
 		}
+
+		//Notifications - Nav
+		if (isset($tpldata['notifications']))
+		{
+			foreach ($tpldata['notifications'] as $index => &$notification)
+			{
+				$this->rewrite_images($notification, 'AVATAR');
+			}
+		}
+
+		//Notifications - UCP
+		if (isset($tpldata['notification_list']))
+		{
+			foreach ($tpldata['notification_list'] as $index => &$notification)
+			{
+				$this->rewrite_images($notification, 'AVATAR');
+			}
+		}
 	}
 }
