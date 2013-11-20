@@ -9,14 +9,6 @@
 
 namespace phpBB\sslAssets\event;
 
-/**
-* @ignore
-*/
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
-
 //define('CAMO_KEY', '');
 define('ASSETS_DOMAIN', 'camo.phpbb.com');
 
@@ -24,12 +16,12 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class listener implements EventSubscriberInterface
 {
-    static public function getSubscribedEvents()
-    {
-        return array(
+	static public function getSubscribedEvents()
+	{
+		return array(
 			'core.page_footer'	=> 'rewrite_assets',
-        );
-    }
+		);
+	}
 
 	/**
 	 * Rewrites an image tag into a version that can be used by a Camo asset server

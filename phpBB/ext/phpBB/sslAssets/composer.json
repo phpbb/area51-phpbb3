@@ -1,6 +1,6 @@
 {
 	"name": "phpBB/sslAssets",
-	"type": "phpbb3-extension",
+	"type": "phpbb-extension",
 	"description": "Rewrites image URLs to point to an asset server.",
 	"homepage": "https://www.phpbb.com/",
 	"version": "1.0.0",
@@ -17,7 +17,7 @@
 	],
 	"require": {
 		"php": ">=5.3",
-		"phpbb": ">=3.1.0-dev"
+		"phpbb/phpbb": ">=3.1.*@dev"
 	},
 	"extra": {
 		"display-name": "phpBB 3.1 SSL Asset Rewriting Extension"
