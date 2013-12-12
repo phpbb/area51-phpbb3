@@ -509,7 +509,7 @@ class ucp_groups
 								}
 								else
 								{
-									if ($driver = $phpbb_avatar_manager->get_driver($user->data['user_avatar_type']))
+									if ($driver = $phpbb_avatar_manager->get_driver($avatar_data['avatar_type']))
 									{
 										$driver->delete($avatar_data);
 									}
@@ -699,7 +699,6 @@ class ucp_groups
 							'GROUP_CLOSED'		=> $type_closed,
 							'GROUP_HIDDEN'		=> $type_hidden,
 
-							'U_SWATCH'			=> append_sid("{$phpbb_admin_path}swatch.$phpEx", 'form=ucp&amp;name=group_colour'),
 							'S_UCP_ACTION'		=> $this->u_action . "&amp;action=$action&amp;g=$group_id",
 							'L_AVATAR_EXPLAIN'	=> phpbb_avatar_explanation_string(),
 						));
