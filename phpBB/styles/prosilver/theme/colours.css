@@ -76,8 +76,22 @@ hr {
 	color: #000000;
 }
 
-.bg1	{ background-color: #ECF3F7; }
-.bg2	{ background-color: #e1ebf2; }
+.bg1 {
+	background-color: #ECF3F7;
+}
+
+table.zebra-list tr:nth-child(odd) td, ul.zebra-list li:nth-child(odd) {
+	background-color: #ECF3F7;
+}
+
+.bg2 {
+	background-color: #e1ebf2;
+}
+
+table.zebra-list tr:nth-child(even) td, ul.zebra-list li:nth-child(even) {
+	background-color: #e1ebf2;
+}
+
 .bg3	{ background-color: #cadceb; }
 
 .ucprowbg {
@@ -256,6 +270,11 @@ a:active	{ color: #368AD2; }
 
 #search-box a:active, .navbg a:active, .forumbg .header a:active, .forabg .header a:active, th a:active {
 	color: #C8E6FF;
+}
+
+/* Notification mark read link */
+#notification_list a.mark_read {
+	background-color: #FFFFFF;
 }
 
 /* Links for forum/topic lists */
@@ -716,6 +735,7 @@ a.sendemail {
 .icon-notification				{ background-image: url("./images/icon_notification.gif"); }
 .icon-pm						{ background-image: url("./images/icon_pm.gif"); }
 .icon-download					{ background-image: url("./images/icon_download.gif"); }
+.icon-mark						{ background-image: url("./images/icon_mark.gif"); }
 
 /* Profile & navigation icons */
 .email-icon, .email-icon a		{ background-image: url("./images/icon_contact_email.gif"); }
@@ -797,11 +817,11 @@ Colours and backgrounds for cp.css
 /* Main CP box
 ----------------------------------------*/
 
-#cp-main h3, #cp-main hr, #cp-menu hr {
+.panel-container h3, .panel-container hr, #cp-menu hr {
 	border-color: #A4B3BF;
 }
 
-#cp-main .panel li.row {
+.panel-container .panel li.row {
 	border-bottom-color: #B5C1CB;
 	border-top-color: #F9F9F9;
 }
@@ -810,11 +830,11 @@ ul.cplist {
 	border-top-color: #B5C1CB;
 }
 
-#cp-main .panel li.header dd, #cp-main .panel li.header dt {
+.panel-container .panel li.header dd, .panel-container .panel li.header dt {
 	color: #000000;
 }
 
-#cp-main table.table1 thead th {
+.panel-container table.table1 thead th {
 	color: #333333;
 	border-bottom-color: #333333;
 }
@@ -915,11 +935,11 @@ ul.cplist {
 
 /* Preferences pane layout
 ----------------------------------------*/
-#cp-main h2 {
+.panel-container h2 {
 	color: #333333;
 }
 
-#cp-main .panel {
+.panel-container .panel {
 	background-color: #F9F9F9;
 }
 

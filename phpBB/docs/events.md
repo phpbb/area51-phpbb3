@@ -1,3 +1,21 @@
+acp_bbcodes_actions_append
+===
+* Location: adm/style/acp_bbcodes.html
+* Since: 3.1.0-a3
+* Purpose: Add actions to the BBCodes page, after edit/delete buttons
+
+acp_bbcodes_actions_prepend
+===
+* Location: adm/style/acp_bbcodes.html
+* Since: 3.1.0-a3
+* Purpose: Add actions to the BBCodes page, before edit/delete buttons
+
+acp_bbcodes_edit_fieldsets_after
+===
+* Location: adm/style/acp_bbcodes.html
+* Since: 3.1.0-a3
+* Purpose: Add settings to BBCode add/edit form
+
 acp_forums_normal_settings_append
 ===
 * Location: adm/style/acp_forums.html
@@ -46,6 +64,20 @@ acp_users_overview_options_append
 * Since: 3.1.0-a1
 * Purpose: Add options and settings on user overview page
 
+acp_users_signature_editor_buttons_after
+===
+* Locations:
+    + adm/style/acp_users_signature.html
+* Since: 3.1.0-a3
+* Purpose: Add content after BBCode posting buttons in the ACP user signature
+
+acp_users_signature_editor_buttons_before
+===
+* Locations:
+    + adm/style/acp_users_signature.html
+* Since: 3.1.0-a3
+* Purpose: Add content before BBCode posting buttons in the ACP user signature
+
 forumlist_body_last_post_title_prepend
 ====
 * Locations:
@@ -54,13 +86,21 @@ forumlist_body_last_post_title_prepend
 * Since: 3.1.0-a1
 * Purpose: Add content before the post title of the latest post in a forum on the forum list.
 
-index_body_forumlist_before
+index_body_linklist_after
 ===
 * Locations:
     + styles/prosilver/template/index_body.html
     + styles/subsilver2/template/index_body.html
 * Since: 3.1.0-a3
-* Purpose: Add content above the forums list (on forum index only)
+* Purpose: Add content after the linklist above the forum list on Board index
+
+index_body_linklist_before
+===
+* Locations:
+    + styles/prosilver/template/index_body.html
+    + styles/subsilver2/template/index_body.html
+* Since: 3.1.0-a3
+* Purpose: Add content before the linklist above the forum list on Board index
 
 index_body_stat_blocks_before
 ===
@@ -171,6 +211,7 @@ overall_header_navigation_append
 ===
 * Locations:
     + styles/prosilver/template/overall_header.html
+    + styles/subsilver2/template/overall_header.html
 * Since: 3.1.0-a1
 * Purpose: Add links after the navigation links in the header
 
@@ -178,8 +219,25 @@ overall_header_navigation_prepend
 ===
 * Locations:
     + styles/prosilver/template/overall_header.html
+    + styles/subsilver2/template/overall_header.html
 * Since: 3.1.0-a1
 * Purpose: Add links before the navigation links in the header
+
+posting_editor_buttons_after
+===
+* Locations:
+    + styles/prosilver/template/posting_buttons.html
+    + styles/subsilver2/template/posting_buttons.html
+* Since: 3.1.0-a3
+* Purpose: Add content after the BBCode posting buttons
+
+posting_editor_buttons_before
+===
+* Locations:
+    + styles/prosilver/template/posting_buttons.html
+    + styles/subsilver2/template/posting_buttons.html
+* Since: 3.1.0-a3
+* Purpose: Add content before the BBCode posting buttons
 
 posting_editor_message_after
 ===
