@@ -1127,6 +1127,7 @@ CREATE TABLE [phpbb_profile_fields] (
 	[field_show_on_reg] [int] DEFAULT (0) NOT NULL ,
 	[field_show_on_pm] [int] DEFAULT (0) NOT NULL ,
 	[field_show_on_vt] [int] DEFAULT (0) NOT NULL ,
+	[field_show_on_ml] [int] DEFAULT (0) NOT NULL ,
 	[field_show_profile] [int] DEFAULT (0) NOT NULL ,
 	[field_hide] [int] DEFAULT (0) NOT NULL ,
 	[field_no_view] [int] DEFAULT (0) NOT NULL ,
@@ -1153,7 +1154,10 @@ GO
 	Table: 'phpbb_profile_fields_data'
 */
 CREATE TABLE [phpbb_profile_fields_data] (
-	[user_id] [int] DEFAULT (0) NOT NULL 
+	[user_id] [int] DEFAULT (0) NOT NULL ,
+	[pf_phpbb_location] [varchar] (255) DEFAULT ('') NOT NULL ,
+	[pf_phpbb_interests] [varchar] (4000) DEFAULT ('') NOT NULL ,
+	[pf_phpbb_occupation] [varchar] (4000) DEFAULT ('') NOT NULL 
 ) ON [PRIMARY]
 GO
 
@@ -1732,15 +1736,12 @@ CREATE TABLE [phpbb_users] (
 	[user_sig] [text] DEFAULT ('') NOT NULL ,
 	[user_sig_bbcode_uid] [varchar] (8) DEFAULT ('') NOT NULL ,
 	[user_sig_bbcode_bitfield] [varchar] (255) DEFAULT ('') NOT NULL ,
-	[user_from] [varchar] (100) DEFAULT ('') NOT NULL ,
 	[user_icq] [varchar] (15) DEFAULT ('') NOT NULL ,
 	[user_aim] [varchar] (255) DEFAULT ('') NOT NULL ,
 	[user_yim] [varchar] (255) DEFAULT ('') NOT NULL ,
 	[user_msnm] [varchar] (255) DEFAULT ('') NOT NULL ,
 	[user_jabber] [varchar] (255) DEFAULT ('') NOT NULL ,
 	[user_website] [varchar] (200) DEFAULT ('') NOT NULL ,
-	[user_occ] [varchar] (4000) DEFAULT ('') NOT NULL ,
-	[user_interests] [varchar] (4000) DEFAULT ('') NOT NULL ,
 	[user_actkey] [varchar] (32) DEFAULT ('') NOT NULL ,
 	[user_newpasswd] [varchar] (40) DEFAULT ('') NOT NULL ,
 	[user_form_salt] [varchar] (32) DEFAULT ('') NOT NULL ,

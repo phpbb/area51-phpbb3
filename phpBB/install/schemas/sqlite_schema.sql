@@ -639,6 +639,7 @@ CREATE TABLE phpbb_profile_fields (
 	field_show_on_reg INTEGER UNSIGNED NOT NULL DEFAULT '0',
 	field_show_on_pm INTEGER UNSIGNED NOT NULL DEFAULT '0',
 	field_show_on_vt INTEGER UNSIGNED NOT NULL DEFAULT '0',
+	field_show_on_ml INTEGER UNSIGNED NOT NULL DEFAULT '0',
 	field_show_profile INTEGER UNSIGNED NOT NULL DEFAULT '0',
 	field_hide INTEGER UNSIGNED NOT NULL DEFAULT '0',
 	field_no_view INTEGER UNSIGNED NOT NULL DEFAULT '0',
@@ -652,6 +653,9 @@ CREATE INDEX phpbb_profile_fields_fld_ordr ON phpbb_profile_fields (field_order)
 # Table: 'phpbb_profile_fields_data'
 CREATE TABLE phpbb_profile_fields_data (
 	user_id INTEGER UNSIGNED NOT NULL DEFAULT '0',
+	pf_phpbb_location varchar(255) NOT NULL DEFAULT '',
+	pf_phpbb_interests text(65535) NOT NULL DEFAULT '',
+	pf_phpbb_occupation text(65535) NOT NULL DEFAULT '',
 	PRIMARY KEY (user_id)
 );
 
@@ -996,15 +1000,12 @@ CREATE TABLE phpbb_users (
 	user_sig mediumtext(16777215) NOT NULL DEFAULT '',
 	user_sig_bbcode_uid varchar(8) NOT NULL DEFAULT '',
 	user_sig_bbcode_bitfield varchar(255) NOT NULL DEFAULT '',
-	user_from varchar(100) NOT NULL DEFAULT '',
 	user_icq varchar(15) NOT NULL DEFAULT '',
 	user_aim varchar(255) NOT NULL DEFAULT '',
 	user_yim varchar(255) NOT NULL DEFAULT '',
 	user_msnm varchar(255) NOT NULL DEFAULT '',
 	user_jabber varchar(255) NOT NULL DEFAULT '',
 	user_website varchar(200) NOT NULL DEFAULT '',
-	user_occ text(65535) NOT NULL DEFAULT '',
-	user_interests text(65535) NOT NULL DEFAULT '',
 	user_actkey varchar(32) NOT NULL DEFAULT '',
 	user_newpasswd varchar(40) NOT NULL DEFAULT '',
 	user_form_salt varchar(32) NOT NULL DEFAULT '',

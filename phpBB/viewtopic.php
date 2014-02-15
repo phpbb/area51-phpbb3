@@ -1104,7 +1104,6 @@ while ($row = $db->sql_fetchrow($result))
 			$user_cache_data = array(
 				'joined'		=> '',
 				'posts'			=> '',
-				'from'			=> '',
 
 				'sig'					=> '',
 				'sig_bbcode_uid'		=> '',
@@ -1168,7 +1167,6 @@ while ($row = $db->sql_fetchrow($result))
 				'joined'		=> $user->format_date($row['user_regdate']),
 				'posts'			=> $row['user_posts'],
 				'warnings'		=> (isset($row['user_warnings'])) ? $row['user_warnings'] : 0,
-				'from'			=> (!empty($row['user_from'])) ? $row['user_from'] : '',
 
 				'sig'					=> $user_sig,
 				'sig_bbcode_uid'		=> (!empty($row['user_sig_bbcode_uid'])) ? $row['user_sig_bbcode_uid'] : '',
@@ -1617,7 +1615,6 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'RANK_IMG_SRC'		=> $user_cache[$poster_id]['rank_image_src'],
 		'POSTER_JOINED'		=> $user_cache[$poster_id]['joined'],
 		'POSTER_POSTS'		=> $user_cache[$poster_id]['posts'],
-		'POSTER_FROM'		=> $user_cache[$poster_id]['from'],
 		'POSTER_AVATAR'		=> $user_cache[$poster_id]['avatar'],
 		'POSTER_WARNINGS'	=> $user_cache[$poster_id]['warnings'],
 		'POSTER_AGE'		=> $user_cache[$poster_id]['age'],
@@ -1901,7 +1898,7 @@ if (!request_var('t', 0) && !empty($topic_id))
 	$request->overwrite('t', $topic_id);
 }
 
-$page_title = $topic_data['topic_title'] . ($start ? ' - ' . sprintf($user->lang['PAGE_TITLE_NUMBER'], $pagination->get_on_page($config['topics_per_page'], $start)) : '');
+$page_title = $topic_data['topic_title'] . ($start ? ' - ' . sprintf($user->lang['PAGE_TITLE_NUMBER'], $pagination->get_on_page($config['posts_per_page'], $start)) : '');
 
 /**
 * You can use this event to modify the page title of the viewtopic page
