@@ -279,6 +279,22 @@ posting_editor_subject_before
 * Since: 3.1.0-a2
 * Purpose: Add field (e.g. textbox) to the posting screen before the subject
 
+quickreply_editor_message_after
+===
+* Locations:
+    + styles/prosilver/template/quickreply_editor.html
+    + styles/subsilver2/template/quickreply_editor.html
+* Since: 3.1.0-a4
+* Purpose: Add content after the quick reply textbox
+
+quickreply_editor_message_before
+===
+* Locations:
+    + styles/prosilver/template/quickreply_editor.html
+    + styles/subsilver2/template/quickreply_editor.html
+* Since: 3.1.0-a4
+* Purpose: Add content before the quick reply textbox
+
 simple_footer_after
 ===
 * Locations:
@@ -398,6 +414,22 @@ ucp_prefs_view_select_menu_append
 * Purpose: Add options to the bottom of the drop-down lists block of the Edit 
 Display Options screen
 
+ucp_friend_list_before
+===
+* Locations:
+	+ styles/prosilver/template/ucp_zebra_friends.html
+	+ styles/subsilver2/template/ucp_zebra_friends.html
+* Since: 3.1.0-a4
+* Purpose: Add optional elements before list of friends in UCP
+
+ucp_friend_list_after
+===
+* Locations:
+	+ styles/prosilver/template/ucp_zebra_friends.html
+	+ styles/subsilver2/template/ucp_zebra_friends.html
+* Since: 3.1.0-a4
+* Purpose: Add optional elements after list of friends in UCP
+
 viewtopic_print_head_append
 ===
 * Locations:
@@ -451,6 +483,30 @@ viewtopic_body_postrow_custom_fields_before
 * Since: 3.1.0-a1
 * Purpose: Add data before the custom fields on the user profile when viewing
 a post
+
+viewtopic_body_postrow_post_after
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+    + styles/subsilver2/template/viewtopic_body.html
+* Since: 3.1.0-a4
+* Purpose: Add data after posts
+
+viewtopic_body_postrow_post_before
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+    + styles/subsilver2/template/viewtopic_body.html
+* Since: 3.1.0-a4
+* Purpose: Add data before posts
+
+viewtopic_body_topic_actions_before
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+    + styles/subsilver2/template/viewtopic_body.html
+* Since: 3.1.0-a4
+* Purpose: Add data before the topic actions buttons (after the posts sorting options)
 
 viewtopic_topic_title_prepend
 ===
