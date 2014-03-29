@@ -620,11 +620,6 @@ $template->assign_vars(array(
 	'SEARCH_IMG' 		=> $user->img('icon_user_search', 'SEARCH_USER_POSTS'),
 	'PM_IMG' 			=> $user->img('icon_contact_pm', 'SEND_PRIVATE_MESSAGE'),
 	'EMAIL_IMG' 		=> $user->img('icon_contact_email', 'SEND_EMAIL'),
-	'WWW_IMG' 			=> $user->img('icon_contact_www', 'VISIT_WEBSITE'),
-	'ICQ_IMG' 			=> $user->img('icon_contact_icq', 'ICQ'),
-	'AIM_IMG' 			=> $user->img('icon_contact_aim', 'AIM'),
-	'MSN_IMG' 			=> $user->img('icon_contact_msnm', 'MSNM'),
-	'YIM_IMG' 			=> $user->img('icon_contact_yahoo', 'YIM'),
 	'JABBER_IMG'		=> $user->img('icon_contact_jabber', 'JABBER') ,
 	'REPORT_IMG'		=> $user->img('icon_post_report', 'REPORT_POST'),
 	'REPORTED_IMG'		=> $user->img('icon_topic_reported', 'POST_REPORTED'),
@@ -639,6 +634,7 @@ $template->assign_vars(array(
 	'S_TOPIC_ACTION' 		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id" . (($start == 0) ? '' : "&amp;start=$start")),
 	'S_MOD_ACTION' 			=> append_sid("{$phpbb_root_path}mcp.$phpEx", "f=$forum_id&amp;t=$topic_id" . (($start == 0) ? '' : "&amp;start=$start") . "&amp;quickmod=1&amp;redirect=" . urlencode(str_replace('&amp;', '&', $viewtopic_url)), true, $user->session_id),
 
+	'L_RETURN_TO_FORUM'		=> $user->lang('RETURN_TO', $topic_data['forum_name']),
 	'S_VIEWTOPIC'			=> true,
 	'S_DISPLAY_SEARCHBOX'	=> ($auth->acl_get('u_search') && $auth->acl_get('f_search', $forum_id) && $config['load_search']) ? true : false,
 	'S_SEARCHBOX_ACTION'	=> append_sid("{$phpbb_root_path}search.$phpEx"),
@@ -1117,12 +1113,6 @@ while ($row = $db->sql_fetchrow($result))
 				'profile'			=> '',
 				'pm'				=> '',
 				'email'				=> '',
-				'www'				=> '',
-				'icq_status_img'	=> '',
-				'icq'				=> '',
-				'aim'				=> '',
-				'msn'				=> '',
-				'yim'				=> '',
 				'jabber'			=> '',
 				'search'			=> '',
 				'age'				=> '',
@@ -1186,10 +1176,6 @@ while ($row = $db->sql_fetchrow($result))
 
 				'online'		=> false,
 				'profile'		=> append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=viewprofile&amp;u=$poster_id"),
-				'www'			=> $row['user_website'],
-				'aim'			=> ($row['user_aim'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=aim&amp;u=$poster_id") : '',
-				'msn'			=> ($row['user_msnm'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=msnm&amp;u=$poster_id") : '',
-				'yim'			=> ($row['user_yim']) ? 'http://edit.yahoo.com/config/send_webmesg?.target=' . urlencode($row['user_yim']) . '&amp;.src=pg' : '',
 				'jabber'		=> ($row['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=jabber&amp;u=$poster_id") : '',
 				'search'		=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id=$poster_id&amp;sr=posts") : '',
 
@@ -1224,17 +1210,6 @@ while ($row = $db->sql_fetchrow($result))
 				$user_cache[$poster_id]['email'] = '';
 			}
 
-			if (!empty($row['user_icq']))
-			{
-				$user_cache[$poster_id]['icq'] = 'http://www.icq.com/people/' . urlencode($row['user_icq']) . '/';
-				$user_cache[$poster_id]['icq_status_img'] = '<img src="http://web.icq.com/whitepages/online?icq=' . $row['user_icq'] . '&amp;img=5" width="18" height="18" alt="" />';
-			}
-			else
-			{
-				$user_cache[$poster_id]['icq_status_img'] = '';
-				$user_cache[$poster_id]['icq'] = '';
-			}
-
 			if ($config['allow_birthdays'] && !empty($row['user_birthday']))
 			{
 				list($bday_day, $bday_month, $bday_year) = array_map('intval', explode('-', $row['user_birthday']));
@@ -1265,7 +1240,7 @@ if ($config['load_cpf_viewtopic'])
 	$cp = $phpbb_container->get('profilefields.manager');
 
 	// Grab all profile fields from users in id cache for later use - similar to the poster cache
-	$profile_fields_tmp = $cp->generate_profile_fields_template('grab', $id_cache);
+	$profile_fields_tmp = $cp->grab_profile_fields_data($id_cache);
 
 	// filter out fields not to be displayed on viewtopic. Yes, it's a hack, but this shouldn't break any MODs.
 	$profile_fields_cache = array();
@@ -1575,7 +1550,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 	//
 	if ($config['load_cpf_viewtopic'])
 	{
-		$cp_row = (isset($profile_fields_cache[$poster_id])) ? $cp->generate_profile_fields_template('show', false, $profile_fields_cache[$poster_id]) : array();
+		$cp_row = (isset($profile_fields_cache[$poster_id])) ? $cp->generate_profile_fields_template_data($profile_fields_cache[$poster_id]) : array();
 	}
 
 	$post_unread = (isset($topic_tracking_info[$topic_id]) && $row['post_time'] > $topic_tracking_info[$topic_id]) ? true : false;
@@ -1589,13 +1564,19 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 	$edit_allowed = ($user->data['is_registered'] && ($auth->acl_get('m_edit', $forum_id) || (
 		$user->data['user_id'] == $poster_id &&
 		$auth->acl_get('f_edit', $forum_id) &&
+		$topic_data['topic_status'] != ITEM_LOCKED &&
 		!$row['post_edit_locked'] &&
 		($row['post_time'] > time() - ($config['edit_time'] * 60) || !$config['edit_time'])
 	)));
 
+	$quote_allowed = $auth->acl_get('m_edit', $forum_id) || ($topic_data['topic_status'] != ITEM_LOCKED &&
+		($user->data['user_id'] == ANONYMOUS || $auth->acl_get('f_reply', $forum_id))
+	);
+
 	$delete_allowed = ($user->data['is_registered'] && (($auth->acl_get('m_delete', $forum_id) || ($auth->acl_get('m_softdelete', $forum_id) && $row['post_visibility'] != ITEM_DELETED)) || (
 		$user->data['user_id'] == $poster_id &&
 		($auth->acl_get('f_delete', $forum_id) || ($auth->acl_get('f_softdelete', $forum_id) && $row['post_visibility'] != ITEM_DELETED)) &&
+		$topic_data['topic_status'] != ITEM_LOCKED &&
 		$topic_data['topic_last_post_id'] == $row['post_id'] &&
 		($row['post_time'] > time() - ($config['delete_time'] * 60) || !$config['delete_time']) &&
 		// we do not want to allow removal of the last post if a moderator locked it!
@@ -1632,12 +1613,11 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'POST_ICON_IMG'			=> ($topic_data['enable_icons'] && !empty($row['icon_id'])) ? $icons[$row['icon_id']]['img'] : '',
 		'POST_ICON_IMG_WIDTH'	=> ($topic_data['enable_icons'] && !empty($row['icon_id'])) ? $icons[$row['icon_id']]['width'] : '',
 		'POST_ICON_IMG_HEIGHT'	=> ($topic_data['enable_icons'] && !empty($row['icon_id'])) ? $icons[$row['icon_id']]['height'] : '',
-		'ICQ_STATUS_IMG'		=> $user_cache[$poster_id]['icq_status_img'],
 		'ONLINE_IMG'			=> ($poster_id == ANONYMOUS || !$config['load_onlinetrack']) ? '' : (($user_cache[$poster_id]['online']) ? $user->img('icon_user_online', 'ONLINE') : $user->img('icon_user_offline', 'OFFLINE')),
 		'S_ONLINE'				=> ($poster_id == ANONYMOUS || !$config['load_onlinetrack']) ? false : (($user_cache[$poster_id]['online']) ? true : false),
 
 		'U_EDIT'			=> ($edit_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=edit&amp;f=$forum_id&amp;p={$row['post_id']}") : '',
-		'U_QUOTE'			=> ($auth->acl_get('f_reply', $forum_id)) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=quote&amp;f=$forum_id&amp;p={$row['post_id']}") : '',
+		'U_QUOTE'			=> ($quote_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=quote&amp;f=$forum_id&amp;p={$row['post_id']}") : '',
 		'U_INFO'			=> ($auth->acl_get('m_info', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", "i=main&amp;mode=post_details&amp;f=$forum_id&amp;p=" . $row['post_id'], true, $user->session_id) : '',
 		'U_DELETE'			=> ($delete_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=delete&amp;f=$forum_id&amp;p={$row['post_id']}") : '',
 
@@ -1645,11 +1625,6 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'U_SEARCH'		=> $user_cache[$poster_id]['search'],
 		'U_PM'			=> ($poster_id != ANONYMOUS && $config['allow_privmsg'] && $auth->acl_get('u_sendpm') && ($user_cache[$poster_id]['allow_pm'] || $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_'))) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;action=quotepost&amp;p=' . $row['post_id']) : '',
 		'U_EMAIL'		=> $user_cache[$poster_id]['email'],
-		'U_WWW'			=> $user_cache[$poster_id]['www'],
-		'U_ICQ'			=> $user_cache[$poster_id]['icq'],
-		'U_AIM'			=> $user_cache[$poster_id]['aim'],
-		'U_MSN'			=> $user_cache[$poster_id]['msn'],
-		'U_YIM'			=> $user_cache[$poster_id]['yim'],
 		'U_JABBER'		=> $user_cache[$poster_id]['jabber'],
 
 		'U_APPROVE_ACTION'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", "i=queue&amp;p={$row['post_id']}&amp;f=$forum_id&amp;redirect=" . urlencode(str_replace('&amp;', '&', $viewtopic_url . '&amp;p=' . $row['post_id'] . '#p' . $row['post_id']))),

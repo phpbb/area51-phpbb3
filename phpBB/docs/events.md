@@ -40,6 +40,12 @@ acp_overall_footer_after
 * Since: 3.1.0-a1
 * Purpose: Add content below the footer in the ACP
 
+acp_overall_header_body_before
+===
+* Location: adm/style/overall_header.html
+* Since: 3.1.0-b2
+* Purpose: Add content to the header body
+
 acp_overall_header_head_append
 ===
 * Location: adm/style/overall_header.html
@@ -51,6 +57,12 @@ acp_simple_footer_after
 * Location: adm/style/simple_footer.html
 * Since: 3.1.0-a1
 * Purpose: Add content below the simple footer in the ACP
+
+acp_simple_header_body_before
+===
+* Location: adm/style/simple_header.html
+* Since: 3.1.0-b2
+* Purpose: Add content to the header body
 
 acp_simple_header_head_append
 ===
@@ -78,6 +90,22 @@ acp_users_signature_editor_buttons_before
 * Since: 3.1.0-a3
 * Purpose: Add content before BBCode posting buttons in the ACP user signature
 
+forumlist_body_category_header_after
+====
+* Locations:
+    + styles/prosilver/template/forumlist_body.html
+    + styles/subsilver2/template/forumlist_body.html
+* Since: 3.1.0-a4
+* Purpose: Add content after the header of the category on the forum list.
+
+forumlist_body_category_header_before
+====
+* Locations:
+    + styles/prosilver/template/forumlist_body.html
+    + styles/subsilver2/template/forumlist_body.html
+* Since: 3.1.0-a4
+* Purpose: Add content before the header of the category on the forum list.
+
 forumlist_body_last_post_title_prepend
 ====
 * Locations:
@@ -85,6 +113,30 @@ forumlist_body_last_post_title_prepend
     + styles/subsilver2/template/forumlist_body.html
 * Since: 3.1.0-a1
 * Purpose: Add content before the post title of the latest post in a forum on the forum list.
+
+forumlist_body_subforums_after
+====
+* Locations:
+    + styles/prosilver/template/forumlist_body.html
+    + styles/subsilver2/template/forumlist_body.html
+* Since: 3.1.0-a4
+* Purpose: Add content after the list of subforums (if any) for each forum on the forum list.
+
+forumlist_body_subforums_before
+====
+* Locations:
+    + styles/prosilver/template/forumlist_body.html
+    + styles/subsilver2/template/forumlist_body.html
+* Since: 3.1.0-a4
+* Purpose: Add content before the list of subforums (if any) for each forum on the forum list.
+
+forumlist_body_last_row_after
+====
+* Locations:
+    + styles/prosilver/template/forumlist_body.html
+    + styles/subsilver2/template/forumlist_body.html
+* Since: 3.1.0-b2
+* Purpose: Add content after the very last row of the forum list.
 
 index_body_linklist_after
 ===
@@ -127,6 +179,30 @@ memberlist_body_username_prepend
 * Since: 3.1.0-a1
 * Purpose: Add information before every username in the memberlist. Works in
 all display modes (leader, group and normal memberlist).
+
+memberlist_view_contact_after
+===
+* Locations:
+    + styles/prosilver/template/memberlist_view.html
+    + styles/subsilver2/template/memberlist_view.html
+* Since: 3.1.0-b2
+* Purpose: Add content after the user contact part of any user profile
+
+memberlist_view_contact_before
+===
+* Locations:
+    + styles/prosilver/template/memberlist_view.html
+    + styles/subsilver2/template/memberlist_view.html
+* Since: 3.1.0-b2
+* Purpose: Add content before the user contact part of any user profile
+
+memberlist_view_content_append
+===
+* Locations:
+    + styles/prosilver/template/memberlist_view.html
+    + styles/subsilver2/template/memberlist_view.html
+* Since: 3.1.0-b2
+* Purpose: Add custom content to the user profile view after the main content
 
 memberlist_view_user_statistics_after
 ===
@@ -182,6 +258,14 @@ overall_footer_copyright_prepend
     + styles/subsilver2/template/overall_footer.html
 * Since: 3.1.0-a1
 * Purpose: Add content before the copyright line
+
+overall_header_body_before
+===
+* Locations:
+    + styles/prosilver/template/overall_header.html
+    + styles/subsilver2/template/overall_header.html
+* Since: 3.1.0-b2
+* Purpose: Add content to the header body
 
 overall_header_breadcrumb_append
 ===
@@ -279,6 +363,22 @@ posting_editor_subject_before
 * Since: 3.1.0-a2
 * Purpose: Add field (e.g. textbox) to the posting screen before the subject
 
+quickreply_editor_panel_after
+===
+* Locations:
+    + styles/prosilver/template/quickreply_editor.html
+    + styles/subsilver2/template/quickreply_editor.html
+* Since: 3.1.0-b2
+* Purpose: Add content after the quick reply panel (but inside the form)
+
+quickreply_editor_panel_before
+===
+* Locations:
+    + styles/prosilver/template/quickreply_editor.html
+    + styles/subsilver2/template/quickreply_editor.html
+* Since: 3.1.0-b2
+* Purpose: Add content before the quick reply panel (but inside the form)
+
 quickreply_editor_message_after
 ===
 * Locations:
@@ -301,6 +401,14 @@ simple_footer_after
     + styles/prosilver/template/simple_footer.html
 * Since: 3.1.0-a1
 * Purpose: Add content directly prior to the `</body>` tag of the simple footer
+
+simple_header_body_before
+===
+* Locations:
+    + styles/prosilver/template/simple_header.html
+    + styles/subsilver2/template/simple_header.html
+* Since: 3.1.0-b2
+* Purpose: Add content to the header body
 
 topiclist_row_prepend
 ===
@@ -499,6 +607,22 @@ viewtopic_body_postrow_post_before
     + styles/subsilver2/template/viewtopic_body.html
 * Since: 3.1.0-a4
 * Purpose: Add data before posts
+
+viewtopic_body_postrow_post_notices_after
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+    + styles/subsilver2/template/viewtopic_body.html
+* Since: 3.1.0-b2
+* Purpose: Add posts specific custom notices at the notices bottom.
+
+viewtopic_body_postrow_post_notices_before
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+    + styles/subsilver2/template/viewtopic_body.html
+* Since: 3.1.0-b2
+* Purpose: Add posts specific custom notices at the notices top.
 
 viewtopic_body_topic_actions_before
 ===

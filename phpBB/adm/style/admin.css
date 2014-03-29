@@ -43,6 +43,10 @@ body {
 	margin: 10px 15px;
 }
 
+code, samp {
+	font-size: 1.2em;
+}
+
 img {
 	border: 0;
 }
@@ -569,12 +573,6 @@ li {
 
 .rtl #menu li span {
 	padding: 3px 8px 3px 3px;
-}
-
-#menu li span, #menu .header {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
 #menu li a:hover, #menu li a:hover span {
@@ -1515,7 +1513,7 @@ input.autowidth { width: auto !important;}
 
 /* Form button styles
 ---------------------------------------- */
-a.button1, input.button1, input.button3,
+a.button1, input.button1,
 a.button2, input.button2 {
 	width: auto !important;
 	padding: 1px 3px 0 3px;
@@ -1558,7 +1556,7 @@ input.disabled {
 }
 
 /* Focus states */
-input.button1:focus, input.button2:focus, input.button3:focus {
+input.button1:focus, input.button2:focus {
 	outline-style: none;
 }
 

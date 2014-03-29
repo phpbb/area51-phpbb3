@@ -49,7 +49,7 @@ $lang = array_merge($lang, array(
 	'ACP_BAN'					=> 'Banning',
 	'ACP_BAN_EMAILS'			=> 'Ban emails',
 	'ACP_BAN_IPS'				=> 'Ban IPs',
-	'ACP_BAN_USERNAMES'			=> 'Ban usernames',
+	'ACP_BAN_USERNAMES'			=> 'Ban users',
 	'ACP_BBCODES'				=> 'BBCodes',
 	'ACP_BOARD_CONFIGURATION'	=> 'Board configuration',
 	'ACP_BOARD_FEATURES'		=> 'Board features',
@@ -83,7 +83,7 @@ $lang = array_merge($lang, array(
 	'ACP_EMAIL_SETTINGS'		=> 'Email settings',
 	'ACP_EXTENSION_GROUPS'		=> 'Manage attachment extension groups',
 	'ACP_EXTENSION_MANAGEMENT'	=> 'Extension management',
-	'ACP_EXTENSIONS'			=> 'Extensions',
+	'ACP_EXTENSIONS'			=> 'Manage extensions',
 
 
 	'ACP_FORUM_BASED_PERMISSIONS'	=> 'Forum based permissions',
@@ -288,7 +288,6 @@ $lang = array_merge($lang, array(
 	'RESYNC'							=> 'Resynchronise',
 	'RESYNC_FILES_STATS'				=> 'Resynchronise files statistics',
 	'RESYNC_FILES_STATS_EXPLAIN'		=> 'Recalculates the total number and size of files attached to posts and private messages.',
-	'RETURN_TO'							=> 'Return to…',
 
 	'SELECT_ANONYMOUS'		=> 'Select anonymous user',
 	'SELECT_OPTION'			=> 'Select option',
@@ -361,7 +360,7 @@ $lang = array_merge($lang, array(
 
 	'GZIP_COMPRESSION'	=> 'GZip compression',
 
-	'NO_SEARCH_INDEX'	=> 'The selected search backend does not have a search index.<br >Please create the index for “%1$s” in the %2$ssearch index%3$s section.',
+	'NO_SEARCH_INDEX'	=> 'The selected search backend does not have a search index.<br />Please create the index for “%1$s” in the %2$ssearch index%3$s section.',
 	'NOT_AVAILABLE'		=> 'Not available',
 	'NUMBER_FILES'		=> 'Number of attachments',
 	'NUMBER_POSTS'		=> 'Number of posts',

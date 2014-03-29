@@ -527,12 +527,6 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		$total_match_count = $search->author_search($show_results, $firstpost_only, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $m_approve_posts_fid_sql, $topic_id, $author_id_ary, $sql_author_match, $id_ary, $start, $per_page);
 	}
 
-	// For some searches we need to print out the "no results" page directly to allow re-sorting/refining the search options.
-	if (!sizeof($id_ary) && !$search_id)
-	{
-		trigger_error('NO_SEARCH_RESULTS');
-	}
-
 	$sql_where = '';
 
 	if (sizeof($id_ary))
@@ -1026,6 +1020,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		{
 			$template->assign_vars(array(
 				'SEARCH_TOPIC'		=> $topic_title,
+				'L_RETURN_TO_TOPIC'	=> $user->lang('RETURN_TO', $topic_title),
 				'U_SEARCH_TOPIC'	=> $view_topic_url
 			));
 		}

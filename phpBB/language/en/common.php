@@ -210,8 +210,6 @@ $lang = array_merge($lang, array(
 	'ERR_CONNECTING_SERVER'				=> 'Error connecting to the server.',
 	'ERR_JAB_AUTH'						=> 'Could not authorise on Jabber server.',
 	'ERR_JAB_CONNECT'					=> 'Could not connect to Jabber server.',
-	'ERR_TEMPLATE_EVENT_LOCATION'		=> 'The specified template event location <em>[%s]</em> is improperly formatted.',
-	'ERR_TEMPLATE_COMPILATION'		=> 'The file could not be compiled: %s',
 	'ERR_UNABLE_TO_LOGIN'				=> 'The specified username or password is incorrect.',
 	'ERR_UNWATCHING'					=> 'An error occurred while trying to unsubscribe.',
 	'ERR_WATCHING'						=> 'An error occurred while trying to subscribe.',
@@ -319,7 +317,6 @@ $lang = array_merge($lang, array(
 	'HOME'							=> 'Home',
 
 	'ICQ'						=> 'ICQ',
-	'ICQ_STATUS'				=> 'ICQ status',
 	'IF'						=> 'If',
 	'IMAGE'						=> 'Image',
 	'IMAGE_FILETYPE_INVALID'	=> 'Image file type %d for mimetype %s not supported.',
@@ -403,9 +400,11 @@ $lang = array_merge($lang, array(
 	'MODERATE'				=> 'Moderate',
 	'MODERATOR'				=> 'Moderator',
 	'MODERATORS'			=> 'Moderators',
+	'MODULE_NOT_ACCESS'		=> 'Module not accessible',
+	'MODULE_NOT_FIND'		=> 'Cannot find module %s',
+	'MODULE_FILE_INCORRECT_CLASS'	=> 'Module file %s does not contain correct class [%s]',
 	'MONTH'					=> 'Month',
 	'MOVE'					=> 'Move',
-	'MSNM'					=> 'WLM',
 
 	'NA'						=> 'N/A',
 	'NEWEST_USER'				=> 'Our newest member <strong>%s</strong>',
@@ -423,18 +422,29 @@ $lang = array_merge($lang, array(
 	'NOT_WATCHING_FORUM'		=> 'You are no longer subscribed to updates on this forum.',
 	'NOT_WATCHING_TOPIC'		=> 'You are no longer subscribed to this topic.',
 	'NOTIFICATIONS'				=> 'Notifications',
-	'NOTIFICATION_BOOKMARK'				=> '%1$s replied to the topic "%2$s" you have bookmarked.',
-	'NOTIFICATION_BOOKMARK_TRIMMED'		=> '%1$s and %3$d others replied to the topic “%2$s” you have bookmarked.',
+	// This applies for NOTIFICATION_BOOKMARK, NOTIFICATION_POST, and NOTIFICATION_QUOTE.
+	// %1$s will return a list of users that's concatenated using "," and "and" - see STRING_LIST
+	// Once the user count reaches 5 users or more, the list is trimmed using NOTIFICATION_X_OTHERS
+	// Examples:
+	// A replied...
+	// A and B replied...
+	// A, B and C replied...
+	// A, B, C and 2 others replied...
+	'NOTIFICATION_BOOKMARK'				=> array(
+		1	=> '%1$s replied to the topic “%2$s” you have bookmarked.',
+	),
 	'NOTIFICATION_GROUP_REQUEST'		=> '%1$s is requesting to join the group %2$s.',
 	'NOTIFICATION_GROUP_REQUEST_APPROVED'	=> 'Your request to join the group %1$s has been approved.',
 	'NOTIFICATION_PM'					=> '%1$s sent you a Private Message "%2$s".',
-	'NOTIFICATION_POST'					=> '%1$s replied to the topic "%2$s".',
-	'NOTIFICATION_POST_TRIMMED'			=> '%1$s and %3$d others replied to the topic “%2$s”',
+	'NOTIFICATION_POST'					=> array(
+		1	=> '%1$s replied to the topic “%2$s”.',
+	),
 	'NOTIFICATION_POST_APPROVED'		=> 'Your post was approved "%2$s".',
 	'NOTIFICATION_POST_DISAPPROVED'		=> 'Your post "%1$s" was disapproved for reason: "%2$s".',
 	'NOTIFICATION_POST_IN_QUEUE'		=> 'A new post titled "%2$s" was posted by %1$s and needs approval.',
-	'NOTIFICATION_QUOTE'				=> '%1$s quoted you in the post "%2$s".',
-	'NOTIFICATION_QUOTE_TRIMMED'		=> '%1$s and %3$d others replied to the topic “%2$s”',
+	'NOTIFICATION_QUOTE'				=> array(
+		1	=> '%1$s quoted you in the post “%2$s”.',
+	),
 	'NOTIFICATION_REPORT_PM'			=> '%1$s reported a Private Message "%2$s" for reason: "%3$s".',
 	'NOTIFICATION_REPORT_POST'			=> '%1$s reported a post "%2$s" for reason: "%3$s".',
 	'NOTIFICATION_REPORT_CLOSED'   		=> '%1$s closed the report you made for "%2$s".',
@@ -444,6 +454,10 @@ $lang = array_merge($lang, array(
 	'NOTIFICATION_TOPIC_IN_QUEUE'		=> 'A new topic titled "%2$s" was posted by %1$s and needs approval.',
 	'NOTIFICATION_TYPE_NOT_EXIST'		=> 'The notification type "%s" is missing from the file system.',
 	'NOTIFICATION_ADMIN_ACTIVATE_USER'	=> 'The user “%1$s” is newly registered and requires activation.',
+	// Used in conjuction with NOTIFICATION_BOOKMARK, NOTIFICATION_POST, and NOTIFICATION_QUOTE.
+	'NOTIFICATION_X_OTHERS'				=> array(
+		2	=> '%d others',
+	),
 	'NOTIFY_ADMIN'				=> 'Please notify the board administrator or webmaster.',
 	'NOTIFY_ADMIN_EMAIL'		=> 'Please notify the board administrator or webmaster: <a href="mailto:%1$s">%1$s</a>',
 	'NO_ACCESS_ATTACHMENT'		=> 'You are not allowed to access this file.',
@@ -599,7 +613,8 @@ $lang = array_merge($lang, array(
 	'RETURN_FORUM'				=> '%sReturn to the forum last visited%s',
 	'RETURN_PAGE'				=> '%sReturn to the previous page%s',
 	'RETURN_TOPIC'				=> '%sReturn to the topic last visited%s',
-	'RETURN_TO'					=> 'Return to',
+	'RETURN_TO'					=> 'Return to “%s”',
+	'RETURN_TO_INDEX'			=> 'Return to Board Index',
 	'FEED'						=> 'Feed',
 	'FEED_NEWS'					=> 'News',
 	'FEED_TOPICS_ACTIVE'		=> 'Active Topics',
@@ -666,6 +681,8 @@ $lang = array_merge($lang, array(
 	'START_WATCHING_TOPIC'		=> 'Subscribe topic',
 	'STOP_WATCHING_FORUM'		=> 'Unsubscribe forum',
 	'STOP_WATCHING_TOPIC'		=> 'Unsubscribe topic',
+	'STRING_LIST_MULTI'			=> '%1$s, and %2$s',
+	'STRING_LIST_SIMPLE'		=> '%1$s and %2$s',
 	'SUBFORUM'					=> 'Subforum',
 	'SUBFORUMS'					=> 'Subforums',
 	'SUBJECT'					=> 'Subject',
@@ -684,37 +701,27 @@ $lang = array_merge($lang, array(
 
 	'TOO_LONG'						=> 'The value you entered is too long.',
 
-	'TOO_LONG_AIM'					=> 'The screenname you entered is too long.',
 	'TOO_LONG_CONFIRM_CODE'			=> 'The confirm code you entered is too long.',
 	'TOO_LONG_DATEFORMAT'			=> 'The date format you entered is too long.',
-	'TOO_LONG_ICQ'					=> 'The ICQ number you entered is too long.',
 	'TOO_LONG_JABBER'				=> 'The Jabber account name you entered is too long.',
-	'TOO_LONG_MSN'					=> 'The WLM name you entered is too long.',
 	'TOO_LONG_NEW_PASSWORD'			=> 'The password you entered is too long.',
 	'TOO_LONG_PASSWORD_CONFIRM'		=> 'The password confirmation you entered is too long.',
 	'TOO_LONG_USER_PASSWORD'		=> 'The password you entered is too long.',
 	'TOO_LONG_USERNAME'				=> 'The username you entered is too long.',
 	'TOO_LONG_EMAIL'				=> 'The email address you entered is too long.',
-	'TOO_LONG_WEBSITE'				=> 'The website address you entered is too long.',
-	'TOO_LONG_YIM'					=> 'The Yahoo! Messenger name you entered is too long.',
 
 	'TOO_MANY_VOTE_OPTIONS'			=> 'You have tried to vote for too many options.',
 
 	'TOO_SHORT'						=> 'The value you entered is too short.',
 
-	'TOO_SHORT_AIM'					=> 'The screenname you entered is too short.',
 	'TOO_SHORT_CONFIRM_CODE'		=> 'The confirm code you entered is too short.',
 	'TOO_SHORT_DATEFORMAT'			=> 'The date format you entered is too short.',
-	'TOO_SHORT_ICQ'					=> 'The ICQ number you entered is too short.',
 	'TOO_SHORT_JABBER'				=> 'The Jabber account name you entered is too short.',
-	'TOO_SHORT_MSN'					=> 'The WLM name you entered is too short.',
 	'TOO_SHORT_NEW_PASSWORD'		=> 'The password you entered is too short.',
 	'TOO_SHORT_PASSWORD_CONFIRM'	=> 'The password confirmation you entered is too short.',
 	'TOO_SHORT_USER_PASSWORD'		=> 'The password you entered is too short.',
 	'TOO_SHORT_USERNAME'			=> 'The username you entered is too short.',
 	'TOO_SHORT_EMAIL'				=> 'The email address you entered is too short.',
-	'TOO_SHORT_WEBSITE'				=> 'The website address you entered is too short.',
-	'TOO_SHORT_YIM'					=> 'The Yahoo! Messenger name you entered is too short.',
 
 	'TOO_SMALL'						=> 'The value you entered is too small.',
 	'TOO_SMALL_MAX_RECIPIENTS'		=> 'The value of <strong>Maximum number of allowed recipients per private message</strong> setting you entered is too small.',
@@ -827,19 +834,18 @@ $lang = array_merge($lang, array(
 	'WEBSITE'			=> 'Website',
 	'WHOIS'				=> 'Whois',
 	'WHO_IS_ONLINE'		=> 'Who is online',
+	'WLM'				=> 'WLM',
 	'WRONG_PASSWORD'	=> 'You entered an incorrect password.',
 
 	'WRONG_DATA_COLOUR'			=> 'The colour value you entered is invalid.',
-	'WRONG_DATA_ICQ'			=> 'The number you entered is not a valid ICQ number.',
 	'WRONG_DATA_JABBER'			=> 'The name you entered is not a valid Jabber account name.',
 	'WRONG_DATA_LANG'			=> 'The language you specified is not valid.',
-	'WRONG_DATA_WEBSITE'		=> 'The website address has to be a valid URL, including the protocol. For example http://www.example.com/.',
 	'WROTE'						=> 'wrote',
 
+	'YAHOO'				=> 'Yahoo Messenger',
 	'YEAR'				=> 'Year',
 	'YEAR_MONTH_DAY'	=> '(YYYY-MM-DD)',
 	'YES'				=> 'Yes',
-	'YIM'				=> 'YIM',
 	'YOU_LAST_VISIT'	=> 'Last visit was: %s',
 
 	'datetime'			=> array(

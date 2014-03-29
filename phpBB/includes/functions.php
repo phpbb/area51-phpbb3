@@ -368,41 +368,6 @@ function still_on_time($extra_time = 15)
 }
 
 /**
-* Hash the password
-*
-* @deprecated 3.1.0-a2 (To be removed: 3.3.0)
-*
-* @param string $password Password to be hashed
-*
-* @return string|bool Password hash or false if something went wrong during hashing
-*/
-function phpbb_hash($password)
-{
-	global $phpbb_container;
-
-	$passwords_manager = $phpbb_container->get('passwords.manager');
-	return $passwords_manager->hash($password);
-}
-
-/**
-* Check for correct password
-*
-* @deprecated 3.1.0-a2 (To be removed: 3.3.0)
-*
-* @param string $password The password in plain text
-* @param string $hash The stored password hash
-*
-* @return bool Returns true if the password is correct, false if not.
-*/
-function phpbb_check_hash($password, $hash)
-{
-	global $phpbb_container;
-
-	$passwords_manager = $phpbb_container->get('passwords.manager');
-	return $passwords_manager->check($password, $hash);
-}
-
-/**
 * Hashes an email address to a big integer
 *
 * @param string $email		Email address
@@ -883,46 +848,6 @@ else
 
 		return $realpath;
 	}
-}
-
-/**
-* Eliminates useless . and .. components from specified path.
-*
-* Deprecated, use filesystem class instead
-*
-* @param string $path Path to clean
-* @return string Cleaned path
-*
-* @deprecated
-*/
-function phpbb_clean_path($path)
-{
-	global $phpbb_path_helper, $phpbb_container;
-
-	if (!$phpbb_path_helper && $phpbb_container)
-	{
-		$phpbb_path_helper = $phpbb_container->get('path_helper');
-	}
-	else if (!$phpbb_path_helper)
-	{
-		// The container is not yet loaded, use a new instance
-		if (!class_exists('\phpbb\path_helper'))
-		{
-			global $phpbb_root_path, $phpEx;
-			require($phpbb_root_path . 'phpbb/path_helper.' . $phpEx);
-		}
-
-		$phpbb_path_helper = new phpbb\path_helper(
-			new phpbb\symfony_request(
-				new phpbb\request\request()
-			),
-			new phpbb\filesystem(),
-			$phpbb_root_path,
-			$phpEx
-		);
-	}
-
-	return $phpbb_path_helper->clean_path($path);
 }
 
 // functions used for building option fields
@@ -2419,7 +2344,7 @@ function reapply_sid($url)
 */
 function build_url($strip_vars = false)
 {
-	global $user, $phpbb_root_path;
+	global $config, $user, $phpEx, $phpbb_root_path;
 
 	$page = $user->page['page'];
 
@@ -2432,6 +2357,12 @@ function build_url($strip_vars = false)
 	// URL
 	if ($url_parts === false || empty($url_parts['scheme']) || empty($url_parts['host']))
 	{
+		// Remove 'app.php/' from the page, when rewrite is enabled
+		if ($config['enable_mod_rewrite'] && strpos($page, 'app.' . $phpEx . '/') === 0)
+		{
+			$page = substr($page, strlen('app.' . $phpEx . '/'));
+		}
+
 		$page = $phpbb_root_path . $page;
 	}
 
@@ -2748,7 +2679,7 @@ function confirm_box($check, $title = '', $hidden = '', $html_body = 'confirm_bo
 	}
 	else
 	{
-		page_header(((!isset($user->lang[$title])) ? $user->lang['CONFIRM'] : $user->lang[$title]), false);
+		page_header((!isset($user->lang[$title])) ? $user->lang['CONFIRM'] : $user->lang[$title]);
 	}
 
 	$template->set_filenames(array(
@@ -3025,7 +2956,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		'PASSWORD_CREDENTIAL'	=> ($admin) ? 'password_' . $credential : 'password',
 	));
 
-	page_header($user->lang['LOGIN'], false);
+	page_header($user->lang['LOGIN']);
 
 	$template->set_filenames(array(
 		'body' => 'login_body.html')
@@ -3101,7 +3032,7 @@ function login_forum_box($forum_data)
 		$template->assign_var('LOGIN_ERROR', $user->lang['WRONG_PASSWORD']);
 	}
 
-	page_header($user->lang['LOGIN'], false);
+	page_header($user->lang['LOGIN']);
 
 	$template->assign_vars(array(
 		'FORUM_NAME'			=> isset($forum_data['forum_name']) ? $forum_data['forum_name'] : '',
@@ -3192,7 +3123,7 @@ function parse_cfg_file($filename, $lines = false)
 		}
 
 		// Determine first occurrence, since in values the equal sign is allowed
-		$key = strtolower(trim(substr($line, 0, $delim_pos)));
+		$key = htmlspecialchars(strtolower(trim(substr($line, 0, $delim_pos))));
 		$value = trim(substr($line, $delim_pos + 1));
 
 		if (in_array($value, array('off', 'false', '0')))
@@ -3209,7 +3140,11 @@ function parse_cfg_file($filename, $lines = false)
 		}
 		else if (($value[0] == "'" && $value[sizeof($value) - 1] == "'") || ($value[0] == '"' && $value[sizeof($value) - 1] == '"'))
 		{
-			$value = substr($value, 1, sizeof($value)-2);
+			$value = htmlspecialchars(substr($value, 1, sizeof($value)-2));
+		}
+		else
+		{
+			$value = htmlspecialchars($value);
 		}
 
 		$parsed_items[$key] = $value;
@@ -4010,7 +3945,7 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 				}
 				else
 				{
-					page_header($msg_title, false);
+					page_header($msg_title);
 				}
 			}
 
@@ -4687,7 +4622,7 @@ function phpbb_build_hidden_fields_for_query_params($request, $exclude = null)
 /**
 * Generate page header
 */
-function page_header($page_title = '', $display_online_list = true, $item_id = 0, $item = 'forum')
+function page_header($page_title = '', $display_online_list = false, $item_id = 0, $item = 'forum')
 {
 	global $db, $config, $template, $SID, $_SID, $_EXTRA_URL, $user, $auth, $phpEx, $phpbb_root_path;
 	global $phpbb_dispatcher, $request, $phpbb_container, $phpbb_admin_path;
@@ -4948,7 +4883,7 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 		'U_SEARCH_UNREAD'		=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=unreadposts'),
 		'U_SEARCH_ACTIVE_TOPICS'=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=active_topics'),
 		'U_DELETE_COOKIES'		=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=delete_cookies'),
-		'U_TEAM'				=> ($user->data['user_id'] != ANONYMOUS && !$auth->acl_get('u_viewprofile')) ? '' : append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=leaders'),
+		'U_TEAM'				=> ($user->data['user_id'] != ANONYMOUS && !$auth->acl_get('u_viewprofile')) ? '' : append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=team'),
 		'U_TERMS_USE'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=terms'),
 		'U_PRIVACY'				=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy'),
 		'U_RESTORE_PERMISSIONS'	=> ($user->data['user_perm_from'] && $auth->acl_get('a_switchperm')) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=restore_perm') : '',
@@ -4977,7 +4912,7 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 		'S_TOPIC_ID'			=> $topic_id,
 
 		'S_LOGIN_ACTION'		=> ((!defined('ADMIN_START')) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=login') : append_sid("{$phpbb_admin_path}index.$phpEx", false, true, $user->session_id)),
-		'S_LOGIN_REDIRECT'		=> build_hidden_fields(array('redirect' => build_url())),
+		'S_LOGIN_REDIRECT'		=> build_hidden_fields(array('redirect' => $phpbb_path_helper->remove_web_root_path(build_url()))),
 
 		'S_ENABLE_FEEDS'			=> ($config['feed_enable']) ? true : false,
 		'S_ENABLE_FEEDS_OVERALL'	=> ($config['feed_overall']) ? true : false,

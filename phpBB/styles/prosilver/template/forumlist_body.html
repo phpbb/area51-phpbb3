@@ -7,6 +7,7 @@
 		</div>
 	<!-- ENDIF -->
 
+	<!-- EVENT forumlist_body_category_header_before -->
 	<!-- IF forumrow.S_IS_CAT or forumrow.S_FIRST_ROW  or forumrow.S_NO_CAT  -->
 		<div class="forabg">
 			<div class="inner">
@@ -22,11 +23,13 @@
 			</ul>
 			<ul class="topiclist forums">
 	<!-- ENDIF -->
+	<!-- EVENT forumlist_body_category_header_after -->
 
 	<!-- IF not forumrow.S_IS_CAT -->
 		<li class="row">
 			<dl class="icon {forumrow.FORUM_IMG_STYLE}">
 				<dt title="{forumrow.FORUM_FOLDER_IMG_ALT}">
+					<!-- IF forumrow.S_UNREAD_FORUM --><a href="{forumrow.U_VIEWFORUM}" class="icon-link"></a><!-- ENDIF -->
 					<div class="list-inner">
 						<!-- IF S_ENABLE_FEEDS and forumrow.S_FEED_ENABLED --><!-- <a class="feed-icon-forum" title="{L_FEED} - {forumrow.FORUM_NAME}" href="{U_FEED}?f={forumrow.FORUM_ID}"><img src="{T_THEME_PATH}/images/feed.gif" alt="{L_FEED} - {forumrow.FORUM_NAME}" /></a> --><!-- ENDIF -->
 
@@ -37,10 +40,12 @@
 							<br /><strong>{forumrow.L_MODERATOR_STR}{L_COLON}</strong> {forumrow.MODERATORS}
 						<!-- ENDIF -->
 						<!-- IF .forumrow.subforum and forumrow.S_LIST_SUBFORUMS -->
-							<br /><strong>{forumrow.L_SUBFORUM_STR}</strong>
+							<!-- EVENT forumlist_body_subforums_before -->
+							<br /><strong>{forumrow.L_SUBFORUM_STR}{L_COLON}</strong>
 							<!-- BEGIN subforum -->
 								<a href="{forumrow.subforum.U_SUBFORUM}" class="subforum<!-- IF forumrow.subforum.S_UNREAD --> unread<!-- ELSE --> read<!-- ENDIF -->" title="<!-- IF forumrow.subforum.UNREAD -->{L_UNREAD_POSTS}<!-- ELSE -->{L_NO_UNREAD_POSTS}<!-- ENDIF -->">{forumrow.subforum.SUBFORUM_NAME}</a><!-- IF not forumrow.subforum.S_LAST_ROW -->{L_COMMA_SEPARATOR}<!-- ENDIF -->
 							<!-- END subforum -->
+							<!-- EVENT forumlist_body_subforums_after -->
 						<!-- ENDIF -->
 
 						<!-- IF not S_IS_BOT -->
@@ -83,6 +88,7 @@
 
 			</div>
 		</div>
+	<!-- EVENT forumlist_body_last_row_after -->
 	<!-- ENDIF -->
 
 <!-- BEGINELSE -->

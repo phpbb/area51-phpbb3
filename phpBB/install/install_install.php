@@ -18,14 +18,9 @@ if (!defined('IN_INSTALL'))
 if (!empty($setmodules))
 {
 	// If phpBB is already installed we do not include this module
-	if (@file_exists($phpbb_root_path . 'config.' . $phpEx) && !file_exists($phpbb_root_path . 'cache/install_lock'))
+	if (phpbb_check_installation_exists($phpbb_root_path, $phpEx) && !file_exists($phpbb_root_path . 'cache/install_lock'))
 	{
-		include_once($phpbb_root_path . 'config.' . $phpEx);
-
-		if (defined('PHPBB_INSTALLED'))
-		{
-			return;
-		}
+		return;
 	}
 
 	$module[] = array(
@@ -1156,13 +1151,9 @@ class install_install extends module
 
 		// How should we treat this schema?
 		$delimiter = $available_dbms[$data['dbms']]['DELIM'];
-
 		$sql_query = @file_get_contents($dbms_schema);
-
 		$sql_query = preg_replace('#phpbb_#i', $data['table_prefix'], $sql_query);
-
 		$sql_query = phpbb_remove_comments($sql_query);
-
 		$sql_query = split_sql_file($sql_query, $delimiter);
 
 		foreach ($sql_query as $sql)
@@ -1175,6 +1166,27 @@ class install_install extends module
 			}
 		}
 		unset($sql_query);
+
+		// Ok we have the db info go ahead and work on building the table
+		$db_table_schema = @file_get_contents('schemas/schema.json');
+		$db_table_schema = json_decode($db_table_schema, true);
+
+		if (!defined('CONFIG_TABLE'))
+		{
+			// CONFIG_TABLE is required by sql_create_index() to check the
+			// length of index names. However table_prefix is not defined
+			// here yet, so we need to create the constant ourselves.
+			define('CONFIG_TABLE', $data['table_prefix'] . 'config');
+		}
+
+		$db_tools = new \phpbb\db\tools($db);
+		foreach ($db_table_schema as $table_name => $table_data)
+		{
+			$db_tools->sql_create_table(
+				$data['table_prefix'] . substr($table_name, 6),
+				$table_data
+			);
+		}
 
 		// Ok tables have been built, let's fill in the basic information
 		$sql_query = file_get_contents('schemas/schema_data.sql');
@@ -2022,8 +2034,8 @@ class install_install extends module
 		'smtp_delivery'			=> array('lang' => 'USE_SMTP',			'type' => 'radio:yes_no', 'explain' => true),
 		'smtp_host'				=> array('lang' => 'SMTP_SERVER',		'type' => 'text:25:50', 'explain' => false),
 		'smtp_auth'				=> array('lang' => 'SMTP_AUTH_METHOD',	'type' => 'select', 'options' => '$this->module->mail_auth_select(\'{VALUE}\')', 'explain' => true),
-		'smtp_user'				=> array('lang' => 'SMTP_USERNAME',		'type' => 'text:25:255', 'explain' => true),
-		'smtp_pass'				=> array('lang' => 'SMTP_PASSWORD',		'type' => 'password:25:255', 'explain' => true),
+		'smtp_user'				=> array('lang' => 'SMTP_USERNAME',		'type' => 'text:25:255', 'explain' => true, 'options' => array('autocomplete' => 'off')),
+		'smtp_pass'				=> array('lang' => 'SMTP_PASSWORD',		'type' => 'password:25:255', 'explain' => true, 'options' => array('autocomplete' => 'off')),
 
 		'legend2'				=> 'SERVER_URL_SETTINGS',
 		'cookie_secure'			=> array('lang' => 'COOKIE_SECURE',		'type' => 'radio:enabled_disabled', 'explain' => true),
