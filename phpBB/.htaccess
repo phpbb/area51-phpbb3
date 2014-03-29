@@ -26,6 +26,11 @@ RewriteRule ^(.*)$ app.php [QSA,L]
 #Options +FollowSymLinks
 </IfModule>
 
+<Directory install>
+Order Allow,Deny
+Deny from All
+</Files>
+
 <Files "config.php">
 Order Allow,Deny
 Deny from All
