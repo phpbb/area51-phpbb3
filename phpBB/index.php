@@ -63,7 +63,7 @@ if (($mark_notification = $request->variable('mark_notification', 0)))
 				redirect(append_sid($phpbb_root_path . $redirect));
 			}
 
-			redirect($notification->get_url());
+			redirect($notification->get_redirect_url());
 		}
 	}
 }
@@ -175,6 +175,7 @@ $template->assign_vars(array(
 	'S_LOGIN_ACTION'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=login'),
 	'U_SEND_PASSWORD'           => ($config['email_enable']) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=sendpassword') : '',
 	'S_DISPLAY_BIRTHDAY_LIST'	=> ($config['load_birthdays']) ? true : false,
+	'S_INDEX'					=> true,
 
 	'U_MARK_FORUMS'		=> ($user->data['is_registered'] || $config['load_anon_lastread']) ? append_sid("{$phpbb_root_path}index.$phpEx", 'hash=' . generate_link_hash('global') . '&amp;mark=forums&amp;mark_time=' . time()) : '',
 	'U_MCP'				=> ($auth->acl_get('m_') || $auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=main&amp;mode=front', true, $user->session_id) : '')
@@ -187,7 +188,7 @@ $page_title = $user->lang['INDEX'];
 *
 * @event core.index_modify_page_title
 * @var	string	page_title		Title of the index page
-* @since 3.1-A1
+* @since 3.1.0-a1
 */
 $vars = array('page_title');
 extract($phpbb_dispatcher->trigger_event('core.index_modify_page_title', compact($vars)));

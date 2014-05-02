@@ -101,6 +101,7 @@ if (!$show_guests)
 	switch ($db->sql_layer)
 	{
 		case 'sqlite':
+		case 'sqlite3':
 			$sql = 'SELECT COUNT(session_ip) as num_guests
 				FROM (
 					SELECT DISTINCT session_ip
@@ -143,7 +144,7 @@ $sql_ary = array(
 * @var	bool	show_guests		Do we display guests in the list
 * @var	int		guest_counter	Number of guests displayed
 * @var	array	forum_data		Array with forum data
-* @since 3.1-A1
+* @since 3.1.0-a1
 * @change 3.1.0-a2 Added vars guest_counter and forum_data
 */
 $vars = array('sql_ary', 'show_guests', 'guest_counter', 'forum_data');
@@ -351,7 +352,7 @@ while ($row = $db->sql_fetchrow($result))
 	* @var	string	location		Page name to displayed in the list
 	* @var	string	location_url	Page url to displayed in the list
 	* @var	array	forum_data		Array with forum data
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	* @change 3.1.0-a2 Added var forum_data
 	*/
 	$vars = array('on_page', 'row', 'location', 'location_url', 'forum_data');
@@ -437,8 +438,9 @@ $template->assign_vars(array(
 
 	'U_SWITCH_GUEST_DISPLAY'	=> append_sid("{$phpbb_root_path}viewonline.$phpEx", 'sg=' . ((int) !$show_guests)),
 	'L_SWITCH_GUEST_DISPLAY'	=> ($show_guests) ? $user->lang['HIDE_GUESTS'] : $user->lang['DISPLAY_GUESTS'],
-	'S_SWITCH_GUEST_DISPLAY'	=> ($config['load_online_guests']) ? true : false)
-);
+	'S_SWITCH_GUEST_DISPLAY'	=> ($config['load_online_guests']) ? true : false,
+	'S_VIEWONLINE'				=> true,
+));
 
 // We do not need to load the who is online box here. ;)
 $config['load_online'] = false;

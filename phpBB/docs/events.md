@@ -66,15 +66,63 @@ acp_simple_header_body_before
 
 acp_simple_header_head_append
 ===
-* Location: adm/style/overall_header.html
+* Location: adm/style/simple_header.html
 * Since: 3.1.0-a1
 * Purpose: Add assets within the `<head>` tags in the simple header of the ACP
 
 acp_users_overview_options_append
 ===
-* Location: adm/style/acp_users.html
+* Location: adm/style/acp_users_overview.html
 * Since: 3.1.0-a1
 * Purpose: Add options and settings on user overview page
+
+acp_users_prefs_append
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the bottom of ACP users prefs settings
+
+acp_users_prefs_prepend
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the top of ACP users prefs settings
+
+acp_users_prefs_personal_append
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the bottom of ACP users personal prefs settings
+
+acp_users_prefs_personal_prepend
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the top of ACP users personal prefs settings
+
+acp_users_prefs_post_append
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the bottom of ACP users post prefs settings
+
+acp_users_prefs_post_prepend
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the top of ACP users post prefs settings
+
+acp_users_prefs_view_append
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the bottom of ACP users view prefs settings
+
+acp_users_prefs_view_prepend
+===
+* Location: adm/style/acp_users_prefs.html
+* Since: 3.1.0-b3
+* Purpose: Add user options fieldset to the top of ACP users view prefs settings
 
 acp_users_signature_editor_buttons_after
 ===
@@ -91,7 +139,7 @@ acp_users_signature_editor_buttons_before
 * Purpose: Add content before BBCode posting buttons in the ACP user signature
 
 forumlist_body_category_header_after
-====
+===
 * Locations:
     + styles/prosilver/template/forumlist_body.html
     + styles/subsilver2/template/forumlist_body.html
@@ -99,7 +147,7 @@ forumlist_body_category_header_after
 * Purpose: Add content after the header of the category on the forum list.
 
 forumlist_body_category_header_before
-====
+===
 * Locations:
     + styles/prosilver/template/forumlist_body.html
     + styles/subsilver2/template/forumlist_body.html
@@ -107,7 +155,7 @@ forumlist_body_category_header_before
 * Purpose: Add content before the header of the category on the forum list.
 
 forumlist_body_last_post_title_prepend
-====
+===
 * Locations:
     + styles/prosilver/template/forumlist_body.html
     + styles/subsilver2/template/forumlist_body.html
@@ -115,7 +163,7 @@ forumlist_body_last_post_title_prepend
 * Purpose: Add content before the post title of the latest post in a forum on the forum list.
 
 forumlist_body_subforums_after
-====
+===
 * Locations:
     + styles/prosilver/template/forumlist_body.html
     + styles/subsilver2/template/forumlist_body.html
@@ -123,7 +171,7 @@ forumlist_body_subforums_after
 * Purpose: Add content after the list of subforums (if any) for each forum on the forum list.
 
 forumlist_body_subforums_before
-====
+===
 * Locations:
     + styles/prosilver/template/forumlist_body.html
     + styles/subsilver2/template/forumlist_body.html
@@ -131,7 +179,7 @@ forumlist_body_subforums_before
 * Purpose: Add content before the list of subforums (if any) for each forum on the forum list.
 
 forumlist_body_last_row_after
-====
+===
 * Locations:
     + styles/prosilver/template/forumlist_body.html
     + styles/subsilver2/template/forumlist_body.html
@@ -153,6 +201,14 @@ index_body_linklist_before
     + styles/subsilver2/template/index_body.html
 * Since: 3.1.0-a3
 * Purpose: Add content before the linklist above the forum list on Board index
+
+index_body_stat_blocks_after
+===
+* Locations:
+    + styles/prosilver/template/index_body.html
+    + styles/subsilver2/template/index_body.html
+* Since: 3.1.0-b3
+* Purpose: Add new statistic blocks below the Who Is Online and Board Statistics blocks
 
 index_body_stat_blocks_before
 ===
@@ -231,7 +287,7 @@ overall_footer_after
 overall_footer_breadcrumb_append
 ===
 * Locations:
-    + styles/prosilver/template/overall_footer.html
+    + styles/prosilver/template/navbar_footer.html
 * Since: 3.1.0-a1
 * Purpose: Add links to the list of breadcrumbs in the footer
 
@@ -259,6 +315,46 @@ overall_footer_copyright_prepend
 * Since: 3.1.0-a1
 * Purpose: Add content before the copyright line
 
+overall_footer_page_body_after
+===
+* Locations:
+    + styles/prosilver/template/overall_footer.html
+    + styles/subsilver2/template/overall_footer.html
+* Since: 3.1.0-b3
+* Purpose: Add content after the page-body, but before the footer
+
+overall_footer_teamlink_after
+===
+* Locations:
+    + styles/prosilver/template/navbar_footer.html
+    + styles/subsilver2/template/index_body.html
+* Since: 3.1.0-b3
+* Purpose: Add contents after the team-link in the footer
+
+overall_footer_teamlink_before
+===
+* Locations:
+    + styles/prosilver/template/navbar_footer.html
+    + styles/subsilver2/template/index_body.html
+* Since: 3.1.0-b3
+* Purpose: Add contents before the team-link in the footer
+
+overall_footer_timezone_after
+===
+* Locations:
+    + styles/prosilver/template/navbar_footer.html
+    + styles/subsilver2/template/breadcrumbs.html
+* Since: 3.1.0-b3
+* Purpose: Add content to the navbar in the page footer, after "Timezone"
+
+overall_footer_timezone_before
+===
+* Locations:
+    + styles/prosilver/template/navbar_footer.html
+    + styles/subsilver2/template/breadcrumbs.html
+* Since: 3.1.0-b3
+* Purpose: Add content to the navbar in the page footer, before "Timezone"
+
 overall_header_body_before
 ===
 * Locations:
@@ -270,7 +366,7 @@ overall_header_body_before
 overall_header_breadcrumb_append
 ===
 * Locations:
-    + styles/prosilver/template/overall_header.html
+    + styles/prosilver/template/navbar_header.html
     + styles/subsilver2/template/breadcrumbs.html
 * Since: 3.1.0-a1
 * Purpose: Add links to the list of breadcrumbs in the header
@@ -294,7 +390,7 @@ overall_header_head_append
 overall_header_navigation_append
 ===
 * Locations:
-    + styles/prosilver/template/overall_header.html
+    + styles/prosilver/template/navbar_header.html
     + styles/subsilver2/template/overall_header.html
 * Since: 3.1.0-a1
 * Purpose: Add links after the navigation links in the header
@@ -302,10 +398,18 @@ overall_header_navigation_append
 overall_header_navigation_prepend
 ===
 * Locations:
-    + styles/prosilver/template/overall_header.html
+    + styles/prosilver/template/navbar_header.html
     + styles/subsilver2/template/overall_header.html
 * Since: 3.1.0-a1
 * Purpose: Add links before the navigation links in the header
+
+overall_header_page_body_before
+===
+* Locations:
+    + styles/prosilver/template/overall_header.html
+    + styles/subsilver2/template/overall_header.html
+* Since: 3.1.0-b3
+* Purpose: Add content after the page-header, but before the page-body
 
 posting_editor_buttons_after
 ===
@@ -399,6 +503,7 @@ simple_footer_after
 ===
 * Locations:
     + styles/prosilver/template/simple_footer.html
+    + styles/subsilver2/template/simple_footer.html
 * Since: 3.1.0-a1
 * Purpose: Add content directly prior to the `</body>` tag of the simple footer
 
@@ -429,6 +534,22 @@ topiclist_row_append
     + styles/subsilver2/template/viewforum_body.html
 * Since: 3.1.0-a1
 * Purpose: Add content into topic rows (inside the elements containing topic titles)
+
+ucp_pm_viewmessage_contact_fields_after
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_viewmessage.html
+* Since: 3.1.0-b1
+* Purpose: Add data after the contact fields on the user profile when viewing
+a private message
+
+ucp_pm_viewmessage_contact_fields_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_viewmessage.html
+* Since: 3.1.0-b1
+* Purpose: Add data before the contact fields on the user profile when viewing
+a private message
 
 ucp_pm_viewmessage_custom_fields_after
 ===
@@ -525,16 +646,16 @@ Display Options screen
 ucp_friend_list_before
 ===
 * Locations:
-	+ styles/prosilver/template/ucp_zebra_friends.html
-	+ styles/subsilver2/template/ucp_zebra_friends.html
+    + styles/prosilver/template/ucp_zebra_friends.html
+    + styles/subsilver2/template/ucp_zebra_friends.html
 * Since: 3.1.0-a4
 * Purpose: Add optional elements before list of friends in UCP
 
 ucp_friend_list_after
 ===
 * Locations:
-	+ styles/prosilver/template/ucp_zebra_friends.html
-	+ styles/subsilver2/template/ucp_zebra_friends.html
+    + styles/prosilver/template/ucp_zebra_friends.html
+    + styles/subsilver2/template/ucp_zebra_friends.html
 * Since: 3.1.0-a4
 * Purpose: Add optional elements after list of friends in UCP
 

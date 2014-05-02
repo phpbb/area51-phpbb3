@@ -1,6 +1,6 @@
 <!-- INCLUDE overall_header.html -->
 <!-- IF U_MCP or U_ACP --><p class="responsive-center">[&nbsp;<!-- IF U_ACP --><a href="{U_ACP}" title="{L_ACP}" data-responsive-text="{L_ACP_SHORT}">{L_ACP}</a><!-- IF U_MCP -->&nbsp;|&nbsp;<!-- ENDIF --><!-- ENDIF --><!-- IF U_MCP --><a href="{U_MCP}" title="{L_MCP}" data-responsive-text="{L_MCP_SHORT}">{L_MCP}</a><!-- ENDIF -->&nbsp;]</p><!-- ENDIF -->
-<h2><a href="{U_VIEW_FORUM}">{FORUM_NAME}</a></h2>
+<h2 class="forum-title"><a href="{U_VIEW_FORUM}">{FORUM_NAME}</a></h2>
 
 <!-- IF FORUM_DESC or MODERATORS or U_MCP -->
 <div>
@@ -28,7 +28,7 @@
 <!-- IF S_HAS_SUBFORUM -->
 <!-- IF not S_IS_BOT and U_MARK_FORUMS -->
 <ul class="linklist">
-	<li class="rightside mark-read"><a href="{U_MARK_FORUMS}" data-ajax="mark_forums_read" data-overlay="false">{L_MARK_SUBFORUMS_READ}</a></li>
+	<li class="rightside mark-read"><a href="{U_MARK_FORUMS}" data-ajax="mark_forums_read">{L_MARK_SUBFORUMS_READ}</a></li>
 </ul>
 <!-- ENDIF -->
 	<!-- INCLUDE forumlist_body.html -->
@@ -56,7 +56,7 @@
 	<!-- ENDIF -->
 
 	<div class="pagination">
-		<!-- IF not S_IS_BOT and U_MARK_TOPICS and .topicrow --><a href="{U_MARK_TOPICS}" accesskey="m" data-ajax="mark_topics_read" data-overlay="false">{L_MARK_TOPICS_READ}</a> &bull; <!-- ENDIF -->
+		<!-- IF not S_IS_BOT and U_MARK_TOPICS and .topicrow --><a href="{U_MARK_TOPICS}" accesskey="m" data-ajax="mark_topics_read">{L_MARK_TOPICS_READ}</a> &bull; <!-- ENDIF -->
 		{TOTAL_TOPICS} &bull; 
 		<!-- IF .pagination -->
 			<!-- INCLUDE pagination.html -->
@@ -227,7 +227,7 @@
 		<!-- ENDIF -->
 
 		<div class="pagination">
-			<!-- IF not S_IS_BOT and U_MARK_TOPICS and .topicrow --><a href="{U_MARK_TOPICS}" data-ajax="mark_topics_read" data-overlay="false">{L_MARK_TOPICS_READ}</a> &bull; <!-- ENDIF -->
+			<!-- IF not S_IS_BOT and U_MARK_TOPICS and .topicrow --><a href="{U_MARK_TOPICS}" data-ajax="mark_topics_read">{L_MARK_TOPICS_READ}</a> &bull; <!-- ENDIF -->
 			{TOTAL_TOPICS} &bull; 
 			<!-- IF .pagination -->
 				<!-- INCLUDE pagination.html -->
@@ -241,13 +241,17 @@
 <!-- INCLUDE jumpbox.html -->
 
 <!-- IF S_DISPLAY_ONLINE_LIST -->
-	<h3><!-- IF U_VIEWONLINE --><a href="{U_VIEWONLINE}">{L_WHO_IS_ONLINE}</a><!-- ELSE -->{L_WHO_IS_ONLINE}<!-- ENDIF --></h3>
-	<p>{LOGGED_IN_USER_LIST}</p>
+	<div class="stat-block online-list">
+		<h3><!-- IF U_VIEWONLINE --><a href="{U_VIEWONLINE}">{L_WHO_IS_ONLINE}</a><!-- ELSE -->{L_WHO_IS_ONLINE}<!-- ENDIF --></h3>
+		<p>{LOGGED_IN_USER_LIST}</p>
+	</div>
 <!-- ENDIF -->
 
 <!-- IF S_DISPLAY_POST_INFO -->
-	<h3>{L_FORUM_PERMISSIONS}</h3>
-	<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
+	<div class="stat-block permissions">
+		<h3>{L_FORUM_PERMISSIONS}</h3>
+		<p><!-- BEGIN rules -->{rules.RULE}<br /><!-- END rules --></p>
+	</div>
 <!-- ENDIF -->
 
 <!-- INCLUDE overall_footer.html -->

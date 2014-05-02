@@ -52,7 +52,7 @@ $current_time = time();
 
 /**
 * This event allows you to alter the above parameters, such as submit and mode
-* 
+*
 * Note: $refresh must be true to retain previously submitted form data.
 *
 * Note: The template class will not work properly until $user->setup() is
@@ -74,15 +74,30 @@ $current_time = time();
 *							viewtopic or viewforum depending on if the user
 *							is posting a new topic or editing a post)
 * @var	bool	refresh		Whether or not to retain previously submitted data
-* @var	string	mode		What action to take if the form has been sumitted
+* @var	string	mode		What action to take if the form has been submitted
 *							post|reply|quote|edit|delete|bump|smilies|popup
 * @var	array	error		Any error strings; a non-empty array aborts
 *							form submission.
 *							NOTE: Should be actual language strings, NOT
 *							language keys.
-* @since 3.1-A1
+* @since 3.1.0-a1
 */
-$vars = array('post_id', 'topic_id', 'forum_id', 'draft_id', 'lastclick', 'submit', 'preview', 'save', 'load', 'delete', 'cancel', 'refresh', 'mode', 'error');
+$vars = array(
+	'post_id',
+	'topic_id',
+	'forum_id',
+	'draft_id',
+	'lastclick',
+	'submit',
+	'preview',
+	'save',
+	'load',
+	'delete',
+	'cancel',
+	'refresh',
+	'mode',
+	'error',
+);
 extract($phpbb_dispatcher->trigger_event('core.modify_posting_parameters', compact($vars)));
 
 // Was cancel pressed? If so then redirect to the appropriate page
@@ -1478,7 +1493,6 @@ $template->assign_vars(array(
 	'L_POST_A'					=> $page_title,
 	'L_ICON'					=> ($mode == 'reply' || $mode == 'quote' || ($mode == 'edit' && $post_id != $post_data['topic_first_post_id'])) ? $user->lang['POST_ICON'] : $user->lang['TOPIC_ICON'],
 	'L_MESSAGE_BODY_EXPLAIN'	=> $user->lang('MESSAGE_BODY_EXPLAIN', (int) $config['max_post_chars']),
-	'L_TOO_MANY_ATTACHMENTS'	=> $user->lang('TOO_MANY_ATTACHMENTS', (int) $config['max_attachments']),
 
 	'FORUM_NAME'			=> $post_data['forum_name'],
 	'FORUM_DESC'			=> ($post_data['forum_desc']) ? generate_text_for_display($post_data['forum_desc'], $post_data['forum_desc_uid'], $post_data['forum_desc_bitfield'], $post_data['forum_desc_options']) : '',
@@ -1502,8 +1516,6 @@ $template->assign_vars(array(
 	'U_VIEW_TOPIC'			=> ($mode != 'post') ? append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=$topic_id") : '',
 	'U_PROGRESS_BAR'		=> append_sid("{$phpbb_root_path}posting.$phpEx", "f=$forum_id&amp;mode=popup"),
 	'UA_PROGRESS_BAR'		=> addslashes(append_sid("{$phpbb_root_path}posting.$phpEx", "f=$forum_id&amp;mode=popup")),
-	'ATTACH_ORDER'			=> ($config['display_order']) ? 'asc' : 'desc',
-	'MAX_ATTACHMENTS'		=> ($auth->acl_get('a_') || $auth->acl_get('m_', $forum_id)) ? 0 : (int) $config['max_attachments'],
 
 	'S_PRIVMSGS'				=> false,
 	'S_CLOSE_PROGRESS_WINDOW'	=> (isset($_POST['add_file'])) ? true : false,
@@ -1544,15 +1556,37 @@ $template->assign_vars(array(
 	'S_POST_ACTION'			=> $s_action,
 	'S_HIDDEN_FIELDS'		=> $s_hidden_fields,
 	'S_ATTACH_DATA'			=> json_encode($message_parser->attachment_data),
+	'S_IN_POSTING'			=> true,
 ));
 
 /**
 * This event allows you to modify template variables for the posting screen
 *
 * @event core.posting_modify_template_vars
-* @since 3.1-A1
+* @var	array	post_data		Array with post data
+* @var	array	moderators		Array with forum moderators
+* @var	string	mode			What action to take if the form is submitted
+*								post|reply|quote|edit|delete|bump|smilies|popup
+* @var	string	page_title		Title of the mode page
+* @var	bool	s_topic_icons	Whether or not to show the topic icons
+* @var	string	form_enctype	If attachments are allowed for this form the value of
+*								this is "multipart/form-data" else it is the empty string
+* @var	string	s_action		The URL to submit the POST data to
+* @var	string	s_hidden_fields The concatenated input tags of the form's hidden fields
+* @since 3.1.0-a1
+* @change 3.1.0-b3 Added vars post_data, moderators, mode, page_title, s_topic_icons, form_enctype, s_action, s_hidden_fields
 */
-$phpbb_dispatcher->dispatch('core.posting_modify_template_vars');
+$vars = array(
+	'post_data',
+	'moderators',
+	'mode',
+	'page_title',
+	's_topic_icons',
+	'form_enctype',
+	's_action',
+	's_hidden_fields',
+);
+extract($phpbb_dispatcher->trigger_event('core.posting_modify_template_vars', compact($vars)));
 
 // Build custom bbcodes array
 display_custom_bbcodes();
@@ -1582,7 +1616,8 @@ $allowed = ($auth->acl_get('f_attach', $forum_id) && $auth->acl_get('u_attach') 
 
 if ($allowed)
 {
-	$plupload->configure($cache, $template, $s_action, $forum_id);
+	$max_files = ($auth->acl_get('a_') || $auth->acl_get('m_', $forum_id)) ? 0 : (int) $config['max_attachments'];
+	$plupload->configure($cache, $template, $s_action, $forum_id, $max_files);
 }
 
 // Attachment entry

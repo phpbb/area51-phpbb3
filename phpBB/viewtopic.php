@@ -16,6 +16,7 @@ $phpEx = substr(strrchr(__FILE__, '.'), 1);
 include($phpbb_root_path . 'common.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 include($phpbb_root_path . 'includes/bbcode.' . $phpEx);
+include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 
 // Start session management
 $user->session_begin();
@@ -266,7 +267,7 @@ if ($topic_data['topic_visibility'] != ITEM_APPROVED && !$auth->acl_get('m_appro
 if ($post_id)
 {
 	// are we where we are supposed to be?
-	if ($topic_data['post_visibility'] == ITEM_UNAPPROVED && !$auth->acl_get('m_approve', $topic_data['forum_id']))
+	if (($topic_data['post_visibility'] == ITEM_UNAPPROVED || $topic_data['post_visibility'] == ITEM_REAPPROVE) && !$auth->acl_get('m_approve', $topic_data['forum_id']))
 	{
 		// If post_id was submitted, we try at least to display the topic as a last resort...
 		if ($topic_id)
@@ -422,17 +423,11 @@ else
 $highlight_match = $highlight = '';
 if ($hilit_words)
 {
-	foreach (explode(' ', trim($hilit_words)) as $word)
-	{
-		if (trim($word))
-		{
-			$word = str_replace('\*', '\w+?', preg_quote($word, '#'));
-			$word = preg_replace('#(^|\s)\\\\w\*\?(\s|$)#', '$1\w+?$2', $word);
-			$highlight_match .= (($highlight_match != '') ? '|' : '') . $word;
-		}
-	}
-
-	$highlight = urlencode($hilit_words);
+	$highlight_match = phpbb_clean_search_string($hilit_words);
+	$highlight = urlencode($highlight_match);
+	$highlight_match = str_replace('\*', '\w+?', preg_quote($highlight_match, '#'));
+	$highlight_match = preg_replace('#(?<=^|\s)\\\\w\*\?(?=\s|$)#', '\w+?', $highlight_match);
+	$highlight_match = str_replace(' ', '|', $highlight_match);
 }
 
 // Make sure $start is set to the last page if it exceeds the amount
@@ -842,9 +837,11 @@ if (!empty($topic_data['poll_start']))
 	}
 
 	$poll_total = 0;
+	$poll_most = 0;
 	foreach ($poll_info as $poll_option)
 	{
 		$poll_total += $poll_option['poll_option_total'];
+		$poll_most = ($poll_option['poll_option_total'] >= $poll_most) ? $poll_option['poll_option_total'] : $poll_most;
 	}
 
 	$parse_flags = ($poll_info[0]['bbcode_bitfield'] ? OPTION_FLAG_BBCODE : 0) | OPTION_FLAG_SMILIES;
@@ -860,16 +857,21 @@ if (!empty($topic_data['poll_start']))
 	{
 		$option_pct = ($poll_total > 0) ? $poll_option['poll_option_total'] / $poll_total : 0;
 		$option_pct_txt = sprintf("%.1d%%", round($option_pct * 100));
+		$option_pct_rel = ($poll_most > 0) ? $poll_option['poll_option_total'] / $poll_most : 0;
+		$option_pct_rel_txt = sprintf("%.1d%%", round($option_pct_rel * 100));
+		$option_most_votes = ($poll_option['poll_option_total'] > 0 && $poll_option['poll_option_total'] == $poll_most) ? true : false;
 
 		$template->assign_block_vars('poll_option', array(
-			'POLL_OPTION_ID' 		=> $poll_option['poll_option_id'],
-			'POLL_OPTION_CAPTION' 	=> $poll_option['poll_option_text'],
-			'POLL_OPTION_RESULT' 	=> $poll_option['poll_option_total'],
-			'POLL_OPTION_PERCENT' 	=> $option_pct_txt,
-			'POLL_OPTION_PCT'		=> round($option_pct * 100),
-			'POLL_OPTION_WIDTH'     => round($option_pct * 250),
-			'POLL_OPTION_VOTED'		=> (in_array($poll_option['poll_option_id'], $cur_voted_id)) ? true : false)
-		);
+			'POLL_OPTION_ID' 			=> $poll_option['poll_option_id'],
+			'POLL_OPTION_CAPTION' 		=> $poll_option['poll_option_text'],
+			'POLL_OPTION_RESULT' 		=> $poll_option['poll_option_total'],
+			'POLL_OPTION_PERCENT' 		=> $option_pct_txt,
+			'POLL_OPTION_PERCENT_REL' 	=> $option_pct_rel_txt,
+			'POLL_OPTION_PCT'			=> round($option_pct * 100),
+			'POLL_OPTION_WIDTH'     	=> round($option_pct * 250),
+			'POLL_OPTION_VOTED'			=> (in_array($poll_option['poll_option_id'], $cur_voted_id)) ? true : false,
+			'POLL_OPTION_MOST_VOTES'	=> $option_most_votes,
+		));
 	}
 
 	$poll_end = $topic_data['poll_length'] + $topic_data['poll_start'];
@@ -889,8 +891,8 @@ if (!empty($topic_data['poll_start']))
 		'S_IS_MULTI_CHOICE'	=> ($topic_data['poll_max_options'] > 1) ? true : false,
 		'S_POLL_ACTION'		=> $viewtopic_url,
 
-		'U_VIEW_RESULTS'	=> $viewtopic_url . '&amp;view=viewpoll')
-	);
+		'U_VIEW_RESULTS'	=> $viewtopic_url . '&amp;view=viewpoll',
+	));
 
 	unset($poll_end, $poll_info, $voted_id);
 }
@@ -998,10 +1000,20 @@ $sql_ary = array(
 * @var	string	sort_dir	Direction the posts are sorted by
 * @var	int		start		Pagination information
 * @var	array	sql_ary		The SQL array to get the data of posts and posters
-* @since 3.1-A1
+* @since 3.1.0-a1
 * @change 3.1.0-a2 Added vars forum_id, topic_id, topic_data, post_list, sort_days, sort_key, sort_dir, start
 */
-$vars = array('forum_id', 'topic_id', 'topic_data', 'post_list', 'sort_days', 'sort_key', 'sort_dir', 'start', 'sql_ary');
+$vars = array(
+	'forum_id',
+	'topic_id',
+	'topic_data',
+	'post_list',
+	'sort_days',
+	'sort_key',
+	'sort_dir',
+	'start',
+	'sql_ary',
+);
 extract($phpbb_dispatcher->trigger_event('core.viewtopic_get_post_data', compact($vars)));
 
 $sql = $db->sql_build_query('SELECT', $sql_ary);
@@ -1027,7 +1039,7 @@ while ($row = $db->sql_fetchrow($result))
 	{
 		$attach_list[] = (int) $row['post_id'];
 
-		if ($row['post_visibility'] == ITEM_UNAPPROVED)
+		if ($row['post_visibility'] == ITEM_UNAPPROVED || $row['post_visibility'] == ITEM_REAPPROVE)
 		{
 			$has_attachments = true;
 		}
@@ -1074,7 +1086,7 @@ while ($row = $db->sql_fetchrow($result))
 	* @event core.viewtopic_post_rowset_data
 	* @var	array	rowset_data	Array with the rowset data for this post
 	* @var	array	row			Array with original user and post data
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	*/
 	$vars = array('rowset_data', 'row');
 	extract($phpbb_dispatcher->trigger_event('core.viewtopic_post_rowset_data', compact($vars)));
@@ -1110,7 +1122,6 @@ while ($row = $db->sql_fetchrow($result))
 				'rank_image'		=> '',
 				'rank_image_src'	=> '',
 				'sig'				=> '',
-				'profile'			=> '',
 				'pm'				=> '',
 				'email'				=> '',
 				'jabber'			=> '',
@@ -1131,7 +1142,7 @@ while ($row = $db->sql_fetchrow($result))
 			* @var	array	user_cache_data	Array with the user's data
 			* @var	int		poster_id		Poster's user id
 			* @var	array	row				Array with original user and post data
-			* @since 3.1-A1
+			* @since 3.1.0-a1
 			*/
 			$vars = array('user_cache_data', 'poster_id', 'row');
 			extract($phpbb_dispatcher->trigger_event('core.viewtopic_cache_guest_data', compact($vars)));
@@ -1153,6 +1164,9 @@ while ($row = $db->sql_fetchrow($result))
 			$id_cache[] = $poster_id;
 
 			$user_cache_data = array(
+				'user_type'					=> $row['user_type'],
+				'user_inactive_reason'		=> $row['user_inactive_reason'],
+
 				'joined'		=> $user->format_date($row['user_regdate']),
 				'posts'			=> $row['user_posts'],
 				'warnings'		=> (isset($row['user_warnings'])) ? $row['user_warnings'] : 0,
@@ -1175,7 +1189,6 @@ while ($row = $db->sql_fetchrow($result))
 				'user_colour'		=> $row['user_colour'],
 
 				'online'		=> false,
-				'profile'		=> append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=viewprofile&amp;u=$poster_id"),
 				'jabber'		=> ($row['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=jabber&amp;u=$poster_id") : '',
 				'search'		=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id=$poster_id&amp;sr=posts") : '',
 
@@ -1192,7 +1205,7 @@ while ($row = $db->sql_fetchrow($result))
 			* @var	array	user_cache_data	Array with the user's data
 			* @var	int		poster_id		Poster's user id
 			* @var	array	row				Array with original user and post data
-			* @since 3.1-A1
+			* @since 3.1.0-a1
 			*/
 			$vars = array('user_cache_data', 'poster_id', 'row');
 			extract($phpbb_dispatcher->trigger_event('core.viewtopic_cache_user_data', compact($vars)));
@@ -1364,6 +1377,13 @@ if ($bbcode_bitfield !== '')
 {
 	$bbcode = new bbcode(base64_encode($bbcode_bitfield));
 }
+
+// Get the list of users who can receive private messages
+$can_receive_pm_list = $auth->acl_get_list(array_keys($user_cache), 'u_readpm');
+$can_receive_pm_list = (empty($can_receive_pm_list) || !isset($can_receive_pm_list[0]['u_readpm'])) ? array() : $can_receive_pm_list[0]['u_readpm'];
+
+// Get the list of permanently banned users
+$permanently_banned_users = phpbb_get_banned_user_ids(array_keys($user_cache), false);
 
 $i_total = sizeof($rowset) - 1;
 $prev_post_id = '';
@@ -1583,6 +1603,31 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		!$row['post_edit_locked']
 	)));
 
+	// Can this user receive a Private Message?
+	$can_receive_pm = (
+		// They must be a "normal" user
+		$user_cache[$poster_id]['user_type'] != USER_IGNORE &&
+
+		// They must not be deactivated by the administrator
+		($user_cache[$poster_id]['user_type'] != USER_INACTIVE && $user_cache[$poster_id]['user_inactive_reason'] == INACTIVE_MANUAL) &&
+
+		// They must be able to read PMs
+		in_array($poster_id, $can_receive_pm_list) &&
+
+		// They must not be permanently banned
+		!in_array($poster_id, $permanently_banned_users) &&
+
+		// They must allow users to contact via PM
+		(($auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_')) || $data['user_allow_pm'])
+	);
+
+    $u_pm = '';
+
+	if ($config['allow_privmsg'] && $auth->acl_get('u_sendpm') && $can_receive_pm)
+	{
+		$u_pm = append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;action=quotepost&amp;p=' . $row['post_id']);
+	}
+
 	//
 	$post_row = array(
 		'POST_AUTHOR_FULL'		=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_full'] : get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
@@ -1621,9 +1666,8 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		'U_INFO'			=> ($auth->acl_get('m_info', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", "i=main&amp;mode=post_details&amp;f=$forum_id&amp;p=" . $row['post_id'], true, $user->session_id) : '',
 		'U_DELETE'			=> ($delete_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=delete&amp;f=$forum_id&amp;p={$row['post_id']}") : '',
 
-		'U_PROFILE'		=> $user_cache[$poster_id]['profile'],
 		'U_SEARCH'		=> $user_cache[$poster_id]['search'],
-		'U_PM'			=> ($poster_id != ANONYMOUS && $config['allow_privmsg'] && $auth->acl_get('u_sendpm') && ($user_cache[$poster_id]['allow_pm'] || $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_'))) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;action=quotepost&amp;p=' . $row['post_id']) : '',
+		'U_PM'			=> $u_pm,
 		'U_EMAIL'		=> $user_cache[$poster_id]['email'],
 		'U_JABBER'		=> $user_cache[$poster_id]['jabber'],
 
@@ -1644,7 +1688,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 
 		'S_HAS_ATTACHMENTS'	=> (!empty($attachments[$row['post_id']])) ? true : false,
 		'S_MULTIPLE_ATTACHMENTS'	=> !empty($attachments[$row['post_id']]) && sizeof($attachments[$row['post_id']]) > 1,
-		'S_POST_UNAPPROVED'	=> ($row['post_visibility'] == ITEM_UNAPPROVED) ? true : false,
+		'S_POST_UNAPPROVED'	=> ($row['post_visibility'] == ITEM_UNAPPROVED || $row['post_visibility'] == ITEM_REAPPROVE) ? true : false,
 		'S_POST_DELETED'	=> ($row['post_visibility'] == ITEM_DELETED) ? true : false,
 		'L_POST_DELETED_MESSAGE'	=> $l_deleted_message,
 		'S_POST_REPORTED'	=> ($row['post_reported'] && $auth->acl_get('m_report', $forum_id)) ? true : false,
@@ -1672,15 +1716,29 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 	* @var	int		start				Start item of this page
 	* @var	int		current_row_number	Number of the post on this page
 	* @var	int		end					Number of posts on this page
+	* @var	int		total_posts			Total posts count
 	* @var	array	row					Array with original post and user data
 	* @var	array	cp_row				Custom profile field data of the poster
 	* @var	array	attachments			List of attachments
 	* @var	array	user_poster_data	Poster's data from user cache
 	* @var	array	post_row			Template block array of the post
-	* @since 3.1-A1
+	* @var	array	topic_data			Array with topic data
+	* @since 3.1.0-a1
 	* @change 3.1.0-a3 Added vars start, current_row_number, end, attachments
+	* @change 3.1.0-b3 Added topic_data array, total_posts
 	*/
-	$vars = array('start', 'current_row_number', 'end', 'row', 'cp_row', 'attachments', 'user_poster_data', 'post_row');
+	$vars = array(
+		'start',
+		'current_row_number',
+		'end',
+		'total_posts',
+		'row',
+		'cp_row',
+		'attachments',
+		'user_poster_data',
+		'post_row',
+		'topic_data',
+	);
 	extract($phpbb_dispatcher->trigger_event('core.viewtopic_modify_post_row', compact($vars)));
 
 	$i = $current_row_number;
@@ -1693,11 +1751,46 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 	// Dump vars into template
 	$template->assign_block_vars('postrow', $post_row);
 
+	$contact_fields = array(
+		array(
+			'ID'		=> 'pm',
+			'NAME' 		=> $user->lang['PRIVATE_MESSAGES'],
+			'U_CONTACT'	=> $u_pm,
+		),
+		array(
+			'ID'		=> 'email',
+			'NAME'		=> $user->lang['SEND_EMAIL'],
+			'U_CONTACT'	=> $user_cache[$poster_id]['email'],
+		),
+		array(
+			'ID'		=> 'jabber',
+			'NAME'		=> $user->lang['JABBER'],
+			'U_CONTACT'	=> $user_cache[$poster_id]['jabber'],
+		),
+	);
+
+	foreach ($contact_fields as $field)
+	{
+		if ($field['U_CONTACT'])
+		{
+			$template->assign_block_vars('postrow.contact', $field);
+		}
+	}
+
 	if (!empty($cp_row['blockrow']))
 	{
 		foreach ($cp_row['blockrow'] as $field_data)
 		{
 			$template->assign_block_vars('postrow.custom_fields', $field_data);
+
+			if ($field_data['S_PROFILE_CONTACT'])
+			{
+				$template->assign_block_vars('postrow.contact', array(
+					'ID'		=> $field_data['PROFILE_FIELD_IDENT'],
+					'NAME'		=> $field_data['PROFILE_FIELD_NAME'],
+					'U_CONTACT'	=> $field_data['PROFILE_FIELD_CONTACT'],
+				));
+			}
 		}
 	}
 
@@ -1727,14 +1820,28 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 	* @var	int		start				Start item of this page
 	* @var	int		current_row_number	Number of the post on this page
 	* @var	int		end					Number of posts on this page
+	* @var	int		total_posts			Total posts count
 	* @var	array	row					Array with original post and user data
 	* @var	array	cp_row				Custom profile field data of the poster
 	* @var	array	attachments			List of attachments
 	* @var	array	user_poster_data	Poster's data from user cache
 	* @var	array	post_row			Template block array of the post
+	* @var	array	topic_data			Array with topic data
 	* @since 3.1.0-a3
+	* @change 3.1.0-b3 Added topic_data array, total_posts
 	*/
-	$vars = array('start', 'current_row_number', 'end', 'row', 'cp_row', 'attachments', 'user_poster_data', 'post_row');
+	$vars = array(
+		'start',
+		'current_row_number',
+		'end',
+		'total_posts',
+		'row',
+		'cp_row',
+		'attachments',
+		'user_poster_data',
+		'post_row',
+		'topic_data',
+	);
 	extract($phpbb_dispatcher->trigger_event('core.viewtopic_post_row_after', compact($vars)));
 
 	$i = $current_row_number;
@@ -1878,11 +1985,11 @@ $page_title = $topic_data['topic_title'] . ($start ? ' - ' . sprintf($user->lang
 * You can use this event to modify the page title of the viewtopic page
 *
 * @event core.viewtopic_modify_page_title
-* @var	string	page_title		Title of the index page
+* @var	string	page_title		Title of the viewtopic page
 * @var	array	topic_data		Array with topic data
 * @var	int		forum_id		Forum ID of the topic
 * @var	int		start			Start offset used to calculate the page
-* @since 3.1-A1
+* @since 3.1.0-a1
 */
 $vars = array('page_title', 'topic_data', 'forum_id', 'start');
 extract($phpbb_dispatcher->trigger_event('core.viewtopic_modify_page_title', compact($vars)));

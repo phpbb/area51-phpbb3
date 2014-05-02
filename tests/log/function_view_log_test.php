@@ -44,7 +44,7 @@ class phpbb_log_function_view_log_test extends phpbb_database_test_case
 				'topic_id'			=> 0,
 
 				'viewforum'			=> '',
-				'action'			=> 'installed: 3.1.0-dev',
+				'action'			=> 'LOG_INSTALL_INSTALLED 3.1.0-dev',
 			),
 			2 => array(
 				'id'				=> 2,
@@ -164,7 +164,7 @@ class phpbb_log_function_view_log_test extends phpbb_database_test_case
 				'topic_id'			=> 45,
 
 				'viewforum'			=> '',
-				'action'			=> '{LOG MOD2}',
+				'action'			=> 'LOG_MOD2',
 				'viewtopic'			=> '',
 				'viewlogs'			=> '',
 			),
@@ -185,7 +185,7 @@ class phpbb_log_function_view_log_test extends phpbb_database_test_case
 				'topic_id'			=> 0,
 
 				'viewforum'			=> '',
-				'action'			=> '{LOG USER}<br />admin',
+				'action'			=> 'LOG_USER admin',
 			),
 			9 => array(
 				'id'				=> 9,
@@ -204,7 +204,47 @@ class phpbb_log_function_view_log_test extends phpbb_database_test_case
 				'topic_id'			=> 0,
 
 				'viewforum'			=> '',
-				'action'			=> '{LOG USER}<br />guest',
+				'action'			=> 'LOG_USER guest',
+			),
+			10 => array(
+				'id'				=> 10,
+
+				'reportee_id'			=> 0,
+				'reportee_username'		=> '',
+				'reportee_username_full'=> '',
+
+				'user_id'			=> 1,
+				'username'			=> 'Anonymous',
+				'username_full'		=> 'Anonymous',
+
+				'ip'				=> '127.0.0.1',
+				'time'				=> 1,
+				'forum_id'			=> 0,
+				'topic_id'			=> 0,
+
+				'viewforum'			=> '',
+				'action'			=> 'LOG_SINGULAR_PLURAL 2',
+			),
+			11 => array(
+				'id'				=> 11,
+
+				'reportee_id'			=> 0,
+				'reportee_username'		=> '',
+				'reportee_username_full'=> '',
+
+				'user_id'			=> 1,
+				'username'			=> 'Anonymous',
+				'username_full'		=> 'Anonymous',
+
+				'ip'				=> '127.0.0.1',
+				'time'				=> 1,
+				'forum_id'			=> 15,
+				'topic_id'			=> 3,
+
+				'viewforum'			=> '',
+				'action'			=> 'LOG_MOD3 guest ',
+				'viewtopic'			=> '',
+				'viewlogs'			=> '',
 			),
 		);
 
@@ -277,9 +317,24 @@ class phpbb_log_function_view_log_test extends phpbb_database_test_case
 				'user', 0, 5, 0, 0, 0, 2,
 			),
 			array(
-				'expected'			=> array(8, 9),
+				'expected'			=> array(8, 9, 10),
 				'expected_returned'	=> 0,
 				'users', 0,
+			),
+			array(
+				'expected'			=> array(1),
+				'expected_returned'	=> 0,
+				'admin', false, 5, 0, 0, 0, 0, 0, 'l.log_id ASC', 'install',
+			),
+			array(
+				'expected'			=> array(10),
+				'expected_returned'	=> 0,
+				'user', false, 5, 0, 0, 0, 0, 0, 'l.log_id ASC', 'plural',
+			),
+			array(
+				'expected'			=> array(11),
+				'expected_returned'	=> 0,
+				'mod', 0, 5, 0, 15, 3,
 			),
 		);
 
@@ -331,6 +386,13 @@ class phpbb_log_function_view_log_test extends phpbb_database_test_case
 		// Test sprintf() of the data into the action
 		$user->lang = array(
 			'LOG_INSTALL_INSTALLED'		=> 'installed: %s',
+			'LOG_USER'					=> 'User<br /> %s',
+			'LOG_MOD2'					=> 'Mod2',
+			'LOG_MOD3'		            => 'Mod3: %1$s, %2$s',
+			'LOG_SINGULAR_PLURAL'		=> array(
+				1	=> 'singular',
+				2	=> 'plural (%d)',
+			),
 		);
 
 		$phpbb_log = new \phpbb\log\log($db, $user, $auth, $phpbb_dispatcher, $phpbb_root_path, 'adm/', $phpEx, LOG_TABLE);

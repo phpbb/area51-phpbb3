@@ -133,7 +133,7 @@ function generate_smilies($mode, $forum_id)
 	* @var	string	mode			Mode of the smilies: window|inline
 	* @var	int		forum_id		The forum ID we are currently in
 	* @var	bool	display_link	Shall we display the "more smilies" link?
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	*/
 	$vars = array('mode', 'forum_id', 'display_link');
 	extract($phpbb_dispatcher->trigger_event('core.generate_smilies_after', compact($vars)));
@@ -172,7 +172,6 @@ function update_post_information($type, $ids, $return_update_sql = false)
 	{
 		$ids = array($ids);
 	}
-
 
 	$update_sql = $empty_forums = $not_empty_forums = array();
 
@@ -414,6 +413,10 @@ function upload_attachment($form_name, $forum_id, $local = false, $local_storage
 	if ($config['check_attachment_content'] && isset($config['mime_triggers']))
 	{
 		$upload->set_disallowed_content(explode('|', $config['mime_triggers']));
+	}
+	else if (!$config['check_attachment_content'])
+	{
+		$upload->set_disallowed_content(array());
 	}
 
 	$filedata['post_attach'] = $local || $upload->is_valid($form_name);
@@ -1149,7 +1152,7 @@ function topic_review($topic_id, $forum_id, $mode = 'topic_review', $cur_post_id
 			'S_HAS_ATTACHMENTS'	=> (!empty($attachments[$row['post_id']])) ? true : false,
 			'S_FRIEND'			=> ($row['friend']) ? true : false,
 			'S_IGNORE_POST'		=> ($row['foe']) ? true : false,
-			'L_IGNORE_POST'		=> ($row['foe']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), "<a href=\"{$u_show_post}\" onclick=\"dE('{$post_anchor}', 1); return false;\">", '</a>') : '',
+			'L_IGNORE_POST'		=> ($row['foe']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), "<a href=\"{$u_show_post}\" onclick=\"phpbb.toggleDisplay('{$post_anchor}', 1); return false;\">", '</a>') : '',
 
 			'POST_SUBJECT'		=> $post_subject,
 			'MINI_POST_IMG'		=> $user->img('icon_post_target', $user->lang['POST']),
@@ -1292,7 +1295,7 @@ function delete_post($forum_id, $topic_id, $post_id, &$data, $is_soft = false, $
 				{
 					$sql_data[FORUMS_TABLE] .= 'forum_posts_approved = forum_posts_approved - 1, forum_topics_approved = forum_topics_approved - 1';
 				}
-				else if ($data['topic_visibility'] == ITEM_UNAPPROVED)
+				else if ($data['topic_visibility'] == ITEM_UNAPPROVED || $data['post_visibility'] == ITEM_REAPPROVE)
 				{
 					$sql_data[FORUMS_TABLE] .= 'forum_posts_unapproved = forum_posts_unapproved - 1, forum_topics_unapproved = forum_topics_unapproved - 1';
 				}
@@ -1399,7 +1402,7 @@ function delete_post($forum_id, $topic_id, $post_id, &$data, $is_soft = false, $
 			{
 				$phpbb_content_visibility->remove_post_from_statistic($data, $sql_data);
 			}
-			else if ($data['post_visibility'] == ITEM_UNAPPROVED)
+			else if ($data['post_visibility'] == ITEM_UNAPPROVED || $data['post_visibility'] == ITEM_REAPPROVE)
 			{
 				$sql_data[FORUMS_TABLE] = (($sql_data[FORUMS_TABLE]) ? $sql_data[FORUMS_TABLE] . ', ' : '') . 'forum_posts_unapproved = forum_posts_unapproved - 1';
 				$sql_data[TOPICS_TABLE] = (($sql_data[TOPICS_TABLE]) ? $sql_data[TOPICS_TABLE] . ', ' : '') . 'topic_posts_unapproved = topic_posts_unapproved - 1';
@@ -1493,7 +1496,17 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 	* @var	bool	update_search_index	Flag indicating if the search index will be updated
 	* @since 3.1.0-a4
 	*/
-	extract($phpbb_dispatcher->trigger_event('core.modify_submit_post_data', compact(array('mode', 'subject', 'username', 'topic_type', 'poll', 'data', 'update_message', 'update_search_index'))));
+	$vars = array(
+		'mode',
+		'subject',
+		'username',
+		'topic_type',
+		'poll',
+		'data',
+		'update_message',
+		'update_search_index',
+	);
+	extract($phpbb_dispatcher->trigger_event('core.modify_submit_post_data', compact($vars)));
 
 	// We do not handle erasing posts here
 	if ($mode == 'delete')
@@ -1551,16 +1564,25 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 	{
 		// Post not approved, but in queue
 		$post_visibility = ITEM_UNAPPROVED;
+		switch ($post_mode)
+		{
+			case 'edit_first_post':
+			case 'edit':
+			case 'edit_last_post':
+			case 'edit_topic':
+				$post_visibility = ITEM_REAPPROVE;
+			break;
+		}
 	}
 
 	// MODs/Extensions are able to force any visibility on posts
 	if (isset($data['force_approved_state']))
 	{
-		$post_visibility = (in_array((int) $data['force_approved_state'], array(ITEM_APPROVED, ITEM_UNAPPROVED, ITEM_DELETED))) ? (int) $data['force_approved_state'] : $post_visibility;
+		$post_visibility = (in_array((int) $data['force_approved_state'], array(ITEM_APPROVED, ITEM_UNAPPROVED, ITEM_DELETED, ITEM_REAPPROVE))) ? (int) $data['force_approved_state'] : $post_visibility;
 	}
 	if (isset($data['force_visibility']))
 	{
-		$post_visibility = (in_array((int) $data['force_visibility'], array(ITEM_APPROVED, ITEM_UNAPPROVED, ITEM_DELETED))) ? (int) $data['force_visibility'] : $post_visibility;
+		$post_visibility = (in_array((int) $data['force_visibility'], array(ITEM_APPROVED, ITEM_UNAPPROVED, ITEM_DELETED, ITEM_REAPPROVE))) ? (int) $data['force_visibility'] : $post_visibility;
 	}
 
 	// Start the transaction here
@@ -2028,6 +2050,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 	$first_post_has_topic_info = ($post_mode == 'edit_first_post' &&
 			(($post_visibility == ITEM_DELETED && $data['topic_posts_softdeleted'] == 1) ||
 			($post_visibility == ITEM_UNAPPROVED && $data['topic_posts_unapproved'] == 1) ||
+			($post_visibility == ITEM_REAPPROVE && $data['topic_posts_unapproved'] == 1) ||
 			($post_visibility == ITEM_APPROVED && $data['topic_posts_approved'] == 1)));
 	// Fix the post's and topic's visibility and first/last post information, when the post is edited
 	if (($post_mode != 'post' && $post_mode != 'reply') && $data['post_visibility'] != $post_visibility)
@@ -2035,7 +2058,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 		// If the post was not approved, it could also be the starter,
 		// so we sync the starter after approving/restoring, to ensure that the stats are correct
 		// Same applies for the last post
-		$is_starter = ($post_mode == 'edit_first_post' || $data['post_visibility'] != ITEM_APPROVED);
+		$is_starter = ($post_mode == 'edit_first_post' || $post_mode == 'edit_topic' || $data['post_visibility'] != ITEM_APPROVED);
 		$is_latest = ($post_mode == 'edit_last_post' || $post_mode == 'edit_topic' || $data['post_visibility'] != ITEM_APPROVED);
 
 		$phpbb_content_visibility = $phpbb_container->get('content.visibility');
@@ -2268,14 +2291,36 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 			case 'edit_first_post':
 			case 'edit':
 			case 'edit_last_post':
-				// @todo: Check whether these notification deletions are correct
-				$phpbb_notifications->delete_notifications('topic', $data['topic_id']);
+				// Nothing to do here
+			break;
+		}
+	}
+	else if ($post_visibility == ITEM_REAPPROVE)
+	{
+		switch ($mode)
+		{
+			case 'edit_topic':
+			case 'edit_first_post':
+				$phpbb_notifications->add_notifications('topic_in_queue', $notification_data);
 
-				$phpbb_notifications->delete_notifications(array(
-					'quote',
-					'bookmark',
-					'post',
-				), $data['post_id']);
+				// Delete the approve_post notification so we can notify the user again,
+				// when his post got reapproved
+				$phpbb_notifications->delete_notifications('approve_post', $notification_data['post_id']);
+			break;
+
+			case 'edit':
+			case 'edit_last_post':
+				$phpbb_notifications->add_notifications('post_in_queue', $notification_data);
+
+				// Delete the approve_post notification so we can notify the user again,
+				// when his post got reapproved
+				$phpbb_notifications->delete_notifications('approve_post', $notification_data['post_id']);
+			break;
+
+			case 'post':
+			case 'reply':
+			case 'quote':
+				// Nothing to do here
 			break;
 		}
 	}
@@ -2286,21 +2331,11 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 			case 'post':
 			case 'reply':
 			case 'quote':
-				// Nothing to do here
-			break;
-
 			case 'edit_topic':
 			case 'edit_first_post':
 			case 'edit':
 			case 'edit_last_post':
-				// @todo: Check whether these notification deletions are correct
-				$phpbb_notifications->delete_notifications('topic', $data['topic_id']);
-
-				$phpbb_notifications->delete_notifications(array(
-					'quote',
-					'bookmark',
-					'post',
-				), $data['post_id']);
+				// Nothing to do here
 			break;
 		}
 	}
@@ -2337,7 +2372,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 	* @var	string		url						The "Return to topic" URL
 	* @var	array		data					Array of post data about the
 	*											submitted post
-	* @since 3.1-A3
+	* @since 3.1.0-a3
 	*/
 	$vars = array('url', 'data');
 	extract($phpbb_dispatcher->trigger_event('core.submit_post_end', compact($vars)));

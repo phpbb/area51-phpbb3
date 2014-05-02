@@ -273,6 +273,10 @@ div[class].topic-actions {
 	overflow-x: auto;
 }
 
+.postbody img.postimage {
+	max-width: 99%;
+}
+
 .search .postbody {
 	width: 68%
 }
@@ -566,8 +570,6 @@ blockquote .codebox {
 .attach-image {
 	margin: 3px 0;
 	max-width: 100%;
-	max-height: 350px;
-	overflow: auto;
 }
 
 .attach-image img {
@@ -727,6 +729,20 @@ fieldset.polls dd div {
 .postprofile .avatar img {
 	max-width: 90%;
 	height: auto !important;
+}
+
+dd.profile-contact {
+	overflow: visible;
+}
+
+.profile-contact .dropdown-container {
+	display: inline-block;
+	text-align: left;
+	width: 30px;
+}
+
+.profile-contact .icon_contact {
+	vertical-align: middle;
 }
 
 .online {

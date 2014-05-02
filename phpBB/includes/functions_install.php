@@ -106,6 +106,15 @@ function get_available_dbms($dbms = false, $return_unavailable = false, $only_20
 			'AVAILABLE'		=> true,
 			'2.0.x'			=> false,
 		),
+		'sqlite3'		=> array(
+			'LABEL'			=> 'SQLite3',
+			'SCHEMA'		=> 'sqlite',
+			'MODULE'		=> 'sqlite3',
+			'DELIM'			=> ';',
+			'DRIVER'		=> 'phpbb\db\driver\sqlite3',
+			'AVAILABLE'		=> true,
+			'2.0.x'			=> false,
+		),
 	);
 
 	if ($dbms)
@@ -206,14 +215,14 @@ function connect_check_db($error_connect, &$error, $dbms_details, $table_prefix,
 	$db->sql_return_on_error(true);
 
 	// Check that we actually have a database name before going any further.....
-	if ($dbms_details['DRIVER'] != 'phpbb\db\driver\sqlite' && $dbms_details['DRIVER'] != 'phpbb\db\driver\oracle' && $dbname === '')
+	if ($dbms_details['DRIVER'] != 'phpbb\db\driver\sqlite' && $dbms_details['DRIVER'] != 'phpbb\db\driver\sqlite3' && $dbms_details['DRIVER'] != 'phpbb\db\driver\oracle' && $dbname === '')
 	{
 		$error[] = $lang['INST_ERR_DB_NO_NAME'];
 		return false;
 	}
 
 	// Make sure we don't have a daft user who thinks having the SQLite database in the forum directory is a good idea
-	if ($dbms_details['DRIVER'] == 'phpbb\db\driver\sqlite' && stripos(phpbb_realpath($dbhost), phpbb_realpath('../')) === 0)
+	if (($dbms_details['DRIVER'] == 'phpbb\db\driver\sqlite' || $dbms_details['DRIVER'] == 'phpbb\db\driver\sqlite3') && stripos(phpbb_realpath($dbhost), phpbb_realpath('../')) === 0)
 	{
 		$error[] = $lang['INST_ERR_DB_FORUM_PATH'];
 		return false;
@@ -243,6 +252,7 @@ function connect_check_db($error_connect, &$error, $dbms_details, $table_prefix,
 		break;
 
 		case 'phpbb\db\driver\sqlite':
+		case 'phpbb\db\driver\sqlite3':
 			$prefix_length = 200;
 		break;
 
@@ -296,6 +306,14 @@ function connect_check_db($error_connect, &$error, $dbms_details, $table_prefix,
 				if (version_compare(sqlite_libversion(), '2.8.2', '<'))
 				{
 					$error[] = $lang['INST_ERR_DB_NO_SQLITE'];
+				}
+			break;
+
+			case 'phpbb\db\driver\sqlite3':
+				$version = \SQLite3::version();
+				if (version_compare($version['versionString'], '3.6.15', '<'))
+				{
+					$error[] = $lang['INST_ERR_DB_NO_SQLITE3'];
 				}
 			break;
 
@@ -486,12 +504,14 @@ function adjust_language_keys_callback($matches)
 * @param	array	$data Array containing the database connection information
 * @param	string	$dbms The name of the DBAL class to use
 * @param	bool	$debug If the debug constants should be enabled by default or not
+* @param	bool	$debug_container If the container should be compiled on
+*					every page load or not
 * @param	bool	$debug_test If the DEBUG_TEST constant should be added
 *					NOTE: Only for use within the testing framework
 *
 * @return	string	The output to write to the file
 */
-function phpbb_create_config_file_data($data, $dbms, $debug = false, $debug_test = false)
+function phpbb_create_config_file_data($data, $dbms, $debug = false, $debug_container = false, $debug_test = false)
 {
 	$config_data = "<?php\n";
 	$config_data .= "// phpBB 3.1.x auto-generated configuration file\n// Do not change anything in this file!\n";
@@ -524,6 +544,15 @@ function phpbb_create_config_file_data($data, $dbms, $debug = false, $debug_test
 	else
 	{
 		$config_data .= "// @define('DEBUG', true);\n";
+	}
+
+	if ($debug_container)
+	{
+		$config_data .= "@define('DEBUG_CONTAINER', true);\n";
+	}
+	else
+	{
+		$config_data .= "// @define('DEBUG_CONTAINER', true);\n";
 	}
 
 	if ($debug_test)

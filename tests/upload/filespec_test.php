@@ -143,6 +143,8 @@ class phpbb_filespec_test extends phpbb_test_case
 		$disallowed_content = explode('|', $this->config['mime_triggers']);
 		$filespec = $this->get_filespec(array('tmp_name' => $this->path . $filename));
 		$this->assertEquals($expected, $filespec->check_content($disallowed_content));
+		// All files should pass if $disallowed_content is empty
+		$this->assertEquals(true, $filespec->check_content(array()));
 	}
 
 	public function clean_filename_variables()
@@ -270,5 +272,19 @@ class phpbb_filespec_test extends phpbb_test_case
 		}
 
 		$phpEx = '';
+	}
+
+	/**
+	* @dataProvider clean_filename_variables
+	*/
+	public function test_uploadname($filename)
+	{
+		$type_cast_helper = new \phpbb\request\type_cast_helper();
+
+		$upload_name = '';
+		$type_cast_helper->set_var($upload_name, $filename, 'string', true, true);
+		$filespec = $this->get_filespec(array('name'=> $upload_name));
+
+		$this->assertSame(trim(utf8_basename(htmlspecialchars($filename))), $filespec->uploadname);
 	}
 }

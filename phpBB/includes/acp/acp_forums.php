@@ -138,12 +138,15 @@ class acp_forums
 						'enable_prune'			=> request_var('enable_prune', false),
 						'enable_post_review'	=> request_var('enable_post_review', true),
 						'enable_quick_reply'	=> request_var('enable_quick_reply', false),
+						'enable_shadow_prune'		=> request_var('enable_shadow_prune', false),
 						'prune_days'			=> request_var('prune_days', 7),
 						'prune_viewed'			=> request_var('prune_viewed', 7),
 						'prune_freq'			=> request_var('prune_freq', 1),
 						'prune_old_polls'		=> request_var('prune_old_polls', false),
 						'prune_announce'		=> request_var('prune_announce', false),
 						'prune_sticky'			=> request_var('prune_sticky', false),
+						'prune_shadow_days'		=> request_var('prune_shadow_days', 7),
+						'prune_shadow_freq'		=> request_var('prune_shadow_freq', 1),
 						'forum_password'		=> request_var('forum_password', '', true),
 						'forum_password_confirm'=> request_var('forum_password_confirm', '', true),
 						'forum_password_unset'	=> request_var('forum_password_unset', false),
@@ -155,7 +158,7 @@ class acp_forums
 					* @event core.acp_manage_forums_request_data
 					* @var	string	action		Type of the action: add|edit
 					* @var	array	forum_data	Array with new forum data
-					* @since 3.1-A1
+					* @since 3.1.0-a1
 					*/
 					$vars = array('action', 'forum_data');
 					extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_request_data', compact($vars)));
@@ -457,6 +460,9 @@ class acp_forums
 							'prune_days'			=> 7,
 							'prune_viewed'			=> 7,
 							'prune_freq'			=> 1,
+							'enable_shadow_prune'		=> false,
+							'prune_shadow_days'		=> 7,
+							'prune_shadow_freq'		=> 1,
 							'forum_flags'			=> FORUM_FLAG_POST_REVIEW + FORUM_FLAG_ACTIVE_TOPICS,
 							'forum_options'			=> 0,
 							'forum_password'		=> '',
@@ -478,7 +484,7 @@ class acp_forums
 				*							empty when creating new forum
 				* @var	array	forum_data	Array with new forum data
 				* @var	string	parents_list	List of parent options
-				* @since 3.1-A1
+				* @since 3.1.0-a1
 				*/
 				$vars = array('action', 'update', 'forum_id', 'row', 'forum_data', 'parents_list');
 				extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_initialise_data', compact($vars)));
@@ -636,6 +642,8 @@ class acp_forums
 					'PRUNE_FREQ'				=> $forum_data['prune_freq'],
 					'PRUNE_DAYS'				=> $forum_data['prune_days'],
 					'PRUNE_VIEWED'				=> $forum_data['prune_viewed'],
+					'PRUNE_SHADOW_FREQ'			=> $forum_data['prune_shadow_freq'],
+					'PRUNE_SHADOW_DAYS'			=> $forum_data['prune_shadow_days'],
 					'TOPICS_PER_PAGE'			=> $forum_data['forum_topics_per_page'],
 					'FORUM_RULES_LINK'			=> $forum_data['forum_rules_link'],
 					'FORUM_RULES'				=> $forum_data['forum_rules'],
@@ -668,6 +676,7 @@ class acp_forums
 					'S_DISPLAY_SUBFORUM_LIST'	=> ($forum_data['display_subforum_list']) ? true : false,
 					'S_DISPLAY_ON_INDEX'		=> ($forum_data['display_on_index']) ? true : false,
 					'S_PRUNE_ENABLE'			=> ($forum_data['enable_prune']) ? true : false,
+					'S_PRUNE_SHADOW_ENABLE'			=> ($forum_data['enable_shadow_prune']) ? true : false,
 					'S_FORUM_LINK_TRACK'		=> ($forum_data['forum_flags'] & FORUM_FLAG_LINK_TRACK) ? true : false,
 					'S_PRUNE_OLD_POLLS'			=> ($forum_data['forum_flags'] & FORUM_FLAG_PRUNE_POLL) ? true : false,
 					'S_PRUNE_ANNOUNCE'			=> ($forum_data['forum_flags'] & FORUM_FLAG_PRUNE_ANNOUNCE) ? true : false,
@@ -696,9 +705,18 @@ class acp_forums
 				*					ensure to update the template variables
 				*					S_ERROR and ERROR_MSG to display it
 				* @var	array	template_data	Array with new forum data
-				* @since 3.1-A1
+				* @since 3.1.0-a1
 				*/
-				$vars = array('action', 'update', 'forum_id', 'row', 'forum_data', 'parents_list', 'errors', 'template_data');
+				$vars = array(
+					'action',
+					'update',
+					'forum_id',
+					'row',
+					'forum_data',
+					'parents_list',
+					'errors',
+					'template_data',
+				);
 				extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_display_form', compact($vars)));
 
 				$template->assign_vars($template_data);
@@ -937,7 +955,7 @@ class acp_forums
 		* @var	array	forum_data	Array with new forum data
 		* @var	array	errors		Array of errors, should be strings and not
 		*							language key.
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$vars = array('forum_data', 'errors');
 		extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_validate_data', compact($vars)));
@@ -1045,7 +1063,7 @@ class acp_forums
 		* @var	array	forum_data_sql	Array with data we are going to update
 		*						If forum_data_sql[forum_id] is set, we update
 		*						that forum, otherwise a new one is created.
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$vars = array('forum_data', 'forum_data_sql');
 		extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_update_data_before', compact($vars)));
@@ -1338,7 +1356,7 @@ class acp_forums
 		*								ensure to set forum_data_sql[forum_id]
 		* @var	array	errors		Array of errors, should be strings and not
 		*							language key.
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$vars = array('forum_data', 'forum_data_sql', 'is_new_forum', 'errors');
 		extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_update_data_after', compact($vars)));
@@ -1376,7 +1394,7 @@ class acp_forums
 		* @var	int		to_id		If of the new parent forum
 		* @var	array	errors		Array of errors, should be strings and not
 		*							language key.
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$vars = array('from_id', 'to_id', 'errors');
 		extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_move_children', compact($vars)));
@@ -1480,7 +1498,7 @@ class acp_forums
 		* @var	array	errors		Array of errors, should be strings and not
 		*							language key. If this array is not empty,
 		*							The content will not be moved.
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$vars = array('from_id', 'to_id', 'sync', 'errors');
 		extract($phpbb_dispatcher->trigger_event('core.acp_manage_forums_move_content', compact($vars)));

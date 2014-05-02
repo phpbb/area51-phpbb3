@@ -1005,24 +1005,6 @@ function phpbb_get_timezone_identifiers($selected_timezone)
 }
 
 /**
-* Pick a timezone
-*
-* @param	string		$default			A timezone to select
-* @param	boolean		$truncate			Shall we truncate the options text
-*
-* @return		string		Returns the options for timezone selector only
-*
-* @deprecated
-*/
-function tz_select($default = '', $truncate = false)
-{
-	global $user;
-
-	$timezone_select = phpbb_timezone_select($user, $default, $truncate);
-	return $timezone_select['tz_select'];
-}
-
-/**
 * Options to pick a timezone and date/time
 *
 * @param	\phpbb\user	$user				Object of the current user
@@ -2022,7 +2004,7 @@ function append_sid($url, $params = false, $is_amp = true, $session_id = false)
 	*											the global one (false)
 	* @var	bool|string	append_sid_overwrite	Overwrite function (string
 	*											URL) or not (false)
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	*/
 	$vars = array('url', 'params', 'is_amp', 'session_id', 'append_sid_overwrite');
 	extract($phpbb_dispatcher->trigger_event('core.append_sid', compact($vars)));
@@ -2344,8 +2326,9 @@ function reapply_sid($url)
 */
 function build_url($strip_vars = false)
 {
-	global $config, $user, $phpEx, $phpbb_root_path;
+	global $config, $user, $phpbb_path_helper;
 
+	$php_ext = $phpbb_path_helper->get_php_ext();
 	$page = $user->page['page'];
 
 	// We need to be cautious here.
@@ -2358,71 +2341,23 @@ function build_url($strip_vars = false)
 	if ($url_parts === false || empty($url_parts['scheme']) || empty($url_parts['host']))
 	{
 		// Remove 'app.php/' from the page, when rewrite is enabled
-		if ($config['enable_mod_rewrite'] && strpos($page, 'app.' . $phpEx . '/') === 0)
+		if ($config['enable_mod_rewrite'] && strpos($page, 'app.' . $php_ext . '/') === 0)
 		{
-			$page = substr($page, strlen('app.' . $phpEx . '/'));
+			$page = substr($page, strlen('app.' . $php_ext . '/'));
 		}
 
-		$page = $phpbb_root_path . $page;
+		$page = $phpbb_path_helper->get_phpbb_root_path() . $page;
 	}
 
 	// Append SID
 	$redirect = append_sid($page, false, false);
 
-	// Add delimiter if not there...
-	if (strpos($redirect, '?') === false)
+	if ($strip_vars !== false)
 	{
-		$redirect .= '?';
+		$redirect = $phpbb_path_helper->strip_url_params($redirect, $strip_vars, false);
 	}
 
-	// Strip vars...
-	if ($strip_vars !== false && strpos($redirect, '?') !== false)
-	{
-		if (!is_array($strip_vars))
-		{
-			$strip_vars = array($strip_vars);
-		}
-
-		$query = $_query = array();
-
-		$args = substr($redirect, strpos($redirect, '?') + 1);
-		$args = ($args) ? explode('&', $args) : array();
-		$redirect = substr($redirect, 0, strpos($redirect, '?'));
-
-		foreach ($args as $argument)
-		{
-			$arguments = explode('=', $argument);
-			$key = $arguments[0];
-			unset($arguments[0]);
-
-			if ($key === '')
-			{
-				continue;
-			}
-
-			$query[$key] = implode('=', $arguments);
-		}
-
-		// Strip the vars off
-		foreach ($strip_vars as $strip)
-		{
-			if (isset($query[$strip]))
-			{
-				unset($query[$strip]);
-			}
-		}
-
-		// Glue the remaining parts together... already urlencoded
-		foreach ($query as $key => $value)
-		{
-			$_query[] = $key . '=' . $value;
-		}
-		$query = implode('&', $_query);
-
-		$redirect .= ($query) ? '?' . $query : '';
-	}
-
-	return str_replace('&', '&amp;', $redirect);
+	return $redirect . ((strpos($redirect, '?') === false) ? '?' : '');
 }
 
 /**
@@ -2437,19 +2372,19 @@ function meta_refresh($time, $url, $disable_cd_check = false)
 {
 	global $template, $refresh_data, $request;
 
+	$url = redirect($url, true, $disable_cd_check);
 	if ($request->is_ajax())
 	{
 		$refresh_data = array(
 			'time'	=> $time,
-			'url'		=> str_replace('&amp;', '&', $url)
+			'url'	=> $url,
 		);
 	}
 	else
 	{
-		$url = redirect($url, true, $disable_cd_check);
+		// For XHTML compatibility we change back & to &amp;
 		$url = str_replace('&', '&amp;', $url);
 
-		// For XHTML compatibility we change back & to &amp;
 		$template->assign_vars(array(
 			'META' => '<meta http-equiv="refresh" content="' . $time . '; url=' . $url . '" />')
 		);
@@ -2711,7 +2646,6 @@ function confirm_box($check, $title = '', $hidden = '', $html_body = 'confirm_bo
 	$sql = 'UPDATE ' . USERS_TABLE . " SET user_last_confirm_key = '" . $db->sql_escape($confirm_key) . "'
 		WHERE user_id = " . $user->data['user_id'];
 	$db->sql_query($sql);
-
 
 	if ($request->is_ajax())
 	{
@@ -3849,6 +3783,16 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 			if (defined('IN_INSTALL') || defined('DEBUG') || isset($auth) && $auth->acl_get('a_'))
 			{
 				$msg_text = $log_text;
+
+				// If this is defined there already was some output
+				// So let's not break it
+				if (defined('IN_DB_UPDATE'))
+				{
+					echo '<div class="errorbox">' . $msg_text . '</div>';
+
+					$db->sql_return_on_error(true);
+					phpbb_end_update($cache, $config);
+				}
 			}
 
 			if ((defined('IN_CRON') || defined('IMAGE_OUTPUT')) && isset($db))
@@ -4045,7 +3989,7 @@ function obtain_guest_count($item_id = 0, $item = 'forum')
 
 	// Get number of online guests
 
-	if ($db->sql_layer === 'sqlite')
+	if ($db->sql_layer === 'sqlite' || $db->sql_layer === 'sqlite3')
 	{
 		$sql = 'SELECT COUNT(session_ip) as num_guests
 			FROM (
@@ -4620,6 +4564,92 @@ function phpbb_build_hidden_fields_for_query_params($request, $exclude = null)
 }
 
 /**
+* Get user avatar
+*
+* @param array $user_row Row from the users table
+* @param string $alt Optional language string for alt tag within image, can be a language key or text
+* @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
+*
+* @return string Avatar html
+*/
+function phpbb_get_user_avatar($user_row, $alt = 'USER_AVATAR', $ignore_config = false)
+{
+	$row = \phpbb\avatar\manager::clean_row($user_row, 'user');
+	return phpbb_get_avatar($row, $alt, $ignore_config);
+}
+
+/**
+* Get group avatar
+*
+* @param array $group_row Row from the groups table
+* @param string $alt Optional language string for alt tag within image, can be a language key or text
+* @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
+*
+* @return string Avatar html
+*/
+function phpbb_get_group_avatar($user_row, $alt = 'GROUP_AVATAR', $ignore_config = false)
+{
+	$row = \phpbb\avatar\manager::clean_row($user_row, 'group');
+	return phpbb_get_avatar($row, $alt, $ignore_config);
+}
+
+/**
+* Get avatar
+*
+* @param array $row Row cleaned by \phpbb\avatar\driver\driver::clean_row
+* @param string $alt Optional language string for alt tag within image, can be a language key or text
+* @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
+*
+* @return string Avatar html
+*/
+function phpbb_get_avatar($row, $alt, $ignore_config = false)
+{
+	global $user, $config, $cache, $phpbb_root_path, $phpEx;
+	global $request;
+	global $phpbb_container;
+
+	if (!$config['allow_avatar'] && !$ignore_config)
+	{
+		return '';
+	}
+
+	$avatar_data = array(
+		'src' => $row['avatar'],
+		'width' => $row['avatar_width'],
+		'height' => $row['avatar_height'],
+	);
+
+	$phpbb_avatar_manager = $phpbb_container->get('avatar.manager');
+	$driver = $phpbb_avatar_manager->get_driver($row['avatar_type'], $ignore_config);
+	$html = '';
+
+	if ($driver)
+	{
+		$html = $driver->get_custom_html($user, $row, $alt);
+		if (!empty($html))
+		{
+			return $html;
+		}
+
+		$avatar_data = $driver->get_data($row, $ignore_config);
+	}
+	else
+	{
+		$avatar_data['src'] = '';
+	}
+
+	if (!empty($avatar_data['src']))
+	{
+		$html = '<img src="' . $avatar_data['src'] . '" ' .
+			($avatar_data['width'] ? ('width="' . $avatar_data['width'] . '" ') : '') .
+			($avatar_data['height'] ? ('height="' . $avatar_data['height'] . '" ') : '') .
+			'alt="' . ((!empty($user->lang[$alt])) ? $user->lang[$alt] : $alt) . '" />';
+	}
+
+	return $html;
+}
+
+/**
 * Generate page header
 */
 function page_header($page_title = '', $display_online_list = false, $item_id = 0, $item = 'forum')
@@ -4649,7 +4679,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 	* @var	int		item_id				Restrict online users to item id
 	* @var	bool	page_header_override	Shall we return instead of running
 	*										the rest of page_header()
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	*/
 	$vars = array('page_title', 'display_online_list', 'item_id', 'item', 'page_header_override');
 	extract($phpbb_dispatcher->trigger_event('core.page_header', compact($vars)));
@@ -4686,7 +4716,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 	if ($user->data['user_id'] != ANONYMOUS)
 	{
 		$u_login_logout = append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=logout', true, $user->session_id);
-		$l_login_logout = sprintf($user->lang['LOGOUT_USER'], $user->data['username']);
+		$l_login_logout = $user->lang['LOGOUT'];
 	}
 	else
 	{
@@ -4825,11 +4855,11 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		}
 	}
 
-	$hidden_fields_for_jumpbox = phpbb_build_hidden_fields_for_query_params($request, array('f'));
 	$notification_mark_hash = generate_link_hash('mark_all_notifications_read');
 
 	// The following assigns all _common_ variables that may be used at any point in a template.
 	$template->assign_vars(array(
+		'CURRENT_USER_AVATAR'	=> phpbb_get_user_avatar($user->data),
 		'SITENAME'						=> $config['sitename'],
 		'SITE_DESCRIPTION'				=> $config['site_desc'],
 		'PAGE_TITLE'					=> $page_title,
@@ -4841,7 +4871,6 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'LOGGED_IN_USER_LIST'			=> $online_userlist,
 		'RECORD_USERS'					=> $l_online_record,
 		'PRIVATE_MESSAGE_COUNT'			=> (!empty($user->data['user_unread_privmsg'])) ? $user->data['user_unread_privmsg'] : 0,
-		'HIDDEN_FIELDS_FOR_JUMPBOX'	=> $hidden_fields_for_jumpbox,
 
 		'UNREAD_NOTIFICATIONS_COUNT'	=> ($notifications !== false) ? $notifications['unread_count'] : '',
 		'NOTIFICATIONS_COUNT'			=> ($notifications !== false) ? $notifications['unread_count'] : '',
@@ -4859,6 +4888,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'SESSION_ID'		=> $user->session_id,
 		'ROOT_PATH'			=> $web_path,
 		'BOARD_URL'			=> $board_url,
+		'USERNAME_FULL'		=> get_username_string('full', $user->data['user_id'], $user->data['username'], $user->data['user_colour']),
 
 		'L_LOGIN_LOGOUT'	=> $l_login_logout,
 		'L_INDEX'			=> ($config['board_index_text'] !== '') ? $config['board_index_text'] : $user->lang['FORUM_INDEX'],
@@ -4875,6 +4905,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'U_SITE_HOME'			=> $config['site_home_url'],
 		'U_REGISTER'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=register'),
 		'U_PROFILE'				=> append_sid("{$phpbb_root_path}ucp.$phpEx"),
+		'U_USER_PROFILE'		=> get_username_string('profile', $user->data['user_id'], $user->data['username'], $user->data['user_colour']),
 		'U_MODCP'				=> append_sid("{$phpbb_root_path}mcp.$phpEx", false, true, $user->session_id),
 		'U_FAQ'					=> append_sid("{$phpbb_root_path}faq.$phpEx"),
 		'U_SEARCH_SELF'			=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=egosearch'),
@@ -4957,6 +4988,22 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'SITE_LOGO_IMG'			=> $user->img('site_logo'),
 	));
 
+	/**
+	* Execute code and/or overwrite _common_ template variables after they have been assigned.
+	*
+	* @event core.page_header_after
+	* @var	string	page_title			Page title
+	* @var	bool	display_online_list		Do we display online users list
+	* @var	string	item				Restrict online users to a certain
+	*									session item, e.g. forum for
+	*									session_forum_id
+	* @var	int		item_id				Restrict online users to item id
+	*
+	* @since 3.1.0-b3
+	*/
+	$vars = array('page_title', 'display_online_list', 'item_id', 'item');
+	extract($phpbb_dispatcher->trigger_event('core.page_header_after', compact($vars)));
+
 	// application/xhtml+xml not used because of IE
 	header('Content-type: text/html; charset=UTF-8');
 
@@ -4995,7 +5042,7 @@ function page_footer($run_cron = true, $display_template = true, $exit_handler =
 	* @var	bool	run_cron			Shall we run cron tasks
 	* @var	bool	page_footer_override	Shall we return instead of running
 	*										the rest of page_footer()
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	*/
 	$vars = array('run_cron', 'page_footer_override');
 	extract($phpbb_dispatcher->trigger_event('core.page_footer', compact($vars)));
@@ -5103,7 +5150,7 @@ function garbage_collection()
 		* Unload some objects, to free some memory, before we finish our task
 		*
 		* @event core.garbage_collection
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$phpbb_dispatcher->dispatch('core.garbage_collection');
 	}

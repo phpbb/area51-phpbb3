@@ -80,7 +80,7 @@
 				<!-- BEGIN poll_option -->
 					<tr>
 					<!-- IF S_CAN_VOTE -->
-						<td>
+						<td<!-- IF poll_option.POLL_OPTION_MOST_VOTES --> class="most-votes"<!-- ENDIF -->>
 							<!-- IF S_IS_MULTI_CHOICE -->
 								<input type="checkbox" class="radio" name="vote_id[]" value="{poll_option.POLL_OPTION_ID}"<!-- IF poll_option.POLL_OPTION_VOTED --> checked="checked"<!-- ENDIF --> />
 							<!-- ELSE -->
@@ -387,7 +387,7 @@
 <!-- IF S_DISPLAY_ONLINE_LIST -->
 	<br clear="all" />
 
-	<table class="tablebg" width="100%" cellspacing="1">
+	<table class="tablebg stat-block online-list" width="100%" cellspacing="1">
 	<tr>
 		<td class="cat"><h4>{L_WHO_IS_ONLINE}</h4></td>
 	</tr>

@@ -108,7 +108,7 @@ if ($interval && !in_array($search_id, array('unreadposts', 'unanswered', 'activ
 	if ($user->data['user_last_search'] > time() - $interval)
 	{
 		$template->assign_var('S_NO_SEARCH', true);
-		trigger_error('NO_SEARCH_TIME');
+		trigger_error($user->lang('NO_SEARCH_TIME', (int) ($user->data['user_last_search'] + $interval - time())));
 	}
 }
 
@@ -561,9 +561,9 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 	}
 
 	// define some vars for urls
-	$hilit = implode('|', explode(' ', preg_replace('#\s+#u', ' ', str_replace(array('+', '-', '|', '(', ')', '&quot;'), ' ', $keywords))));
-	// Do not allow *only* wildcard being used for hilight
-	$hilit = (strspn($hilit, '*') === strlen($hilit)) ? '' : $hilit;
+	// A single wildcard will make the search results look ugly
+	$hilit = phpbb_clean_search_string(str_replace(array('+', '-', '|', '(', ')', '&quot;'), ' ', $keywords));
+	$hilit = str_replace(' ', '|', $hilit);
 
 	$u_hilit = urlencode(htmlspecialchars_decode(str_replace('|', ' ', $hilit)));
 	$u_show_results = '&amp;sr=' . $show_results;
@@ -681,7 +681,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 			* @var	string	sql_select		The SQL SELECT string used by search to get topic data
 			* @var	string	sql_from		The SQL FROM string used by search to get topic data
 			* @var	string	sql_where		The SQL WHERE string used by search to get topic data
-			* @since 3.1-A1
+			* @since 3.1.0-a1
 			*/
 			$vars = array('sql_select', 'sql_from', 'sql_where');
 			extract($phpbb_dispatcher->trigger_event('core.search_get_topic_data', compact($vars)));
@@ -850,7 +850,8 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 			$hilit_array = array_filter(explode('|', $hilit), 'strlen');
 			foreach ($hilit_array as $key => $value)
 			{
-				$hilit_array[$key] = str_replace('\*', '\w*?', preg_quote($value, '#'));
+				$hilit_array[$key] = phpbb_clean_search_string($value);
+				$hilit_array[$key] = str_replace('\*', '\w*?', preg_quote($hilit_array[$key], '#'));
 				$hilit_array[$key] = preg_replace('#(^|\s)\\\\w\*\?(\s|$)#', '$1\w+?$2', $hilit_array[$key]);
 			}
 			$hilit = implode('|', $hilit_array);
@@ -878,7 +879,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 
 				$unread_topic = (isset($topic_tracking_info[$forum_id][$row['topic_id']]) && $row['topic_last_post_time'] > $topic_tracking_info[$forum_id][$row['topic_id']]) ? true : false;
 
-				$topic_unapproved = ($row['topic_visibility'] == ITEM_UNAPPROVED && $auth->acl_get('m_approve', $forum_id)) ? true : false;
+				$topic_unapproved = (($row['topic_visibility'] == ITEM_UNAPPROVED || $row['topic_visibility'] == ITEM_REAPPROVE) && $auth->acl_get('m_approve', $forum_id)) ? true : false;
 				$posts_unapproved = ($row['topic_visibility'] == ITEM_APPROVED && $row['topic_posts_unapproved'] && $auth->acl_get('m_approve', $forum_id)) ? true : false;
 				$topic_deleted = $row['topic_visibility'] == ITEM_DELETED;
 				$u_mcp_queue = ($topic_unapproved || $posts_unapproved) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=' . (($topic_unapproved) ? 'approve_details' : 'unapproved_posts') . "&amp;t=$result_topic_id", true, $user->session_id) : '';
@@ -1003,7 +1004,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 			* @event core.search_modify_tpl_ary
 			* @var	array	row			Array with topic data
 			* @var	array	tpl_ary		Template block array with topic data
-			* @since 3.1-A1
+			* @since 3.1.0-a1
 			*/
 			$vars = array('row', 'tpl_ary');
 			extract($phpbb_dispatcher->trigger_event('core.search_modify_tpl_ary', compact($vars)));

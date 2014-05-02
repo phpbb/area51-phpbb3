@@ -26,7 +26,7 @@ if (!defined('IN_PHPBB'))
 * Used to bootstrap the container.
 *
 * @param string $config_file
-* @return \phpbb\db\driver\driver
+* @return \phpbb\db\driver\driver_interface
 */
 function phpbb_bootstrap_db_connection($config_file)
 {
@@ -239,7 +239,7 @@ function phpbb_create_dumped_container($config_file, array $extensions, array $p
 */
 function phpbb_create_dumped_container_unless_debug($config_file, array $extensions, array $passes, $phpbb_root_path, $php_ext)
 {
-	$container_factory = defined('DEBUG') ? 'phpbb_create_compiled_container' : 'phpbb_create_dumped_container';
+	$container_factory = defined('DEBUG_CONTAINER') ? 'phpbb_create_compiled_container' : 'phpbb_create_dumped_container';
 	return $container_factory($config_file, $extensions, $passes, $phpbb_root_path, $php_ext);
 }
 

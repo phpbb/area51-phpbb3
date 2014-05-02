@@ -17,7 +17,7 @@
 		<!-- ENDIF -->
 		<li><a href="{U_SEARCH_ACTIVE_TOPICS}">{L_SEARCH_ACTIVE_TOPICS}</a></li>
 	<!-- ENDIF -->
-	<!-- IF not S_IS_BOT and U_MARK_FORUMS --><li class="rightside mark-read"><a href="{U_MARK_FORUMS}" accesskey="m" data-ajax="mark_forums_read" data-overlay="false">{L_MARK_FORUMS_READ}</a></li><!-- ENDIF -->
+	<!-- IF not S_IS_BOT and U_MARK_FORUMS --><li class="rightside mark-read"><a href="{U_MARK_FORUMS}" accesskey="m" data-ajax="mark_forums_read">{L_MARK_FORUMS_READ}</a></li><!-- ENDIF -->
 </ul>
 <!-- ENDIF -->
 
@@ -46,19 +46,27 @@
 <!-- EVENT index_body_stat_blocks_before -->
 
 <!-- IF S_DISPLAY_ONLINE_LIST -->
-	<!-- IF U_VIEWONLINE --><h3><a href="{U_VIEWONLINE}">{L_WHO_IS_ONLINE}</a></h3><!-- ELSE --><h3>{L_WHO_IS_ONLINE}</h3><!-- ENDIF -->
-	<p>{TOTAL_USERS_ONLINE} ({L_ONLINE_EXPLAIN})<br />{RECORD_USERS}<br /> <br />{LOGGED_IN_USER_LIST}
-	<!-- IF LEGEND --><br /><em>{L_LEGEND}{L_COLON} {LEGEND}</em><!-- ENDIF --></p>
+	<div class="stat-block online-list">
+		<!-- IF U_VIEWONLINE --><h3><a href="{U_VIEWONLINE}">{L_WHO_IS_ONLINE}</a></h3><!-- ELSE --><h3>{L_WHO_IS_ONLINE}</h3><!-- ENDIF -->
+		<p>{TOTAL_USERS_ONLINE} ({L_ONLINE_EXPLAIN})<br />{RECORD_USERS}<br /> <br />{LOGGED_IN_USER_LIST}
+		<!-- IF LEGEND --><br /><em>{L_LEGEND}{L_COLON} {LEGEND}</em><!-- ENDIF --></p>
+	</div>
 <!-- ENDIF -->
 
 <!-- IF S_DISPLAY_BIRTHDAY_LIST -->
-	<h3>{L_BIRTHDAYS}</h3>
-	<p><!-- IF .birthdays -->{L_CONGRATULATIONS}{L_COLON} <strong><!-- BEGIN birthdays -->{birthdays.USERNAME}<!-- IF birthdays.AGE !== '' --> ({birthdays.AGE})<!-- ENDIF --><!-- IF not birthdays.S_LAST_ROW -->, <!-- ENDIF --><!-- END birthdays --></strong><!-- ELSE -->{L_NO_BIRTHDAYS}<!-- ENDIF --></p>
+	<div class="stat-block birthday-list">
+		<h3>{L_BIRTHDAYS}</h3>
+		<p><!-- IF .birthdays -->{L_CONGRATULATIONS}{L_COLON} <strong><!-- BEGIN birthdays -->{birthdays.USERNAME}<!-- IF birthdays.AGE !== '' --> ({birthdays.AGE})<!-- ENDIF --><!-- IF not birthdays.S_LAST_ROW -->, <!-- ENDIF --><!-- END birthdays --></strong><!-- ELSE -->{L_NO_BIRTHDAYS}<!-- ENDIF --></p>
+	</div>
 <!-- ENDIF -->
 
 <!-- IF NEWEST_USER -->
-	<h3>{L_STATISTICS}</h3>
-	<p>{TOTAL_POSTS} &bull; {TOTAL_TOPICS} &bull; {TOTAL_USERS} &bull; {NEWEST_USER}</p>
+	<div class="stat-block statistics">
+		<h3>{L_STATISTICS}</h3>
+		<p>{TOTAL_POSTS} &bull; {TOTAL_TOPICS} &bull; {TOTAL_USERS} &bull; {NEWEST_USER}</p>
+	</div>
 <!-- ENDIF -->
+
+<!-- EVENT index_body_stat_blocks_after -->
 
 <!-- INCLUDE overall_footer.html -->

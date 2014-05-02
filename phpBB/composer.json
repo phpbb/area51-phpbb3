@@ -1,5 +1,8 @@
 {
-	"minimum-stability": "beta",
+	"_readme": [
+		"You MUST update the clean-vendor-dir target in build/build.xml",
+		"accordingly when adding or upgrading dependencies."
+	],
 	"require": {
 		"lusitanian/oauth": "0.2.*",
 		"symfony/config": "2.3.*",

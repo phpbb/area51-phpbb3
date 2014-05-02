@@ -94,7 +94,6 @@ switch ($mode)
 		if ($user->data['user_id'] != ANONYMOUS && $request->is_set('sid') && $request->variable('sid', '') === $user->session_id)
 		{
 			$user->session_kill();
-			$user->session_begin();
 		}
 		else if ($user->data['user_id'] != ANONYMOUS)
 		{
@@ -338,7 +337,7 @@ if (!$config['allow_topic_notify'] && !$config['allow_forum_notify'])
 * @var	p_master	module	Object holding all modules and their status
 * @var	mixed		id		Active module category (can be the int or string)
 * @var	string		mode	Active module
-* @since 3.1-A1
+* @since 3.1.0-a1
 */
 $vars = array('module', 'id', 'mode');
 extract($phpbb_dispatcher->trigger_event('core.ucp_display_module_before', compact($vars)));

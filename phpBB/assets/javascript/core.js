@@ -26,6 +26,7 @@ phpbb.loadingIndicator = function() {
 	if (!loadingIndicator.is(':visible')) {
 		loadingIndicator.fadeIn(phpbb.alertTime);
 		// Wait fifteen seconds and display an error if nothing has been returned by then.
+		phpbb.clearLoadingTimeout();
 		phpbbAlertTimer = setTimeout(function() {
 			if (loadingIndicator.is(':visible')) {
 				phpbb.alert($('#phpbb_alert').attr('data-l-err'), $('#phpbb_alert').attr('data-l-timeout-processing-req'));
@@ -315,7 +316,7 @@ phpbb.ajaxify = function(options) {
 						refresh = false;
 					}
 
-					setTimeout(function() {
+					phpbbAlertTimer = setTimeout(function() {
 						if (refresh) {
 							window.location = res.REFRESH_DATA.url;
 						}
@@ -431,14 +432,14 @@ phpbb.timezoneSwitchDate = function(keepSelection) {
 
 	if ($("#timezone > optgroup[label='" + $('#tz_date').val() + "'] > option").size() === 1) {
 		// If there is only one timezone for the selected date, we just select that automatically.
-		$("#timezone > optgroup[label='" + $('#tz_date').val() + "'] > option:first").attr('selected', true);
+		$("#timezone > optgroup[label='" + $('#tz_date').val() + "'] > option:first").prop('selected', true);
 		keepSelection = true;
 	}
 
 	if (typeof keepSelection !== 'undefined' && !keepSelection) {
 		var timezoneOptions = $('#timezone > optgroup option');
 		if (timezoneOptions.filter(':selected').length <= 0) {
-			timezoneOptions.filter(':first').attr('selected', true);
+			timezoneOptions.filter(':first').prop('selected', true);
 		}
 	}
 };
@@ -549,13 +550,23 @@ phpbb.addAjaxCallback = function(id, callback) {
  * current text so that the process can be repeated.
  */
 phpbb.addAjaxCallback('alt_text', function() {
-	var el = $(this),
+	var el,
+		updateAll = $(this).data('update-all'),
 		altText;
 
-	altText = el.attr('data-alt-text');
-	el.attr('data-alt-text', el.text());
-	el.attr('title', altText);
-	el.text(altText);
+	if (updateAll !== undefined && updateAll.length) {
+		el = $(updateAll);
+	} else {
+		el = $(this);
+	}
+
+	el.each(function() {
+		var el = $(this);
+		altText = el.attr('data-alt-text');
+		el.attr('data-alt-text', el.text());
+		el.attr('title', $.trim(altText));
+		el.text(altText);
+	});
 });
 
 /**
@@ -568,27 +579,37 @@ phpbb.addAjaxCallback('alt_text', function() {
  * and changes the link itself.
  */
 phpbb.addAjaxCallback('toggle_link', function() {
-	var el = $(this),
+	var el,
+		updateAll = $(this).data('update-all') ,
 		toggleText,
 		toggleUrl,
 		toggleClass;
 
-	// Toggle link text
+	if (updateAll !== undefined && updateAll.length) {
+		el = $(updateAll);
+	} else {
+		el = $(this);
+	}
 
-	toggleText = el.attr('data-toggle-text');
-	el.attr('data-toggle-text', el.text());
-	el.attr('title', toggleText);
-	el.text(toggleText);
+	el.each(function() {
+		var el = $(this);
 
-	// Toggle link url
-	toggleUrl = el.attr('data-toggle-url');
-	el.attr('data-toggle-url', el.attr('href'));
-	el.attr('href', toggleUrl);
+		// Toggle link text
+		toggleText = el.attr('data-toggle-text');
+		el.attr('data-toggle-text', el.text());
+		el.attr('title', $.trim(toggleText));
+		el.text(toggleText);
 
-	// Toggle class of link parent
-	toggleClass = el.attr('data-toggle-class');
-	el.attr('data-toggle-class', el.parent().attr('class'));
-	el.parent().attr('class', toggleClass);
+		// Toggle link url
+		toggleUrl = el.attr('data-toggle-url');
+		el.attr('data-toggle-url', el.attr('href'));
+		el.attr('href', toggleUrl);
+
+		// Toggle class of link parent
+		toggleClass = el.attr('data-toggle-class');
+		el.attr('data-toggle-class', el.parent().attr('class'));
+		el.parent().attr('class', toggleClass);
+	});
 });
 
 /**
@@ -897,9 +918,10 @@ phpbb.toggleDropdown = function() {
 	// Check dimensions when showing dropdown
 	// !visible because variable shows state of dropdown before it was toggled
 	if (!visible) {
+		var windowWidth = $(window).width();
+
 		options.dropdown.find('.dropdown-contents').each(function() {
-			var $this = $(this),
-				windowWidth = $(window).width();
+			var $this = $(this);
 
 			$this.css({
 				marginLeft: 0,
@@ -917,6 +939,13 @@ phpbb.toggleDropdown = function() {
 				$this.css('margin-left', (windowWidth - offset - width - 2) + 'px');
 			}
 		});
+		var freeSpace = parent.offset().left - 4;
+
+		if (direction == 'left') {
+			options.dropdown.css('margin-left', '-' + freeSpace + 'px');
+		} else {
+			options.dropdown.css('margin-right', '-' + (windowWidth + freeSpace) + 'px');
+		}
 	}
 
 	// Prevent event propagation
@@ -1059,6 +1088,27 @@ phpbb.registerPalette = function(el) {
 		}
 		e.preventDefault();
 	});
+}
+
+/**
+* Set display of page element
+*
+* @param string	id	The ID of the element to change
+* @param int	action	Set to 0 if element display should be toggled, -1 for
+*			hiding the element, and 1 for showing it.
+* @param string	type	Display type that should be used, e.g. inline, block or
+*			other CSS "display" types
+*/
+phpbb.toggleDisplay = function(id, action, type) {
+	if (!type) {
+		type = 'block';
+	}
+
+	var display = $('#' + id).css('display');
+	if (!action) {
+		action = (display === '' || display === type) ? -1 : 1;
+	}
+	$('#' + id).css('display', ((action === 1) ? type : 'none'));
 }
 
 /**

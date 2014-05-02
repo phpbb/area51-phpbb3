@@ -93,10 +93,10 @@ class log implements \phpbb\log\log_interface
 	/**
 	* Constructor
 	*
-	* @param	\phpbb\db\driver\driver	$db		Database object
+	* @param	\phpbb\db\driver\driver_interface	$db		Database object
 	* @param	\phpbb\user		$user	User object
 	* @param	\phpbb\auth\auth		$auth	Auth object
-	* @param	phpbb_dispatcher	$phpbb_dispatcher	Event dispatcher
+	* @param	\phpbb\event\dispatcher	$phpbb_dispatcher	Event dispatcher
 	* @param	string		$phpbb_root_path		Root path
 	* @param	string		$relative_admin_path	Relative admin root path
 	* @param	string		$php_ext			PHP Extension
@@ -305,9 +305,17 @@ class log implements \phpbb\log\log_interface
 		* @var	array	sql_ary			Array with log data we insert into the
 		*							database. If sql_ary[log_type] is not set,
 		*							we won't add the entry to the database.
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
-		$vars = array('mode', 'user_id', 'log_ip', 'log_operation', 'log_time', 'additional_data', 'sql_ary');
+		$vars = array(
+			'mode',
+			'user_id',
+			'log_ip',
+			'log_operation',
+			'log_time',
+			'additional_data',
+			'sql_ary',
+		);
 		extract($this->dispatcher->trigger_event('core.add_log', compact($vars)));
 
 		// We didn't find a log_type, so we don't save it in the database.
@@ -403,9 +411,23 @@ class log implements \phpbb\log\log_interface
 		*							is false, no entries will be returned.
 		* @var	string	sql_additional	Additional conditions for the entries,
 		*								e.g.: 'AND l.forum_id = 1'
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
-		$vars = array('mode', 'count_logs', 'limit', 'offset', 'forum_id', 'topic_id', 'user_id', 'log_time', 'sort_by', 'keywords', 'profile_url', 'log_type', 'sql_additional');
+		$vars = array(
+			'mode',
+			'count_logs',
+			'limit',
+			'offset',
+			'forum_id',
+			'topic_id',
+			'user_id',
+			'log_time',
+			'sort_by',
+			'keywords',
+			'profile_url',
+			'log_type',
+			'sql_additional',
+		);
 		extract($this->dispatcher->trigger_event('core.get_logs_modify_type', compact($vars)));
 
 		if ($log_type === false)
@@ -490,7 +512,7 @@ class log implements \phpbb\log\log_interface
 				'topic_id'			=> (int) $row['topic_id'],
 
 				'viewforum'			=> ($row['forum_id'] && $this->auth->acl_get('f_read', $row['forum_id'])) ? append_sid("{$this->phpbb_root_path}viewforum.{$this->php_ext}", 'f=' . $row['forum_id']) : false,
-				'action'			=> (isset($this->user->lang[$row['log_operation']])) ? $this->user->lang[$row['log_operation']] : '{' . ucfirst(str_replace('_', ' ', $row['log_operation'])) . '}',
+				'action'			=> (isset($this->user->lang[$row['log_operation']])) ? $row['log_operation'] : '{' . ucfirst(str_replace('_', ' ', $row['log_operation'])) . '}',
 			);
 
 			/**
@@ -499,7 +521,7 @@ class log implements \phpbb\log\log_interface
 			* @event core.get_logs_modify_entry_data
 			* @var	array	row			Entry data from the database
 			* @var	array	log_entry_data	Entry's data which is returned
-			* @since 3.1-A1
+			* @since 3.1.0-a1
 			*/
 			$vars = array('row', 'log_entry_data');
 			extract($this->dispatcher->trigger_event('core.get_logs_modify_entry_data', compact($vars)));
@@ -517,12 +539,26 @@ class log implements \phpbb\log\log_interface
 					// arguments, if there are we fill out the arguments
 					// array. It doesn't matter if we add more arguments than
 					// placeholders.
-					if ((substr_count($log[$i]['action'], '%') - sizeof($log_data_ary)) > 0)
+					$num_args = 0;
+					if (!is_array($this->user->lang[$row['log_operation']]))
 					{
-						$log_data_ary = array_merge($log_data_ary, array_fill(0, substr_count($log[$i]['action'], '%') - sizeof($log_data_ary), ''));
+						$num_args = substr_count($this->user->lang[$row['log_operation']], '%');
+					}
+					else
+					{
+						foreach ($this->user->lang[$row['log_operation']] as $case => $plural_string)
+						{
+							$num_args = max($num_args, substr_count($plural_string, '%'));
+						}
 					}
 
-					$log[$i]['action'] = vsprintf($log[$i]['action'], $log_data_ary);
+					if (($num_args - sizeof($log_data_ary)) > 0)
+					{
+						$log_data_ary = array_merge($log_data_ary, array_fill(0, $num_args - sizeof($log_data_ary), ''));
+					}
+
+					$lang_arguments = array_merge(array($log[$i]['action']), $log_data_ary);
+					$log[$i]['action'] = call_user_func_array(array($this->user, 'lang'), $lang_arguments);
 
 					// If within the admin panel we do not censor text out
 					if ($this->get_is_admin())
@@ -544,6 +580,10 @@ class log implements \phpbb\log\log_interface
 				$log[$i]['action'] = make_clickable($log[$i]['action']);
 				*/
 			}
+			else
+			{
+				$log[$i]['action'] = $this->user->lang($log[$i]['action']);
+			}
 
 			$i++;
 		}
@@ -558,7 +598,7 @@ class log implements \phpbb\log\log_interface
 		*									get the permission data
 		* @var	array	reportee_id_list	Array of additional user IDs we
 		*									get the username strings for
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$vars = array('log', 'topic_id_list', 'reportee_id_list');
 		extract($this->dispatcher->trigger_event('core.get_logs_get_additional_data', compact($vars)));
@@ -625,9 +665,23 @@ class log implements \phpbb\log\log_interface
 			$operations = array();
 			foreach ($this->user->lang as $key => $value)
 			{
-				if (substr($key, 0, 4) == 'LOG_' && preg_match($keywords_pattern, $value))
+				if (substr($key, 0, 4) == 'LOG_')
 				{
-					$operations[] = $key;
+					if (is_array($value))
+					{
+						foreach ($value as $plural_value)
+						{
+							if (preg_match($keywords_pattern, $plural_value))
+							{
+								$operations[] = $key;
+								break;
+							}
+						}
+					}
+					else if (preg_match($keywords_pattern, $value))
+					{
+						$operations[] = $key;
+					}
 				}
 			}
 

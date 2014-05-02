@@ -314,7 +314,6 @@ function check_rule(&$rules, &$rule_row, &$message_row, $user_id)
 		break;
 	}
 
-
 	if (!$result)
 	{
 		return false;
@@ -1575,7 +1574,7 @@ function get_folder_status($folder_id, $folder)
 */
 function submit_pm($mode, $subject, &$data, $put_in_outbox = true)
 {
-	global $db, $auth, $config, $phpEx, $template, $user, $phpbb_root_path, $phpbb_container;
+	global $db, $auth, $config, $phpEx, $template, $user, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher;
 
 	// We do not handle erasing pms here
 	if ($mode == 'delete')
@@ -1584,6 +1583,18 @@ function submit_pm($mode, $subject, &$data, $put_in_outbox = true)
 	}
 
 	$current_time = time();
+
+	/**
+	* Get all parts of the PM that are to be submited to the DB.
+	*
+	* @event core.submit_pm_before
+	* @var	string	mode	PM Post mode - post|reply|quote|quotepost|forward|edit
+	* @var	string	subject	Subject of the private message
+	* @var	array	data	The whole row data of the PM.
+	* @since 3.1.0-b3
+	*/
+	$vars = array('mode', 'subject', 'data');
+	extract($phpbb_dispatcher->trigger_event('core.submit_pm_before', compact($vars)));
 
 	// Collect some basic information about which tables and which rows to update/insert
 	$sql_data = array();
@@ -2018,10 +2029,10 @@ function message_history($msg_id, $user_id, $message_row, $folder, $in_post_mode
 
 			$decoded_message = bbcode_nl2br($decoded_message);
 		}
-		
+
 		$parse_flags = ($row['bbcode_bitfield'] ? OPTION_FLAG_BBCODE : 0);
 		$parse_flags |= ($row['enable_smilies'] ? OPTION_FLAG_SMILIES : 0);
-		
+
 		$message = generate_text_for_display($message, $row['bbcode_uid'], $row['bbcode_bitfield'], $parse_flags, false);
 
 		$subject = censor_text($subject);

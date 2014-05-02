@@ -96,9 +96,6 @@ class mcp_warn
 				'U_NOTES'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $row['user_id']),
 
 				'USERNAME_FULL'		=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
-				'USERNAME'			=> $row['username'],
-				'USERNAME_COLOUR'	=> ($row['user_colour']) ? '#' . $row['user_colour'] : '',
-				'U_USER'			=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=viewprofile&amp;u=' . $row['user_id']),
 
 				'WARNING_TIME'	=> $user->format_date($row['user_last_warning']),
 				'WARNINGS'		=> $row['user_warnings'],
@@ -118,9 +115,6 @@ class mcp_warn
 				'U_NOTES'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $row['user_id']),
 
 				'USERNAME_FULL'		=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
-				'USERNAME'			=> $row['username'],
-				'USERNAME_COLOUR'	=> ($row['user_colour']) ? '#' . $row['user_colour'] : '',
-				'U_USER'			=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=viewprofile&amp;u=' . $row['user_id']),
 
 				'WARNING_TIME'	=> $user->format_date($row['warning_time']),
 				'WARNINGS'		=> $row['user_warnings'],
@@ -167,9 +161,6 @@ class mcp_warn
 				'U_NOTES'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $row['user_id']),
 
 				'USERNAME_FULL'		=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']),
-				'USERNAME'			=> $row['username'],
-				'USERNAME_COLOUR'	=> ($row['user_colour']) ? '#' . $row['user_colour'] : '',
-				'U_USER'			=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=viewprofile&amp;u=' . $row['user_id']),
 
 				'WARNING_TIME'	=> $user->format_date($row['user_last_warning']),
 				'WARNINGS'		=> $row['user_warnings'],
@@ -293,7 +284,7 @@ class mcp_warn
 		$message = generate_text_for_display($user_row['post_text'], $user_row['bbcode_uid'], $user_row['bbcode_bitfield'], $parse_flags, true);
 
 		// Generate the appropriate user information for the user we are looking at
-		if (!function_exists('phpbb_get_user_avatar'))
+		if (!function_exists('get_user_rank'))
 		{
 			include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 		}
@@ -398,11 +389,10 @@ class mcp_warn
 		}
 
 		// Generate the appropriate user information for the user we are looking at
-		if (!function_exists('phpbb_get_user_avatar'))
+		if (!function_exists('get_user_rank'))
 		{
 			include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 		}
-
 		get_user_rank($user_row['user_rank'], $user_row['user_posts'], $rank_title, $rank_img, $rank_img_src);
 		$avatar_img = phpbb_get_user_avatar($user_row);
 

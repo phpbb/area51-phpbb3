@@ -3,7 +3,7 @@
 *
 * @package db
 * @copyright (c) 2011 phpBB Group
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
@@ -19,7 +19,7 @@ class migrator
 	/** @var \phpbb\config\config */
 	protected $config;
 
-	/** @var \phpbb\db\driver\driver */
+	/** @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
 	/** @var \phpbb\db\tools */
@@ -68,7 +68,7 @@ class migrator
 	/**
 	* Constructor of the database migrator
 	*/
-	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\db\tools $db_tools, $migrations_table, $phpbb_root_path, $php_ext, $table_prefix, $tools, \phpbb\db\migration\helper $helper)
+	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\db\tools $db_tools, $migrations_table, $phpbb_root_path, $php_ext, $table_prefix, $tools, \phpbb\db\migration\helper $helper)
 	{
 		$this->config = $config;
 		$this->db = $db;
@@ -509,10 +509,17 @@ class migrator
 					throw new \phpbb\db\migration\exception('MIGRATION_INVALID_DATA_CUSTOM_NOT_CALLABLE', $step);
 				}
 
-				return array(
-					$parameters[0],
-					array($last_result),
-				);
+				if ($reverse)
+				{
+					return false;
+				}
+				else
+				{
+					return array(
+						$parameters[0],
+						array($last_result),
+					);
+				}
 			break;
 
 			default:

@@ -21,6 +21,9 @@ $user->session_begin();
 $auth->acl($user->data);
 $user->setup(array('memberlist', 'groups'));
 
+// Setting a variable to let the style designer know where he is...
+$template->assign_var('S_IN_MEMBERLIST', true);
+
 // Grab data
 $mode		= request_var('mode', '');
 $action		= request_var('action', '');
@@ -598,10 +601,19 @@ switch ($mode)
 		*										enabled?
 		* @var	bool    friend					Is the user friend?
 		* @var	bool	foe						Is the user foe?
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		* @changed 3.1.0-b2 Added friend and foe status
 		*/
-		$vars = array('member', 'user_notes_enabled', 'warn_user_enabled', 'zebra_enabled', 'friends_enabled', 'foes_enabled', 'friend', 'foe');
+		$vars = array(
+			'member',
+			'user_notes_enabled',
+			'warn_user_enabled',
+			'zebra_enabled',
+			'friends_enabled',
+			'foes_enabled',
+			'friend',
+			'foe',
+		);
 		extract($phpbb_dispatcher->trigger_event('core.memberlist_view_profile', compact($vars)));
 
 		$template->assign_vars(show_profile($member, $user_notes_enabled, $warn_user_enabled));
@@ -621,7 +633,7 @@ switch ($mode)
 			$sql = 'SELECT COUNT(post_id) as posts_in_queue
 				FROM ' . POSTS_TABLE . '
 				WHERE poster_id = ' . $user_id . '
-					AND post_visibility = ' . ITEM_UNAPPROVED;
+					AND ' . $db->sql_in_set('post_visibility', array(ITEM_UNAPPROVED, ITEM_REAPPROVE));
 			$result = $db->sql_query($sql);
 			$member['posts_in_queue'] = (int) $db->sql_fetchfield('posts_in_queue');
 			$db->sql_freeresult($result);
@@ -1579,8 +1591,8 @@ switch ($mode)
 					'S_CUSTOM_PROFILE'	=> (isset($cp_row['row']) && sizeof($cp_row['row'])) ? true : false,
 					'S_GROUP_LEADER'	=> $is_leader,
 
-					'U_VIEW_PROFILE'	=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=viewprofile&amp;u=' . $user_id))
-				);
+					'U_VIEW_PROFILE'	=> get_username_string('profile', $user_id, $row['username']),
+				));
 
 				if (isset($cp_row['row']) && sizeof($cp_row['row']))
 				{
@@ -1708,6 +1720,29 @@ function show_profile($data, $user_notes_enabled = false, $warn_user_enabled = f
 		}
 	}
 
+	if (!function_exists('phpbb_get_banned_user_ids'))
+	{
+		include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+	}
+
+	// Can this user receive a Private Message?
+	$can_receive_pm = (
+		// They must be a "normal" user
+		$data['user_type'] != USER_IGNORE &&
+
+		// They must not be deactivated by the administrator
+		($data['user_type'] != USER_INACTIVE && $data['user_inactive_reason'] == INACTIVE_MANUAL) &&
+
+		// They must be able to read PMs
+		sizeof($auth->acl_get_list($user_id, 'u_readpm')) &&
+
+		// They must not be permanently banned
+		!sizeof(phpbb_get_banned_user_ids($user_id, false)) &&
+
+		// They must allow users to contact via PM
+		(($auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_')) || $data['user_allow_pm'])
+	);
+
 	// Dump it out to the template
 	$template_data = array(
 		'AGE'			=> $age,
@@ -1736,7 +1771,7 @@ function show_profile($data, $user_notes_enabled = false, $warn_user_enabled = f
 		'U_SEARCH_USER'	=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id=$user_id&amp;sr=posts") : '',
 		'U_NOTES'		=> ($user_notes_enabled && $auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $user_id, true, $user->session_id) : '',
 		'U_WARN'		=> ($warn_user_enabled && $auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $user_id, true, $user->session_id) : '',
-		'U_PM'			=> ($config['allow_privmsg'] && $auth->acl_get('u_sendpm') && ($data['user_allow_pm'] || $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_'))) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;u=' . $user_id) : '',
+		'U_PM'			=> ($config['allow_privmsg'] && $auth->acl_get('u_sendpm') && $can_receive_pm) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;u=' . $user_id) : '',
 		'U_EMAIL'		=> $email,
 		'U_JABBER'		=> ($data['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contact&amp;action=jabber&amp;u=' . $user_id) : '',
 
@@ -1752,7 +1787,7 @@ function show_profile($data, $user_notes_enabled = false, $warn_user_enabled = f
 	* @event core.memberlist_prepare_profile_data
 	* @var	array	data				Array with user's data
 	* @var	array	template_data		Template array with user's data
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	*/
 	$vars = array('data', 'template_data');
 	extract($phpbb_dispatcher->trigger_event('core.memberlist_prepare_profile_data', compact($vars)));

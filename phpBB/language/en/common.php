@@ -167,6 +167,7 @@ $lang = array_merge($lang, array(
 	'CONGRATULATIONS'		=> 'Congratulations to',
 	'CONNECTION_FAILED'		=> 'Connection failed.',
 	'CONNECTION_SUCCESS'	=> 'Connection was successful!',
+	'CONTACT_USER'			=> 'Contact',
 	'COOKIES_DELETED'		=> 'All board cookies successfully deleted.',
 	'CURRENT_TIME'			=> 'It is currently %s',
 
@@ -422,14 +423,16 @@ $lang = array_merge($lang, array(
 	'NOT_WATCHING_FORUM'		=> 'You are no longer subscribed to updates on this forum.',
 	'NOT_WATCHING_TOPIC'		=> 'You are no longer subscribed to this topic.',
 	'NOTIFICATIONS'				=> 'Notifications',
-	// This applies for NOTIFICATION_BOOKMARK, NOTIFICATION_POST, and NOTIFICATION_QUOTE.
+	// This applies for NOTIFICATION_BOOKMARK and NOTIFICATION_POST.
 	// %1$s will return a list of users that's concatenated using "," and "and" - see STRING_LIST
 	// Once the user count reaches 5 users or more, the list is trimmed using NOTIFICATION_X_OTHERS
+	// Once the user count reaches 20 users or more, the list is trimmed using NOTIFICATION_MANY_OTHERS
 	// Examples:
 	// A replied...
 	// A and B replied...
 	// A, B and C replied...
 	// A, B, C and 2 others replied...
+	// A, B, C and others replied...
 	'NOTIFICATION_BOOKMARK'				=> array(
 		1	=> '%1$s replied to the topic “%2$s” you have bookmarked.',
 	),
@@ -454,7 +457,8 @@ $lang = array_merge($lang, array(
 	'NOTIFICATION_TOPIC_IN_QUEUE'		=> 'A new topic titled "%2$s" was posted by %1$s and needs approval.',
 	'NOTIFICATION_TYPE_NOT_EXIST'		=> 'The notification type "%s" is missing from the file system.',
 	'NOTIFICATION_ADMIN_ACTIVATE_USER'	=> 'The user “%1$s” is newly registered and requires activation.',
-	// Used in conjuction with NOTIFICATION_BOOKMARK, NOTIFICATION_POST, and NOTIFICATION_QUOTE.
+	// Used in conjuction with NOTIFICATION_BOOKMARK and NOTIFICATION_POST.
+	'NOTIFICATION_MANY_OTHERS'			=> 'others',
 	'NOTIFICATION_X_OTHERS'				=> array(
 		2	=> '%d others',
 	),
@@ -758,7 +762,7 @@ $lang = array_merge($lang, array(
 	),
 	'TRACKED_PHP_ERROR'	=> 'Tracked PHP errors: %s',
 
-	'UNABLE_GET_IMAGE_SIZE'	=> 'It was not possible to determine the dimensions of the image.',
+	'UNABLE_GET_IMAGE_SIZE'	=> 'It was not possible to determine the dimensions of the image. Please verify that the URL you entered is correct.',
 	'UNABLE_TO_DELIVER_FILE'=> 'Unable to deliver file.',
 	'UNKNOWN_BROWSER'		=> 'Unknown browser',
 	'UNMARK_ALL'			=> 'Unmark all',
@@ -1370,7 +1374,7 @@ $lang = array_merge($lang, array(
 		'D M d, Y g:i a'		=> 'Mon Jan 01, 2007 1:37 pm',
 		'F jS, Y, g:i a'		=> 'January 1st, 2007, 1:37 pm',
 		'|d M Y|, H:i'			=> 'Today, 13:37 / 01 Jan 2007, 13:37',
-		'|F jS, Y|, g:i a'		=> 'Today, 1:37 pm / January 1st, 2007, 1:37 pm'
+		'|F jS, Y|, g:i a'		=> 'Today, 1:37 pm / January 1st, 2007, 1:37 pm',
 	),
 
 	// The default dateformat which will be used on new installs in this language

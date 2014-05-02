@@ -150,7 +150,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		global $phpbb_root_path, $phpEx;
 		// so we don't reopen an open connection
-		if (!($this->db instanceof \phpbb\db\driver\driver))
+		if (!($this->db instanceof \phpbb\db\driver\driver_interface))
 		{
 			$dbms = self::$config['dbms'];
 			$this->db = new $dbms();
@@ -300,7 +300,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		// because that step will create a config.php file if phpBB has the
 		// permission to do so. We have to create the config file on our own
 		// in order to get the DEBUG constants defined.
-		$config_php_data = phpbb_create_config_file_data(self::$config, self::$config['dbms'], true, true);
+		$config_php_data = phpbb_create_config_file_data(self::$config, self::$config['dbms'], true, false, true);
 		$config_created = file_put_contents($config_file, $config_php_data) !== false;
 		if (!$config_created)
 		{
@@ -422,7 +422,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		}
 		else
 		{
-			$db->sql_multi_insert(STYLES_TABLE, array(
+			$db->sql_multi_insert(STYLES_TABLE, array(array(
 				'style_id' => $style_id,
 				'style_name' => $style_path,
 				'style_copyright' => '',
@@ -431,7 +431,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 				'bbcode_bitfield' => 'kNg=',
 				'style_parent_id' => $parent_style_id,
 				'style_parent_tree' => $parent_style_path,
-			));
+			)));
 		}
 	}
 
@@ -522,8 +522,8 @@ class phpbb_functional_test_case extends phpbb_test_case
 			'user_email' => 'nobody@example.com',
 			'user_type' => 0,
 			'user_lang' => 'en',
-			'user_timezone' => 0,
-			'user_dateformat' => '',
+			'user_timezone' => 'UTC',
+			'user_dateformat' => 'r',
 			'user_password' => $passwords_manager->hash($username . $username),
 		);
 		return user_add($user_row);

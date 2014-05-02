@@ -64,7 +64,7 @@ class filespec
 		$this->filename = $upload_ary['tmp_name'];
 		$this->filesize = $upload_ary['size'];
 		$name = (STRIP) ? stripslashes($upload_ary['name']) : $upload_ary['name'];
-		$name = trim(utf8_htmlspecialchars(utf8_basename($name)));
+		$name = trim(utf8_basename($name));
 		$this->realname = $this->uploadname = $name;
 		$this->mimetype = $upload_ary['type'];
 
@@ -475,7 +475,7 @@ class fileerror extends filespec
 class fileupload
 {
 	var $allowed_extensions = array();
-	var $disallowed_content = array('body', 'head', 'html', 'img', 'plaintext', 'a href', 'pre', 'script', 'table', 'title'); 
+	var $disallowed_content = array('body', 'head', 'html', 'img', 'plaintext', 'a href', 'pre', 'script', 'table', 'title');
 	var $max_filesize = 0;
 	var $min_width = 0;
 	var $min_height = 0;

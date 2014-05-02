@@ -224,6 +224,18 @@ if (!$config['use_system_cron'])
 		$url = $task->get_url();
 		$template->assign_var('RUN_CRON_TASK', '<img src="' . $url . '" width="1" height="1" alt="cron" />');
 	}
+	else
+	{
+		// See if we should prune the shadow topics instead
+		$task = $cron->find_task('cron.task.core.prune_shadow_topics');
+		$task->set_forum_data($forum_data);
+
+		if ($task->is_ready())
+		{
+			$url = $task->get_url();
+			$template->assign_var('RUN_CRON_TASK', '<img src="' . $url . '" width="1" height="1" alt="cron" />');
+		}
+	}
 }
 
 // Forum rules and subscription info
@@ -375,7 +387,7 @@ $sql_array = array(
 *
 * @event core.viewforum_get_topic_data
 * @var	array	sql_array		The SQL array to get the data of all topics
-* @since 3.1-A1
+* @since 3.1.0-a1
 */
 $vars = array('sql_array');
 extract($phpbb_dispatcher->trigger_event('core.viewforum_get_topic_data', compact($vars)));
@@ -570,7 +582,7 @@ if (sizeof($shadow_topic_list))
 	*
 	* @event core.viewforum_get_shadowtopic_data
 	* @var	array	sql_array		SQL array to get the data of any shadowtopics
-	* @since 3.1-A1
+	* @since 3.1.0-a1
 	*/
 	$vars = array('sql_array');
 	extract($phpbb_dispatcher->trigger_event('core.viewforum_get_shadowtopic_data', compact($vars)));
@@ -640,6 +652,18 @@ $template->assign_vars(array(
 
 $topic_list = ($store_reverse) ? array_merge($announcement_list, array_reverse($topic_list)) : array_merge($announcement_list, $topic_list);
 $topic_tracking_info = $tracking_topics = array();
+
+/**
+* Modify topics data before we display the viewforum page
+*
+* @event core.viewforum_modify_topics_data
+* @var	array	topic_list			Array with current viewforum page topic ids
+* @var	array	rowset				Array with topics data (in topic_id => topic_data format)
+* @var	int		total_topic_count	Forum's total topic count
+* @since 3.1.0-b3
+*/
+$vars = array('topic_list', 'rowset', 'total_topic_count');
+extract($phpbb_dispatcher->trigger_event('core.viewforum_modify_topics_data', compact($vars)));
 
 // Okay, lets dump out the page ...
 if (sizeof($topic_list))
@@ -725,7 +749,7 @@ if (sizeof($topic_list))
 		$view_topic_url_params = 'f=' . $row['forum_id'] . '&amp;t=' . $topic_id;
 		$view_topic_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", $view_topic_url_params);
 
-		$topic_unapproved = ($row['topic_visibility'] == ITEM_UNAPPROVED && $auth->acl_get('m_approve', $row['forum_id']));
+		$topic_unapproved = (($row['topic_visibility'] == ITEM_UNAPPROVED || $row['topic_visibility'] == ITEM_REAPPROVE) && $auth->acl_get('m_approve', $row['forum_id']));
 		$posts_unapproved = ($row['topic_visibility'] == ITEM_APPROVED && $row['topic_posts_unapproved'] && $auth->acl_get('m_approve', $row['forum_id']));
 		$topic_deleted = $row['topic_visibility'] == ITEM_DELETED;
 
@@ -795,7 +819,7 @@ if (sizeof($topic_list))
 		* @event core.viewforum_modify_topicrow
 		* @var	array	row			Array with topic data
 		* @var	array	topic_row	Template array with topic data
-		* @since 3.1-A1
+		* @since 3.1.0-a1
 		*/
 		$vars = array('row', 'topic_row');
 		extract($phpbb_dispatcher->trigger_event('core.viewforum_modify_topicrow', compact($vars)));
