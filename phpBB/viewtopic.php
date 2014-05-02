@@ -1609,7 +1609,7 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		$user_cache[$poster_id]['user_type'] != USER_IGNORE &&
 
 		// They must not be deactivated by the administrator
-		($user_cache[$poster_id]['user_type'] != USER_INACTIVE && $user_cache[$poster_id]['user_inactive_reason'] == INACTIVE_MANUAL) &&
+		($user_cache[$poster_id]['user_type'] != USER_INACTIVE || $user_cache[$poster_id]['user_inactive_reason'] != INACTIVE_MANUAL) &&
 
 		// They must be able to read PMs
 		in_array($poster_id, $can_receive_pm_list) &&
@@ -1618,10 +1618,10 @@ for ($i = 0, $end = sizeof($post_list); $i < $end; ++$i)
 		!in_array($poster_id, $permanently_banned_users) &&
 
 		// They must allow users to contact via PM
-		(($auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_')) || $data['user_allow_pm'])
+		(($auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_')) || $user_cache[$poster_id]['allow_pm'])
 	);
 
-    $u_pm = '';
+	$u_pm = '';
 
 	if ($config['allow_privmsg'] && $auth->acl_get('u_sendpm') && $can_receive_pm)
 	{
