@@ -5,7 +5,7 @@
 	"homepage": "https://www.phpbb.com/",
 	"version": "1.0.0",
 	"time": "2013-09-06 14:22:00",
-	"licence": "GPL-2.0",
+	"license": "GPL-2.0",
 	"authors": [
 		{
 			"name": "Patrick Webster",
