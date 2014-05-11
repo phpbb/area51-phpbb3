@@ -58,6 +58,7 @@
 		<ul class="topiclist topics">
 
 		<!-- BEGIN searchresults -->
+			<!-- EVENT search_results_topic_before -->
 			<li class="row<!-- IF searchresults.S_ROW_COUNT is even --> bg1<!-- ELSE --> bg2<!-- ENDIF -->">
 				<dl class="icon {searchresults.TOPIC_IMG_STYLE}">
 					<dt <!-- IF searchresults.TOPIC_ICON_IMG -->style="background-image: url({T_ICONS_PATH}{searchresults.TOPIC_ICON_IMG}); background-repeat: no-repeat;"<!-- ENDIF --> title="{searchresults.TOPIC_FOLDER_IMG_ALT}">
@@ -84,6 +85,7 @@
 								</ul>
 							</div>
 							<!-- ENDIF -->
+							<!-- IF searchresults.S_HAS_POLL -->{POLL_IMG} <!-- ENDIF -->
 							{L_POST_BY_AUTHOR} {searchresults.TOPIC_AUTHOR_FULL} &raquo; {searchresults.FIRST_POST_TIME} &raquo; {L_IN} <a href="{searchresults.U_VIEW_FORUM}">{searchresults.FORUM_TITLE}</a>
 							<!-- EVENT topiclist_row_append -->
 
@@ -97,6 +99,7 @@
 					</dd>
 				</dl>
 			</li>
+			<!-- EVENT search_results_topic_after -->
 		<!-- END searchresults -->
 		</ul>
 
