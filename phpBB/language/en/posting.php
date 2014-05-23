@@ -221,6 +221,7 @@ $lang = array_merge($lang, array(
 		1	=> 'You may embed only %d quote within each other.',
 		2	=> 'You may embed only %d quotes within each other.',
 	),
+	'QUOTE_NO_NESTING'			=> 'You may not embed quotes within each other.',
 
 	'SAVE'						=> 'Save',
 	'SAVE_DATE'					=> 'Saved at',
@@ -267,6 +268,6 @@ $lang = array_merge($lang, array(
 	'VIEW_MESSAGE'				=> '%sView your submitted message%s',
 	'VIEW_PRIVATE_MESSAGE'		=> '%sView your submitted private message%s',
 
-	'WRONG_FILESIZE'			=> 'The file is too big, maximum allowed size is %1d %2s.',
+	'WRONG_FILESIZE'			=> 'The file is too big, maximum allowed size is %1$d %2$s.',
 	'WRONG_SIZE'				=> 'The image must be at least %1$s wide, %2$s high and at most %3$s wide and %4$s high. The submitted image is %5$s wide and %6$s high.',
 ));
