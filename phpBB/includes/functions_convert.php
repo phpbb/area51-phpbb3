@@ -1,9 +1,13 @@
 <?php
 /**
 *
-* @package install
-* @copyright (c) 2006 phpBB Group
-* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
 *
 */
 
@@ -1236,7 +1240,7 @@ function get_config()
 		$filename = $convert->options['forum_path'] . '/' . $convert->config_schema['filename'];
 		if (!file_exists($filename))
 		{
-			$convert->p_master->error($user->lang['FILE_NOT_FOUND'] . ': ' . $filename, __LINE__, __FILE__);
+			$convert->p_master->error($user->lang('FILE_NOT_FOUND', $filename), __LINE__, __FILE__);
 		}
 
 		if (isset($convert->config_schema['array_name']))

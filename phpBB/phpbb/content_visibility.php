@@ -1,9 +1,13 @@
 <?php
 /**
 *
-* @package phpbb
-* @copyright (c) 2012 phpBB Group
-* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
 *
 */
 
@@ -12,7 +16,6 @@ namespace phpbb;
 /**
 * phpbb_visibility
 * Handle fetching and setting the visibility for topics and posts
-* @package phpbb
 */
 class content_visibility
 {
@@ -384,6 +387,7 @@ class content_visibility
 			$update_topic_postcount = false;
 		}
 
+		$topic_update_array = array();
 		// Update the topic's reply count and the forum's post count
 		if ($update_topic_postcount)
 		{
@@ -421,25 +425,51 @@ class content_visibility
 
 			if (sizeof($sql_ary))
 			{
-				$topic_sql = $forum_sql = array();
+				$forum_sql = array();
 
 				foreach ($sql_ary as $field => $value_change)
 				{
-					$topic_sql[] = 'topic_' . $field . ' = topic_' . $field . $value_change;
+					$topic_update_array[] = 'topic_' . $field . ' = topic_' . $field . $value_change;
 					$forum_sql[] = 'forum_' . $field . ' = forum_' . $field . $value_change;
 				}
-
-				// Update the number for replies and posts
-				$sql = 'UPDATE ' . $this->topics_table . '
-					SET ' . implode(', ', $topic_sql) . '
-					WHERE topic_id = ' . (int) $topic_id;
-				$this->db->sql_query($sql);
 
 				$sql = 'UPDATE ' . $this->forums_table . '
 					SET ' . implode(', ', $forum_sql) . '
 					WHERE forum_id = ' . (int) $forum_id;
 				$this->db->sql_query($sql);
 			}
+		}
+
+		if ($post_id)
+		{
+			$sql = 'SELECT 1 AS has_attachments
+				FROM ' . POSTS_TABLE . '
+				WHERE topic_id = ' . (int) $topic_id . '
+					AND post_attachment = 1
+					AND post_visibility = ' . ITEM_APPROVED . '
+					AND ' . $this->db->sql_in_set('post_id', $post_id, true);
+			$result = $this->db->sql_query_limit($sql, 1);
+
+			$has_attachment = (bool) $this->db->sql_fetchfield('has_attachments');
+			$this->db->sql_freeresult($result);
+
+			if ($has_attachment && $visibility == ITEM_APPROVED)
+			{
+				$topic_update_array[] = 'topic_attachment = 1';
+			}
+			else if (!$has_attachment && $visibility != ITEM_APPROVED)
+			{
+				$topic_update_array[] = 'topic_attachment = 0';
+			}
+		}
+
+		if (!empty($topic_update_array))
+		{
+			// Update the number for replies and posts, and update the attachments flag
+			$sql = 'UPDATE ' . $this->topics_table . '
+				SET ' . implode(', ', $topic_update_array) . '
+				WHERE topic_id = ' . (int) $topic_id;
+			$this->db->sql_query($sql);
 		}
 
 		return $data;

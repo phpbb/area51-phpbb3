@@ -1,9 +1,13 @@
 <?php
 /**
 *
-* @package install
-* @copyright (c) 2005 phpBB Group
-* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
 *
 */
 
@@ -250,7 +254,12 @@ $phpbb_path_helper = $phpbb_container->get('path_helper');
 $template = new \phpbb\template\twig\twig($phpbb_path_helper, $config, $user, new \phpbb\template\context());
 $paths = array($phpbb_root_path . 'install/update/new/adm/style', $phpbb_admin_path . 'style');
 $paths = array_filter($paths, 'is_dir');
-$template->set_custom_style('adm', $paths);
+$template->set_custom_style(array(
+	array(
+		'name' 		=> 'adm',
+		'ext_path' 	=> 'adm/style/',
+	),
+), $paths);
 
 $path = array_shift($paths);
 
@@ -272,9 +281,6 @@ $template->set_filenames(array(
 
 $install->page_footer();
 
-/**
-* @package install
-*/
 class module
 {
 	var $id = 0;
@@ -633,7 +639,7 @@ class module
 		echo '		</div>';
 		echo '	</div>';
 		echo '	<div id="page-footer">';
-		echo '		Powered by <a href="https://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Group';
+		echo '		Powered by <a href="https://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Limited';
 		echo '	</div>';
 		echo '</div>';
 		echo '</body>';

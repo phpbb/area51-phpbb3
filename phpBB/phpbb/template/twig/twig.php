@@ -1,9 +1,13 @@
 <?php
 /**
 *
-* @package phpBB3
-* @copyright (c) 2013 phpBB Group
-* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
 *
 */
 
@@ -11,7 +15,6 @@ namespace phpbb\template\twig;
 
 /**
 * Twig Template class.
-* @package phpBB3
 */
 class twig extends \phpbb\template\base
 {
@@ -211,9 +214,13 @@ class twig extends \phpbb\template\base
 	*
 	* Note: Templates are still compiled to phpBB's cache directory.
 	*
-	* @param string|array $names Array of names or string of name of template(s) in inheritance tree order, used by extensions.
-	* @param string|array or string $paths Array of style paths, relative to current root directory
-	* @return phpbb_template $this
+	* @param string|array $names Array of names (or detailed names) or string of name of template(s) in inheritance tree order, used by extensions.
+	*	E.g. array(
+	*			'name' 		=> 'adm',
+	*			'ext_path' 	=> 'adm/style/',
+	*		)
+	* @param string|array of string $paths Array of style paths, relative to current root directory
+	* @return \phpbb\template\template $this
 	*/
 	public function set_custom_style($names, $paths)
 	{
@@ -234,10 +241,26 @@ class twig extends \phpbb\template\base
 				$namespace = str_replace('/', '_', $ext_namespace);
 				$paths = array();
 
-				foreach ($names as $style_name)
+				foreach ($names as $template_dir)
 				{
-					$ext_style_path = $ext_path . 'styles/' . $style_name . '/';
-					$ext_style_template_path = $ext_style_path . 'template/';
+					if (is_array($template_dir))
+					{
+						if (isset($template_dir['ext_path']))
+						{
+							$ext_style_template_path = $ext_path . $template_dir['ext_path'];
+							$ext_style_path = dirname($ext_style_template_path);
+						}
+						else
+						{
+							$ext_style_path = $ext_path . 'styles/' . $template_dir['name'] . '/';
+							$ext_style_template_path = $ext_style_path . 'template/';
+						}
+					}
+					else
+					{
+						$ext_style_path = $ext_path . 'styles/' . $template_dir . '/';
+						$ext_style_template_path = $ext_style_path . 'template/';
+					}
 
 					if (is_dir($ext_style_template_path))
 					{

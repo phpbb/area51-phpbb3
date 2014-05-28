@@ -1,9 +1,13 @@
 <?php
 /**
 *
-* @package db
-* @copyright (c) 2014 phpBB Group
-* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
 *
 */
 
@@ -11,8 +15,6 @@ namespace phpbb\db\migration;
 
 /**
 * The schema generator generates the schema based on the existing migrations
-*
-* @package db
 */
 class schema_generator
 {
@@ -107,7 +109,25 @@ class schema_generator
 							{
 								foreach ($add_columns as $column => $column_data)
 								{
-									$this->tables[$table]['COLUMNS'][$column] = $column_data;
+									if (isset($column_data['after']))
+									{
+										$columns = $this->tables[$table]['COLUMNS'];
+										$offset = array_search($column_data['after'], array_keys($columns));
+										unset($column_data['after']);
+
+										if ($offset === false)
+										{
+											$this->tables[$table]['COLUMNS'][$column] = array_values($column_data);
+										}
+										else
+										{
+											$this->tables[$table]['COLUMNS'] = array_merge(array_slice($columns, 0, $offset + 1, true), array($column => array_values($column_data)), array_slice($columns, $offset));
+										}
+									}
+									else
+									{
+										$this->tables[$table]['COLUMNS'][$column] = $column_data;
+									}
 								}
 							}
 						}

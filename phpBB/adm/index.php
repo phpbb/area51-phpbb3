@@ -1,9 +1,13 @@
 <?php
 /**
 *
-* @package acp
-* @copyright (c) 2005 phpBB Group
-* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
 *
 */
 
@@ -50,7 +54,13 @@ $module_id		= request_var('i', '');
 $mode			= request_var('mode', '');
 
 // Set custom style for admin area
-$template->set_custom_style('adm', $phpbb_admin_path . 'style');
+$template->set_custom_style(array(
+	array(
+		'name' 		=> 'adm',
+		'ext_path' 	=> 'adm/style/',
+	),
+), $phpbb_admin_path . 'style');
+
 $template->assign_var('T_ASSETS_PATH', $phpbb_root_path . 'assets');
 $template->assign_var('T_TEMPLATE_PATH', $phpbb_admin_path . 'style');
 

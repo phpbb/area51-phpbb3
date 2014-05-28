@@ -1,9 +1,13 @@
 <?php
 /**
 *
-* @package testing
-* @copyright (c) 2012 phpBB Group
-* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
 *
 */
 
@@ -138,6 +142,47 @@ class phpbb_content_visibility_set_post_visibility_test extends phpbb_database_t
 			WHERE topic_id = ' . $topic_id);
 
 		$this->assertEquals($expected_topic, $db->sql_fetchrowset($result));
+		$db->sql_freeresult($result);
+	}
+
+	public function set_post_soft_deleted_data()
+	{
+		return array(
+			array(
+				10, 10, 10,
+				1, time(), 'soft-deleted',
+				true, false,
+				array(array('topic_attachment' => 1)),
+			),
+			array(
+				13, 11, 10,
+				1, time(), 'soft-deleted',
+				true, false,
+				array(array('topic_attachment' => 0)),
+			),
+		);
+	}
+
+	/**
+	* @dataProvider set_post_soft_deleted_data
+	*/
+	public function test_set_post_soft_deleted($post_id, $topic_id, $forum_id, $user_id, $time, $reason, $is_starter, $is_latest, $expected)
+	{
+		global $cache, $db, $auth, $phpbb_root_path, $phpEx;
+
+		$cache = new phpbb_mock_cache;
+		$db = $this->new_dbal();
+		$auth = $this->getMock('\phpbb\auth\auth');
+		$user = $this->getMock('\phpbb\user');
+		$content_visibility = new \phpbb\content_visibility($auth, $db, $user, $phpbb_root_path, $phpEx, FORUMS_TABLE, POSTS_TABLE, TOPICS_TABLE, USERS_TABLE);
+
+		$content_visibility->set_post_visibility(ITEM_DELETED, $post_id, $topic_id, $forum_id, $user_id, $time, $reason, $is_starter, $is_latest);
+
+		$result = $db->sql_query('SELECT topic_attachment
+			FROM phpbb_topics
+			WHERE topic_id = ' . $topic_id);
+
+		$this->assertEquals($expected, $db->sql_fetchrowset($result));
 		$db->sql_freeresult($result);
 	}
 }

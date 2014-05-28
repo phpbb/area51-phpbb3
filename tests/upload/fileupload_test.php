@@ -1,11 +1,15 @@
 <?php
 /**
- *
- * @package testing
- * @copyright (c) 2012 phpBB Group
- * @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
- *
- */
+*
+* This file is part of the phpBB Forum Software package.
+*
+* @copyright (c) phpBB Limited <https://www.phpbb.com>
+* @license GNU General Public License, version 2 (GPL-2.0)
+*
+* For full copyright and license information, please see
+* the docs/CREDITS.txt file.
+*
+*/
 
 require_once __DIR__ . '/../../phpBB/includes/functions.php';
 require_once __DIR__ . '/../../phpBB/includes/utf/utf_tools.php';
@@ -101,6 +105,31 @@ class phpbb_fileupload_test extends phpbb_test_case
 		$file = $upload->local_upload($this->path . 'jpg.jpg');
 		$this->assertEquals(0, sizeof($file->error));
 		unlink($this->path . 'jpg.jpg');
+	}
+
+	public function test_move_existent_file()
+	{
+		$upload = new fileupload('', array('jpg'), 1000);
+
+		copy($this->path . 'jpg', $this->path . 'jpg.jpg');
+		$file = $upload->local_upload($this->path . 'jpg.jpg');
+		$this->assertEquals(0, sizeof($file->error));
+		$this->assertFalse($file->move_file('../tests/upload/fixture'));
+		$this->assertFalse($file->file_moved);
+		$this->assertEquals(1, sizeof($file->error));
+	}
+
+	public function test_move_existent_file_overwrite()
+	{
+		$upload = new fileupload('', array('jpg'), 1000);
+
+		copy($this->path . 'jpg', $this->path . 'jpg.jpg');
+		copy($this->path . 'jpg', $this->path . 'copies/jpg.jpg');
+		$file = $upload->local_upload($this->path . 'jpg.jpg');
+		$this->assertEquals(0, sizeof($file->error));
+		$file->move_file('../tests/upload/fixture/copies', true);
+		$this->assertEquals(0, sizeof($file->error));
+		unlink($this->path . 'copies/jpg.jpg');
 	}
 
 	public function test_valid_dimensions()
