@@ -1007,8 +1007,8 @@ function get_remote_avatar_dim($src, $axis)
 		{
 			$bigger = ($remote_avatar_cache[$src][0] > $remote_avatar_cache[$src][1]) ? 0 : 1;
 			$ratio = $default[$bigger] / $remote_avatar_cache[$src][$bigger];
-			$remote_avatar_cache[$src][0] = (int)($remote_avatar_cache[$src][0] * $ratio);
-			$remote_avatar_cache[$src][1] = (int)($remote_avatar_cache[$src][1] * $ratio);
+			$remote_avatar_cache[$src][0] = (int) ($remote_avatar_cache[$src][0] * $ratio);
+			$remote_avatar_cache[$src][1] = (int) ($remote_avatar_cache[$src][1] * $ratio);
 		}
 	}
 
@@ -1287,7 +1287,9 @@ function restore_config($schema)
 		{
 			$var = (empty($m[2]) || empty($convert_config[$m[2]])) ? "''" : "'" . addslashes($convert_config[$m[2]]) . "'";
 			$exec = '$config_value = ' . $m[1] . '(' . $var . ');';
+			// @codingStandardsIgnoreStart
 			eval($exec);
+			// @codingStandardsIgnoreEnd
 		}
 		else
 		{
@@ -2295,7 +2297,7 @@ function convert_bbcode($message, $convert_size = true, $extended_bbcodes = fals
 		$message = preg_replace('#\[size=([0-9]+)\](.*?)\[/size\]#i', '[size=\1]\2[/size]', $message);
 		$message = preg_replace('#\[size=[0-9]{2,}\](.*?)\[/size\]#i', '[size=29]\1[/size]', $message);
 
-		for ($i = sizeof($size); $i; )
+		for ($i = sizeof($size); $i;)
 		{
 			$i--;
 			$message = str_replace('[size=' . $i . ']', '[size=' . $size[$i] . ']', $message);

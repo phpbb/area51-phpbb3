@@ -28,6 +28,8 @@ class file extends \phpbb\cache\driver\base
 
 	/**
 	* Set cache path
+	*
+	* @param string $cache_dir Define the path to the cache directory (default: $phpbb_root_path . 'cache/')
 	*/
 	function __construct($cache_dir = null)
 	{
@@ -222,7 +224,7 @@ class file extends \phpbb\cache\driver\base
 			{
 				$this->remove_dir($fileInfo->getPathname());
 			}
-			elseif (strpos($filename, 'container_') === 0 ||
+			else if (strpos($filename, 'container_') === 0 ||
 				strpos($filename, 'url_matcher') === 0 ||
 				strpos($filename, 'sql_') === 0 ||
 				strpos($filename, 'data_') === 0)
