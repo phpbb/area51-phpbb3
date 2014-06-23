@@ -71,10 +71,17 @@ class mysqli extends \phpbb\db\driver\mysql_base
 			if (version_compare($this->sql_server_info(true), '5.0.2', '>='))
 			{
 				$result = @mysqli_query($this->db_connect_id, 'SELECT @@session.sql_mode AS sql_mode');
-				$row = @mysqli_fetch_assoc($result);
-				@mysqli_free_result($result);
+				if ($result !== null)
+				{
+					$row = @mysqli_fetch_assoc($result);
 
-				$modes = array_map('trim', explode(',', $row['sql_mode']));
+					$modes = array_map('trim', explode(',', $row['sql_mode']));
+				}
+				else
+				{
+					$modes = array();
+				}
+				@mysqli_free_result($result);
 
 				// TRADITIONAL includes STRICT_ALL_TABLES and STRICT_TRANS_TABLES
 				if (!in_array('TRADITIONAL', $modes))
@@ -109,15 +116,18 @@ class mysqli extends \phpbb\db\driver\mysql_base
 		if (!$use_cache || empty($cache) || ($this->sql_server_version = $cache->get('mysqli_version')) === false)
 		{
 			$result = @mysqli_query($this->db_connect_id, 'SELECT VERSION() AS version');
-			$row = @mysqli_fetch_assoc($result);
-			@mysqli_free_result($result);
-
-			$this->sql_server_version = $row['version'];
-
-			if (!empty($cache) && $use_cache)
+			if ($result !== null)
 			{
-				$cache->put('mysqli_version', $this->sql_server_version);
+				$row = @mysqli_fetch_assoc($result);
+
+				$this->sql_server_version = $row['version'];
+
+				if (!empty($cache) && $use_cache)
+				{
+					$cache->put('mysqli_version', $this->sql_server_version);
+				}
 			}
+			@mysqli_free_result($result);
 		}
 
 		return ($raw) ? $this->sql_server_version : 'MySQL(i) ' . $this->sql_server_version;
@@ -165,6 +175,10 @@ class mysqli extends \phpbb\db\driver\mysql_base
 			{
 				$this->sql_report('start', $query);
 			}
+			else if (defined('PHPBB_DISPLAY_LOAD_TIME'))
+			{
+				$this->curtime = microtime(true);
+			}
 
 			$this->query_result = ($cache && $cache_ttl) ? $cache->sql_load($query) : false;
 			$this->sql_add_num_queries($this->query_result);
@@ -179,6 +193,10 @@ class mysqli extends \phpbb\db\driver\mysql_base
 				if (defined('DEBUG'))
 				{
 					$this->sql_report('stop', $query);
+				}
+				else if (defined('PHPBB_DISPLAY_LOAD_TIME'))
+				{
+					$this->sql_time += microtime(true) - $this->curtime;
 				}
 
 				if ($cache && $cache_ttl)
@@ -224,7 +242,7 @@ class mysqli extends \phpbb\db\driver\mysql_base
 			return $cache->sql_fetchrow($query_id);
 		}
 
-		if ($query_id !== false)
+		if ($query_id !== false && $query_id !== null)
 		{
 			$result = @mysqli_fetch_assoc($query_id);
 			return $result !== null ? $result : false;
@@ -434,9 +452,12 @@ class mysqli extends \phpbb\db\driver\mysql_base
 				$endtime = $endtime[0] + $endtime[1];
 
 				$result = @mysqli_query($this->db_connect_id, $query);
-				while ($void = @mysqli_fetch_assoc($result))
+				if ($result !== null)
 				{
-					// Take the time spent on parsing rows into account
+					while ($void = @mysqli_fetch_assoc($result))
+					{
+						// Take the time spent on parsing rows into account
+					}
 				}
 				@mysqli_free_result($result);
 
