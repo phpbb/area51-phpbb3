@@ -70,7 +70,7 @@ class log implements \phpbb\log\log_interface
 
 	/**
 	* Event dispatcher object
-	* @var \phpbb\event\dispatcher
+	* @var \phpbb\event\dispatcher_interface
 	*/
 	protected $dispatcher;
 
@@ -98,7 +98,7 @@ class log implements \phpbb\log\log_interface
 	* @param	\phpbb\db\driver\driver_interface	$db		Database object
 	* @param	\phpbb\user		$user	User object
 	* @param	\phpbb\auth\auth		$auth	Auth object
-	* @param	\phpbb\event\dispatcher	$phpbb_dispatcher	Event dispatcher
+	* @param	\phpbb\event\dispatcher_interface	$phpbb_dispatcher	Event dispatcher
 	* @param	string		$phpbb_root_path		Root path
 	* @param	string		$relative_admin_path	Relative admin root path
 	* @param	string		$php_ext			PHP Extension
@@ -737,7 +737,7 @@ class log implements \phpbb\log\log_interface
 			for ($i = 0, $num_keywords = sizeof($keywords); $i < $num_keywords; $i++)
 			{
 				$keywords_pattern[] = preg_quote($keywords[$i], '#');
-				$keywords[$i] = $this->db->sql_like_expression($this->db->any_char . $keywords[$i] . $this->db->any_char);
+				$keywords[$i] = $this->db->sql_like_expression($this->db->get_any_char() . $keywords[$i] . $this->db->get_any_char());
 			}
 
 			$keywords_pattern = '#' . implode('|', $keywords_pattern) . '#ui';

@@ -68,7 +68,7 @@ fieldset dl {
 }
 
 fieldset dt {
-	float: left;	
+	float: left;
 	width: 40%;
 	text-align: left;
 	display: block;
@@ -201,24 +201,6 @@ fieldset.forum-selection2 {
 	float: right;
 }
 
-/* Jumpbox */
-fieldset.jumpbox {
-	text-align: right;
-	margin-top: 15px;
-	min-height: 2.5em;
-}
-
-fieldset.jumpbox select {
-	max-width: 50%;
-}
-
-fieldset.quickmod {
-	width: 50%;
-	float: right;
-	text-align: right;
-	height: 2.5em;
-}
-
 /* Submit button fieldset */
 fieldset.submit-buttons {
 	text-align: center;
@@ -294,6 +276,10 @@ textarea.inputbox {
 	width: auto !important;
 }
 
+input[type="number"] {
+	-moz-padding-end: inherit;
+}
+
 input[type="search"] {
 	-webkit-appearance: textfield;
 	-webkit-box-sizing: content-box;
@@ -331,8 +317,8 @@ input.button3 {
 	font-variant: small-caps;
 }
 
-input[type="button"], input[type="submit"], input[type="reset"], input[type="checkbox"], input[type="radio"] { 
-	cursor: pointer; 
+input[type="button"], input[type="submit"], input[type="reset"], input[type="checkbox"], input[type="radio"] {
+	cursor: pointer;
 }
 
 /* Alternative button */

@@ -799,7 +799,7 @@ switch ($mode)
 		$sql = 'SELECT username, user_id, user_colour
 			FROM ' . USERS_TABLE . '
 			WHERE ' . $db->sql_in_set('user_type', array(USER_NORMAL, USER_FOUNDER)) . '
-				AND username_clean ' . $db->sql_like_expression(utf8_clean_string($username_chars) . $db->any_char);
+				AND username_clean ' . $db->sql_like_expression(utf8_clean_string($username_chars) . $db->get_any_char());
 		$result = $db->sql_query_limit($sql, 10);
 		$user_list = array();
 
@@ -829,8 +829,14 @@ switch ($mode)
 		$pagination = $phpbb_container->get('pagination');
 
 		// Sorting
-		$sort_key_text = array('a' => $user->lang['SORT_USERNAME'], 'c' => $user->lang['SORT_JOINED'], 'd' => $user->lang['SORT_POST_COUNT'], 'k' => $user->lang['JABBER']);
-		$sort_key_sql = array('a' => 'u.username_clean', 'c' => 'u.user_regdate', 'd' => 'u.user_posts',  'k' => 'u.user_jabber');
+		$sort_key_text = array('a' => $user->lang['SORT_USERNAME'], 'c' => $user->lang['SORT_JOINED'], 'd' => $user->lang['SORT_POST_COUNT']);
+		$sort_key_sql = array('a' => 'u.username_clean', 'c' => 'u.user_regdate', 'd' => 'u.user_posts');
+
+		if ($config['jab_enable'])
+		{
+			$sort_key_text['k'] = $user->lang['JABBER'];
+			$sort_key_sql['k'] = 'u.user_jabber';
+		}
 
 		if ($auth->acl_get('a_user'))
 		{
@@ -920,9 +926,9 @@ switch ($mode)
 				$s_find_active_time .= '<option value="' . $key . '"' . $selected . '>' . $value . '</option>';
 			}
 
-			$sql_where .= ($username) ? ' AND u.username_clean ' . $db->sql_like_expression(str_replace('*', $db->any_char, utf8_clean_string($username))) : '';
-			$sql_where .= ($auth->acl_get('a_user') && $email) ? ' AND u.user_email ' . $db->sql_like_expression(str_replace('*', $db->any_char, $email)) . ' ' : '';
-			$sql_where .= ($jabber) ? ' AND u.user_jabber ' . $db->sql_like_expression(str_replace('*', $db->any_char, $jabber)) . ' ' : '';
+			$sql_where .= ($username) ? ' AND u.username_clean ' . $db->sql_like_expression(str_replace('*', $db->get_any_char(), utf8_clean_string($username))) : '';
+			$sql_where .= ($auth->acl_get('a_user') && $email) ? ' AND u.user_email ' . $db->sql_like_expression(str_replace('*', $db->get_any_char(), $email)) . ' ' : '';
+			$sql_where .= ($jabber) ? ' AND u.user_jabber ' . $db->sql_like_expression(str_replace('*', $db->get_any_char(), $jabber)) . ' ' : '';
 			$sql_where .= (is_numeric($count) && isset($find_key_match[$count_select])) ? ' AND u.user_posts ' . $find_key_match[$count_select] . ' ' . (int) $count . ' ' : '';
 
 			if (isset($find_key_match[$joined_select]) && sizeof($joined) == 3)
@@ -1016,12 +1022,12 @@ switch ($mode)
 		{
 			for ($i = 97; $i < 123; $i++)
 			{
-				$sql_where .= ' AND u.username_clean NOT ' . $db->sql_like_expression(chr($i) . $db->any_char);
+				$sql_where .= ' AND u.username_clean NOT ' . $db->sql_like_expression(chr($i) . $db->get_any_char());
 			}
 		}
 		else if ($first_char)
 		{
-			$sql_where .= ' AND u.username_clean ' . $db->sql_like_expression(substr($first_char, 0, 1) . $db->any_char);
+			$sql_where .= ' AND u.username_clean ' . $db->sql_like_expression(substr($first_char, 0, 1) . $db->get_any_char());
 		}
 
 		// Are we looking at a usergroup? If so, fetch additional info
@@ -1286,6 +1292,7 @@ switch ($mode)
 
 				'S_IP_SEARCH_ALLOWED'	=> ($auth->acl_getf_global('m_info')) ? true : false,
 				'S_EMAIL_SEARCH_ALLOWED'=> ($auth->acl_get('a_user')) ? true : false,
+				'S_JABBER_ENABLED'		=> $config['jab_enable'],
 				'S_IN_SEARCH_POPUP'		=> ($form && $field) ? true : false,
 				'S_SEARCH_USER'			=> ($mode == 'searchuser' || ($mode == '' && $submit)),
 				'S_FORM_NAME'			=> $form,

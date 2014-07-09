@@ -228,15 +228,15 @@ p.post-notice {
 	background-image: none;
 }
 
-p.post-notice.deleted:before { 
+p.post-notice.deleted:before {
 	background-image: url("./images/icon_topic_deleted.png");
 }
 
-p.post-notice.unapproved:before { 
+p.post-notice.unapproved:before {
 	background-image: url("./images/icon_topic_unapproved.gif");
 }
 
-p.post-notice.reported:before, p.post-notice.error:before { 
+p.post-notice.reported:before, p.post-notice.error:before {
 	background-image: url("./images/icon_topic_reported.gif");
 }
 
@@ -271,10 +271,6 @@ a:hover	{ color: #D31141; }
 .postlink:visited {
 	color: #5D8FBD;
 	border-bottom-color: #5D8FBD;
-}
-
-.postlink {
-	color: #368AD2;
 }
 
 .postlink:hover {
@@ -612,6 +608,10 @@ Colours and backgrounds for buttons.css
 	box-shadow: 0 0 0 1px #FFFFFF inset;
 	-webkit-box-shadow: 0 0 0 1px #FFFFFF inset;
 	color: #D31141;
+}
+
+.dropdown-select, .dropdown-select:visited {
+	color: #536482;
 }
 
 .button:hover, .dropdown-visible .dropdown-select, .nojs .dropdown-container:hover .dropdown-select {
