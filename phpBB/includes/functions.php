@@ -1031,7 +1031,7 @@ function phpbb_get_timezone_identifiers($selected_timezone)
 			$validate_timezone = new DateTimeZone($selected_timezone);
 			$timezones[] = $selected_timezone;
 		}
-		catch (Exception $e)
+		catch (\Exception $e)
 		{
 		}
 	}
@@ -1067,7 +1067,7 @@ function phpbb_timezone_select($user, $default = '', $truncate = false)
 			$offset_string = phpbb_format_timezone_offset($offset);
 			$timezones['GMT' . $offset_string . ' - ' . $timezone] = array(
 				'tz'		=> $timezone,
-				'offest'	=> 'GMT' . $offset_string,
+				'offset'	=> 'GMT' . $offset_string,
 				'current'	=> $current_time,
 			);
 			if ($timezone === $default)
@@ -1084,14 +1084,14 @@ function phpbb_timezone_select($user, $default = '', $truncate = false)
 
 	foreach ($timezones as $timezone)
 	{
-		if ($opt_group != $timezone['offest'])
+		if ($opt_group != $timezone['offset'])
 		{
 			$tz_select .= ($opt_group) ? '</optgroup>' : '';
-			$tz_select .= '<optgroup label="' . $timezone['offest'] . ' - ' . $timezone['current'] . '">';
-			$opt_group = $timezone['offest'];
+			$tz_select .= '<optgroup label="' . $timezone['offset'] . ' - ' . $timezone['current'] . '">';
+			$opt_group = $timezone['offset'];
 
-			$selected = ($default_offset == $timezone['offest']) ? ' selected="selected"' : '';
-			$tz_dates .= '<option value="' . $timezone['offest'] . ' - ' . $timezone['current'] . '"' . $selected . '>' . $timezone['offest'] . ' - ' . $timezone['current'] . '</option>';
+			$selected = ($default_offset == $timezone['offset']) ? ' selected="selected"' : '';
+			$tz_dates .= '<option value="' . $timezone['offset'] . ' - ' . $timezone['current'] . '"' . $selected . '>' . $timezone['offset'] . ' - ' . $timezone['current'] . '</option>';
 		}
 
 		$label = $timezone['tz'];
@@ -1099,7 +1099,7 @@ function phpbb_timezone_select($user, $default = '', $truncate = false)
 		{
 			$label = $user->lang['timezones'][$label];
 		}
-		$title = $timezone['offest'] . ' - ' . $label;
+		$title = $timezone['offset'] . ' - ' . $label;
 
 		if ($truncate)
 		{
@@ -2210,18 +2210,13 @@ function generate_board_url($without_script_path = false)
 */
 function redirect($url, $return = false, $disable_cd_check = false)
 {
-	global $db, $cache, $config, $user, $phpbb_root_path, $phpbb_filesystem, $phpbb_path_helper, $phpEx;
+	global $db, $cache, $config, $user, $phpbb_root_path, $phpbb_filesystem, $phpbb_path_helper, $phpEx, $phpbb_dispatcher;
 
 	$failover_flag = false;
 
 	if (empty($user->lang))
 	{
 		$user->add_lang('common');
-	}
-
-	if (!$return)
-	{
-		garbage_collection();
 	}
 
 	// Make sure no &amp;'s are in, this will break the redirect
@@ -2298,9 +2293,25 @@ function redirect($url, $return = false, $disable_cd_check = false)
 		trigger_error('INSECURE_REDIRECT', E_USER_ERROR);
 	}
 
+	/**
+	* Execute code and/or overwrite redirect()
+	*
+	* @event core.functions.redirect
+	* @var	string	url					The url
+	* @var	bool	return				If true, do not redirect but return the sanitized URL.
+	* @var	bool	disable_cd_check	If true, redirect() will redirect to an external domain. If false, the redirect point to the boards url if it does not match the current domain.
+	* @since 3.1.0-RC3
+	*/
+	$vars = array('url', 'return', 'disable_cd_check');
+	extract($phpbb_dispatcher->trigger_event('core.functions.redirect', compact($vars)));
+
 	if ($return)
 	{
 		return $url;
+	}
+	else
+	{
+		garbage_collection();
 	}
 
 	// Redirect via an HTML form for PITA webservers
@@ -4955,7 +4966,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'U_SEARCH_UNREAD'		=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=unreadposts'),
 		'U_SEARCH_ACTIVE_TOPICS'=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=active_topics'),
 		'U_DELETE_COOKIES'		=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=delete_cookies'),
-		'U_CONTACT_US'			=> ($config['contact_admin_form_enable']) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contactadmin') : '',
+		'U_CONTACT_US'			=> ($config['contact_admin_form_enable'] && $config['email_enable']) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contactadmin') : '',
 		'U_TEAM'				=> ($user->data['user_id'] != ANONYMOUS && !$auth->acl_get('u_viewprofile')) ? '' : append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=team'),
 		'U_TERMS_USE'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=terms'),
 		'U_PRIVACY'				=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy'),
@@ -5327,52 +5338,6 @@ function phpbb_to_numeric($input)
 }
 
 /**
-* Convert either 3.0 dbms or 3.1 db driver class name to 3.1 db driver class name.
-*
-* If $dbms is a valid 3.1 db driver class name, returns it unchanged.
-* Otherwise prepends phpbb\db\driver\ to the dbms to convert a 3.0 dbms
-* to 3.1 db driver class name.
-*
-* @param string $dbms dbms parameter
-* @return db driver class
-*/
-function phpbb_convert_30_dbms_to_31($dbms)
-{
-	// Note: this check is done first because mysqli extension
-	// supplies a mysqli class, and class_exists($dbms) would return
-	// true for mysqli class.
-	// However, per the docblock any valid 3.1 driver name should be
-	// recognized by this function, and have priority over 3.0 dbms.
-	if (strpos($dbms, 'phpbb\db\driver') === false && class_exists('phpbb\db\driver\\' . $dbms))
-	{
-		return 'phpbb\db\driver\\' . $dbms;
-	}
-
-	if (class_exists($dbms))
-	{
-		// Additionally we could check that $dbms extends phpbb\db\driver\driver.
-		// http://php.net/manual/en/class.reflectionclass.php
-		// Beware of possible performance issues:
-		// http://stackoverflow.com/questions/294582/php-5-reflection-api-performance
-		// We could check for interface implementation in all paths or
-		// only when we do not prepend phpbb\db\driver\.
-
-		/*
-		$reflection = new \ReflectionClass($dbms);
-
-		if ($reflection->isSubclassOf('phpbb\db\driver\driver'))
-		{
-			return $dbms;
-		}
-		*/
-
-		return $dbms;
-	}
-
-	throw new \RuntimeException("You have specified an invalid dbms driver: $dbms");
-}
-
-/**
 * Get the board contact details (e.g. for emails)
 *
 * @param \phpbb\config\config	$config
@@ -5401,7 +5366,7 @@ function phpbb_get_board_contact(\phpbb\config\config $config, $phpEx)
 */
 function phpbb_get_board_contact_link(\phpbb\config\config $config, $phpbb_root_path, $phpEx)
 {
-	if ($config['contact_admin_form_enable'])
+	if ($config['contact_admin_form_enable'] && $config['email_enable'])
 	{
 		return append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contactadmin');
 	}

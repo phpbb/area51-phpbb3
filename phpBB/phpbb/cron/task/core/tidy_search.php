@@ -31,7 +31,7 @@ class tidy_search extends \phpbb\cron\task\base
 	* Constructor.
 	*
 	* @param string $phpbb_root_path The root path
-	* @param string $php_ext The PHP extension
+	* @param string $php_ext The PHP file extension
 	* @param \phpbb\auth\auth $auth The auth
 	* @param \phpbb\config\config $config The config
 	* @param \phpbb\db\driver\driver_interface $db The db connection
@@ -54,8 +54,7 @@ class tidy_search extends \phpbb\cron\task\base
 	*/
 	public function run()
 	{
-		// Select the search method
-		$search_type = basename($this->config['search_type']);
+		$search_type = $this->config['search_type'];
 
 		// We do some additional checks in the module to ensure it can actually be utilised
 		$error = false;
@@ -78,10 +77,7 @@ class tidy_search extends \phpbb\cron\task\base
 	*/
 	public function is_runnable()
 	{
-		// Select the search method
-		$search_type = basename($this->config['search_type']);
-
-		return class_exists($search_type);
+		return class_exists($this->config['search_type']);
 	}
 
 	/**

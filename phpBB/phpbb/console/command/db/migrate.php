@@ -32,31 +32,29 @@ class migrate extends \phpbb\console\command\command
 	/** @var \phpbb\log\log */
 	protected $log;
 
-	/** @var \phpbb\user */
-	protected $user;
-
-	function __construct(\phpbb\db\migrator $migrator, \phpbb\extension\manager $extension_manager, \phpbb\config\config $config, \phpbb\cache\service $cache, \phpbb\log\log $log, \phpbb\user $user)
+	function __construct(\phpbb\user $user, \phpbb\db\migrator $migrator, \phpbb\extension\manager $extension_manager, \phpbb\config\config $config, \phpbb\cache\service $cache, \phpbb\log\log $log)
 	{
 		$this->migrator = $migrator;
 		$this->extension_manager = $extension_manager;
 		$this->config = $config;
 		$this->cache = $cache;
 		$this->log = $log;
-		$this->user = $user;
+		parent::__construct($user);
 		$this->user->add_lang(array('common', 'install', 'migrator'));
-		parent::__construct();
 	}
 
 	protected function configure()
 	{
 		$this
 			->setName('db:migrate')
-			->setDescription('Updates the database by applying migrations.')
+			->setDescription($this->user->lang('CLI_DESCRIPTION_DB_MIGRATE'))
 		;
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		$this->migrator->create_migrations_table();
+
 		$this->load_migrations();
 		$orig_version = $this->config['version'];
 		while (!$this->migrator->finished())

@@ -48,6 +48,18 @@ phpbb.clearLoadingTimeout = function() {
 	}
 };
 
+
+/**
+* Close popup alert after a specified delay
+*
+* @param int Delay in ms until darkenwrapper's click event is triggered
+*/
+phpbb.closeDarkenWrapper = function(delay) {
+	phpbbAlertTimer = setTimeout(function() {
+		$('#darkenwrapper').trigger('click');
+	}, delay);
+};
+
 /**
  * Display a simple alert similar to JSs native alert().
  *
@@ -272,7 +284,7 @@ phpbb.ajaxify = function(options) {
 		 * Handler for AJAX errors
 		 */
 		function errorHandler(jqXHR, textStatus, errorThrown) {
-			if (console && console.log) {
+			if (typeof console !== 'undefined' && console.log) {
 				console.log('AJAX error. status: ' + textStatus + ', message: ' + errorThrown);
 			}
 			phpbb.clearLoadingTimeout();

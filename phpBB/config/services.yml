@@ -39,9 +39,6 @@ services:
     cache.driver:
         class: %cache.driver.class%
 
-    cache.driver.install:
-        class: phpbb\cache\driver\file
-
     class_loader:
         class: phpbb\class_loader
         arguments:
@@ -69,6 +66,9 @@ services:
             - @cache.driver
             - %tables.config%
 
+    config.php:
+        synthetic: true
+
     config_text:
         class: phpbb\config\db_text
         arguments:
@@ -79,6 +79,7 @@ services:
         class: phpbb\content_visibility
         arguments:
             - @auth
+            - @config
             - @dbal.conn
             - @user
             - %core.root_path%

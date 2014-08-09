@@ -136,6 +136,8 @@ function marklist(id, name, state)
 
 {$STYLESHEETS}
 
+<!-- EVENT overall_header_stylesheets_after -->
+
 </head>
 <body class="{S_CONTENT_DIRECTION} {BODY_CLASS}">
 
@@ -213,7 +215,7 @@ function marklist(id, name, state)
 			</td>
 			<td class="genmed" align="{S_CONTENT_FLOW_END}">
 				<!-- EVENT overall_header_navigation_prepend -->
-				<a href="{U_FAQ}"><img src="{T_THEME_PATH}/images/icon_mini_faq.gif" width="12" height="13" alt="*" /> {L_FAQ}</a>
+				<a href="{U_FAQ}" rel="help"><img src="{T_THEME_PATH}/images/icon_mini_faq.gif" width="12" height="13" alt="*" /> {L_FAQ}</a>
 				<!-- IF S_DISPLAY_SEARCH -->&nbsp; &nbsp;<a href="{U_SEARCH}"><img src="{T_THEME_PATH}/images/icon_mini_search.gif" width="12" height="13" alt="*" /> {L_SEARCH}</a><!-- ENDIF -->
 				<!-- IF not S_IS_BOT -->
 					<!-- IF S_DISPLAY_MEMBERLIST -->&nbsp; &nbsp;<a href="{U_MEMBERLIST}"><img src="{T_THEME_PATH}/images/icon_mini_members.gif" width="12" height="13" alt="*" /> {L_MEMBERLIST}</a><!-- ENDIF -->
@@ -252,7 +254,9 @@ function marklist(id, name, state)
 	<br style="clear: both;" />
 
 	<!-- DEFINE $S_MICRODATA = 1 -->
+	<!-- DEFINE $OVERALL_HEADER_BREADCRUMBS = 1 -->
 	<!-- INCLUDE breadcrumbs.html -->
+	<!-- UNDEFINE $OVERALL_HEADER_BREADCRUMBS -->
 	<!-- DEFINE $S_MICRODATA = 0 -->
 
 	<br />

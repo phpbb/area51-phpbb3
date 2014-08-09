@@ -47,7 +47,7 @@ class service
 	protected $phpbb_root_path;
 
 	/**
-	* PHP extension.
+	* PHP file extension.
 	*
 	* @var string
 	*/
@@ -60,7 +60,7 @@ class service
 	* @param \phpbb\config\config $config The config
 	* @param \phpbb\db\driver\driver_interface $db Database connection
 	* @param string $phpbb_root_path Root path
-	* @param string $php_ext PHP extension
+	* @param string $php_ext PHP file extension
 	*/
 	public function __construct(\phpbb\cache\driver\driver_interface $driver, \phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, $phpbb_root_path, $php_ext)
 	{
@@ -168,18 +168,12 @@ class service
 			{
 				if ($row['rank_special'])
 				{
-					$ranks['special'][$row['rank_id']] = array(
-						'rank_title'	=>	$row['rank_title'],
-						'rank_image'	=>	$row['rank_image']
-					);
+					unset($row['rank_min']);
+					$ranks['special'][$row['rank_id']] = $row;
 				}
 				else
 				{
-					$ranks['normal'][] = array(
-						'rank_title'	=>	$row['rank_title'],
-						'rank_min'		=>	$row['rank_min'],
-						'rank_image'	=>	$row['rank_image']
-					);
+					$ranks['normal'][$row['rank_id']] = $row;
 				}
 			}
 			$this->db->sql_freeresult($result);

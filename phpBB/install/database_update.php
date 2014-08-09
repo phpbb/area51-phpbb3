@@ -13,10 +13,6 @@
 
 $update_start_time = time();
 
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-
 /**
 * @ignore
 */
@@ -56,8 +52,14 @@ function phpbb_end_update($cache, $config)
 }
 
 require($phpbb_root_path . 'includes/startup.' . $phpEx);
+require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
 
-include($phpbb_root_path . 'config.' . $phpEx);
+$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
+$phpbb_class_loader->register();
+
+$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path, $phpEx);
+extract($phpbb_config_php_file->get_all());
+
 if (!defined('PHPBB_INSTALLED') || empty($dbms) || empty($acm_type))
 {
 	die("Please read: <a href='../docs/INSTALL.html'>INSTALL.html</a> before attempting to update.");
@@ -68,13 +70,9 @@ $phpbb_adm_relative_path = (isset($phpbb_adm_relative_path)) ? $phpbb_adm_relati
 $phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : $phpbb_root_path . $phpbb_adm_relative_path;
 
 // Include files
-require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
-
 require($phpbb_root_path . 'includes/functions.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_content.' . $phpEx);
-require($phpbb_root_path . 'includes/functions_container.' . $phpEx);
 
-require($phpbb_root_path . 'config.' . $phpEx);
 require($phpbb_root_path . 'includes/constants.' . $phpEx);
 include($phpbb_root_path . 'includes/utf/utf_normalizer.' . $phpEx);
 require($phpbb_root_path . 'includes/utf/utf_tools.' . $phpEx);
@@ -82,26 +80,12 @@ require($phpbb_root_path . 'includes/utf/utf_tools.' . $phpEx);
 // Set PHP error handler to ours
 set_error_handler(defined('PHPBB_MSG_HANDLER') ? PHPBB_MSG_HANDLER : 'msg_handler');
 
-// Setup class loader first
-$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
-$phpbb_class_loader->register();
-
 // Set up container (must be done here because extensions table may not exist)
-$container_extensions = array(
-	new \phpbb\di\extension\config($phpbb_root_path . 'config.' . $phpEx),
-	new \phpbb\di\extension\core($phpbb_root_path . 'config/'),
-);
-$container_passes = array(
-	new \phpbb\di\pass\collection_pass(),
-);
-$phpbb_container = phpbb_create_container($container_extensions, $phpbb_root_path, $phpEx);
-
-// Compile the container
-foreach ($container_passes as $pass)
-{
-	$phpbb_container->addCompilerPass($pass);
-}
-$phpbb_container->compile();
+$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_config_php_file, $phpbb_root_path, $phpEx);
+$phpbb_container_builder->set_use_extensions(false);
+$phpbb_container_builder->set_use_kernel_pass(false);
+$phpbb_container_builder->set_dump_container(false);
+$phpbb_container = $phpbb_container_builder->get_container();
 
 // set up caching
 $cache = $phpbb_container->get('cache');
@@ -189,25 +173,9 @@ define('IN_DB_UPDATE', true);
 
 // End startup code
 
-// Make sure migrations have been installed.
-$db_tools = $phpbb_container->get('dbal.tools');
-if (!$db_tools->sql_table_exists($table_prefix . 'migrations'))
-{
-	$db_tools->sql_create_table($table_prefix . 'migrations', array(
-		'COLUMNS'		=> array(
-			'migration_name'			=> array('VCHAR', ''),
-			'migration_depends_on'		=> array('TEXT', ''),
-			'migration_schema_done'		=> array('BOOL', 0),
-			'migration_data_done'		=> array('BOOL', 0),
-			'migration_data_state'		=> array('TEXT', ''),
-			'migration_start_time'		=> array('TIMESTAMP', 0),
-			'migration_end_time'		=> array('TIMESTAMP', 0),
-		),
-		'PRIMARY_KEY'	=> 'migration_name',
-	));
-}
-
 $migrator = $phpbb_container->get('migrator');
+$migrator->create_migrations_table();
+
 $phpbb_extension_manager = $phpbb_container->get('ext.manager');
 $finder = $phpbb_extension_manager->get_finder();
 

@@ -266,7 +266,7 @@ function connect_check_db($error_connect, &$error, $dbms_details, $table_prefix,
 	if (is_array($db->sql_connect($dbhost, $dbuser, $dbpasswd, $dbname, $dbport, false, true)))
 	{
 		$db_error = $db->sql_error();
-		$error[] = $lang['INST_ERR_DB_CONNECT'] . '<br />' . (($db_error['message']) ? $db_error['message'] : $lang['INST_ERR_DB_NO_ERROR']);
+		$error[] = $lang['INST_ERR_DB_CONNECT'] . '<br />' . (($db_error['message']) ? utf8_convert_message($db_error['message']) : $lang['INST_ERR_DB_NO_ERROR']);
 	}
 	else
 	{
@@ -449,6 +449,7 @@ function phpbb_create_config_file_data($data, $dbms, $debug = false, $debug_cont
 	}
 
 	$config_data .= "\n@define('PHPBB_INSTALLED', true);\n";
+	$config_data .= "// @define('PHPBB_DISPLAY_LOAD_TIME', true);\n";
 
 	if ($debug)
 	{

@@ -77,11 +77,12 @@ class manager
 	{
 		$this->extensions = array();
 
-		// Do not try to load any extensions when installing or updating
+		// Do not try to load any extensions if the extension table
+		// does not exist or when installing or updating.
 		// Note: database updater invokes this code, and in 3.0
 		// there is no extension table therefore the rest of this function
 		// fails
-		if (defined('IN_INSTALL'))
+		if (defined('IN_INSTALL') || version_compare($this->config['version'], '3.1.0-dev', '<'))
 		{
 			return;
 		}
@@ -177,6 +178,12 @@ class manager
 		$old_state = (isset($this->extensions[$name]['ext_state'])) ? unserialize($this->extensions[$name]['ext_state']) : false;
 
 		$extension = $this->get_extension($name);
+
+		if (!$extension->is_enableable())
+		{
+			return false;
+		}
+
 		$state = $extension->enable_step($old_state);
 
 		$active = ($state === false);

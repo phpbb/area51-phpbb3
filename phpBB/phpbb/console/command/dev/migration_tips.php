@@ -20,17 +20,17 @@ class migration_tips extends \phpbb\console\command\command
 	/** @var \phpbb\extension\manager */
 	protected $extension_manager;
 
-	function __construct(\phpbb\extension\manager $extension_manager)
+	function __construct(\phpbb\user $user, \phpbb\extension\manager $extension_manager)
 	{
 		$this->extension_manager = $extension_manager;
-		parent::__construct();
+		parent::__construct($user);
 	}
 
 	protected function configure()
 	{
 		$this
 			->setName('dev:migration-tips')
-			->setDescription('Finds migrations that are not depended on.')
+			->setDescription($this->user->lang('CLI_DESCRIPTION_FIND_MIGRATIONS'))
 		;
 	}
 

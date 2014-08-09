@@ -46,6 +46,7 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 				'c_bool'				=> array('BOOL', 1),
 				'c_vchar'				=> array('VCHAR', 'foo'),
 				'c_vchar_size'		=> array('VCHAR:4', 'foo'),
+				'c_vchar_null'		=> array('VCHAR', null),
 				'c_char_size'			=> array('CHAR:4', 'foo'),
 				'c_xstext'			=> array('XSTEXT', 'foo'),
 				'c_stext'				=> array('STEXT', 'foo'),
@@ -111,6 +112,7 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 			'c_bool' => 0,
 			'c_vchar' => '',
 			'c_vchar_size' => '',
+			'c_vchar_null' => null,
 			'c_char_size' => 'abcd',
 			'c_xstext' => '',
 			'c_stext' => '',
@@ -144,6 +146,7 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 			array('c_bool', 0),
 			array('c_vchar', str_repeat('a', 255)),
 			array('c_vchar_size', str_repeat('a', 4)),
+			array('c_vchar_null', str_repeat('a', 4)),
 			array('c_char_size', str_repeat('a', 4)),
 			array('c_xstext', str_repeat('a', 1000)),
 			array('c_stext', str_repeat('a', 3000)),
@@ -285,13 +288,13 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 		$this->assertTrue($this->tools->sql_column_exists('prefix_table_name', 'c_bug_12012_2'));
 
 		// Create index over the column
-		$this->assertFalse($this->tools->sql_index_exists('prefix_table_name', 'i_bug_12012_2'));
-		$this->assertTrue($this->tools->sql_create_index('prefix_table_name', 'i_bug_12012_2', array('c_bug_12012_2', 'c_bool')));
-		$this->assertTrue($this->tools->sql_index_exists('prefix_table_name', 'i_bug_12012_2'));
+		$this->assertFalse($this->tools->sql_index_exists('prefix_table_name', 'bug_12012_2'));
+		$this->assertTrue($this->tools->sql_create_index('prefix_table_name', 'bug_12012_2', array('c_bug_12012_2', 'c_bool')));
+		$this->assertTrue($this->tools->sql_index_exists('prefix_table_name', 'bug_12012_2'));
 
-		$this->assertFalse($this->tools->sql_index_exists('prefix_table_name', 'i_bug_12012_3'));
-		$this->assertTrue($this->tools->sql_create_index('prefix_table_name', 'i_bug_12012_3', array('c_bug_12012_2')));
-		$this->assertTrue($this->tools->sql_index_exists('prefix_table_name', 'i_bug_12012_3'));
+		$this->assertFalse($this->tools->sql_index_exists('prefix_table_name', 'bug_12012_3'));
+		$this->assertTrue($this->tools->sql_create_index('prefix_table_name', 'bug_12012_3', array('c_bug_12012_2')));
+		$this->assertTrue($this->tools->sql_index_exists('prefix_table_name', 'bug_12012_3'));
 
 		// Remove the column
 		$this->assertTrue($this->tools->sql_column_exists('prefix_table_name', 'c_bug_12012_2'));

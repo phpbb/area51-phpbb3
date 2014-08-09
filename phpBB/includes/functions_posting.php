@@ -398,14 +398,15 @@ function posting_gen_topic_types($forum_id, $cur_topic_type = POST_NORMAL)
 * @param string			$local_storage	The path to the local file
 * @param bool			$is_message		Whether it is a PM or not
 * @param \filespec		$local_filedata	A filespec object created for the local file
+* @param \phpbb\mimetype\guesser	$mimetype_guesser	The mimetype guesser object if used
 * @param \phpbb\plupload\plupload	$plupload		The plupload object if one is being used
 *
 * @return object filespec
 */
-function upload_attachment($form_name, $forum_id, $local = false, $local_storage = '', $is_message = false, $local_filedata = false, \phpbb\plupload\plupload $plupload = null)
+function upload_attachment($form_name, $forum_id, $local = false, $local_storage = '', $is_message = false, $local_filedata = false, \phpbb\mimetype\guesser $mimetype_guesser = null, \phpbb\plupload\plupload $plupload = null)
 {
 	global $auth, $user, $config, $db, $cache;
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path, $phpEx, $phpbb_dispatcher;
 
 	$filedata = array(
 		'error'	=> array()
@@ -434,7 +435,7 @@ function upload_attachment($form_name, $forum_id, $local = false, $local_storage
 	$extensions = $cache->obtain_attach_extensions((($is_message) ? false : (int) $forum_id));
 	$upload->set_allowed_extensions(array_keys($extensions['_allowed_']));
 
-	$file = ($local) ? $upload->local_upload($local_storage, $local_filedata) : $upload->form_upload($form_name, $plupload);
+	$file = ($local) ? $upload->local_upload($local_storage, $local_filedata, $mimetype_guesser) : $upload->form_upload($form_name, $mimetype_guesser, $plupload);
 
 	if ($file->init_error)
 	{
@@ -505,6 +506,20 @@ function upload_attachment($form_name, $forum_id, $local = false, $local_storage
 	$filedata['physical_filename'] = $file->get('realname');
 	$filedata['real_filename'] = $file->get('uploadname');
 	$filedata['filetime'] = time();
+
+	/**
+	* Event to modify uploaded file before submit to the post
+	*
+	* @event core.modify_uploaded_file
+	* @var	array	filedata	Array containing uploaded file data
+	* @var	bool	is_image	Flag indicating if the file is an image
+	* @since 3.1.0-RC3
+	*/
+	$vars = array(
+		'filedata',
+		'is_image',
+	);
+	extract($phpbb_dispatcher->trigger_event('core.modify_uploaded_file', compact($vars)));
 
 	// Check our complete quota
 	if ($config['attachment_quota'])
@@ -893,7 +908,7 @@ function posting_gen_attachment_entry($attachment_data, &$filename_data, $show_a
 function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $msg_id = 0)
 {
 	global $user, $db, $template, $auth;
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path, $phpbb_dispatcher, $phpEx;
 
 	$topic_ids = $forum_ids = $draft_rows = array();
 
@@ -936,7 +951,7 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 	$topic_rows = array();
 	if (sizeof($topic_ids))
 	{
-		$sql = 'SELECT topic_id, forum_id, topic_title
+		$sql = 'SELECT topic_id, forum_id, topic_title, topic_poster
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $db->sql_in_set('topic_id', array_unique($topic_ids));
 		$result = $db->sql_query($sql);
@@ -947,6 +962,20 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 		}
 		$db->sql_freeresult($result);
 	}
+
+	/**
+	* Drafts found and their topics
+	* Edit $draft_rows in order to add or remove drafts loaded
+	*
+	* @event core.load_drafts_draft_list_result
+	* @var	array	draft_rows			The drafts query result. Includes its forum id and everything about the draft
+	* @var	array	topic_ids			The list of topics got from the topics table
+	* @var	array	topic_rows			The topics that draft_rows references
+	* @since 3.1.0-RC3
+	*/
+	$vars = array('draft_rows', 'topic_ids', 'topic_rows');
+	extract($phpbb_dispatcher->trigger_event('core.load_drafts_draft_list_result', compact($vars)));
+
 	unset($topic_ids);
 
 	$template->assign_var('S_SHOW_DRAFTS', true);
@@ -1402,20 +1431,7 @@ function delete_post($forum_id, $topic_id, $post_id, &$data, $is_soft = false, $
 	{
 		if (!$is_soft)
 		{
-			if ($data['post_visibility'] == ITEM_APPROVED)
-			{
-				$phpbb_content_visibility->remove_post_from_statistic($data, $sql_data);
-			}
-			else if ($data['post_visibility'] == ITEM_UNAPPROVED || $data['post_visibility'] == ITEM_REAPPROVE)
-			{
-				$sql_data[FORUMS_TABLE] = (($sql_data[FORUMS_TABLE]) ? $sql_data[FORUMS_TABLE] . ', ' : '') . 'forum_posts_unapproved = forum_posts_unapproved - 1';
-				$sql_data[TOPICS_TABLE] = (($sql_data[TOPICS_TABLE]) ? $sql_data[TOPICS_TABLE] . ', ' : '') . 'topic_posts_unapproved = topic_posts_unapproved - 1';
-			}
-			else if ($data['post_visibility'] == ITEM_DELETED)
-			{
-				$sql_data[FORUMS_TABLE] = (($sql_data[FORUMS_TABLE]) ? $sql_data[FORUMS_TABLE] . ', ' : '') . 'forum_posts_softdeleted = forum_posts_softdeleted - 1';
-				$sql_data[TOPICS_TABLE] = (($sql_data[TOPICS_TABLE]) ? $sql_data[TOPICS_TABLE] . ', ' : '') . 'topic_posts_softdeleted = topic_posts_softdeleted - 1';
-			}
+			$phpbb_content_visibility->remove_post_from_statistic($data, $sql_data);
 		}
 
 		$sql = 'SELECT 1 AS has_attachments
@@ -2373,12 +2389,31 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll, &$data, $u
 	* event is to modify the return URL ($url).
 	*
 	* @event core.submit_post_end
-	* @var	string		url						The "Return to topic" URL
-	* @var	array		data					Array of post data about the
-	*											submitted post
+	* @var	string	mode				Variable containing posting mode value
+	* @var	string	subject				Variable containing post subject value
+	* @var	string	username			Variable containing post author name
+	* @var	int		topic_type			Variable containing topic type value
+	* @var	array	poll				Array with the poll data for the post
+	* @var	array	data				Array with the data for the post
+	* @var	bool	update_message		Flag indicating if the post will be updated
+	* @var	bool	update_search_index	Flag indicating if the search index will be updated
+	* @var	string	url					The "Return to topic" URL
+	*
 	* @since 3.1.0-a3
+	* @change 3.1.0-RC3 Added vars mode, subject, username, topic_type,
+	*		poll, update_message, update_search_index
 	*/
-	$vars = array('url', 'data');
+	$vars = array(
+		'mode',
+		'subject',
+		'username',
+		'topic_type',
+		'poll',
+		'data',
+		'update_message',
+		'update_search_index',
+		'url',
+	);
 	extract($phpbb_dispatcher->trigger_event('core.submit_post_end', compact($vars)));
 
 	return $url;
