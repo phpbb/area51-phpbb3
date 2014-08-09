@@ -35,6 +35,8 @@ if (isset($_GET['avatar']))
 {
 	require($phpbb_root_path . 'includes/startup.' . $phpEx);
 
+    \QafooLabs\Profiler::setTransactionName("download/file.php: avatar");
+
 	require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
 	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
 	$phpbb_class_loader->register();
@@ -138,6 +140,8 @@ if (isset($_GET['avatar']))
 // implicit else: we are not in avatar mode
 include($phpbb_root_path . 'common.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_download' . '.' . $phpEx);
+
+\QafooLabs\Profiler::setTransactionName("download/file.php: default");
 
 $download_id = request_var('id', 0);
 $topic_id = $request->variable('topic_id', 0);

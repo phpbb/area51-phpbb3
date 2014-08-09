@@ -20,6 +20,8 @@ $phpEx = substr(strrchr(__FILE__, '.'), 1);
 include($phpbb_root_path . 'common.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 
+\QafooLabs\Profiler::setTransactionName("report.php: default");
+
 // Start session management
 $user->session_begin();
 $auth->acl($user->data);

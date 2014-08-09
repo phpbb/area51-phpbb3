@@ -32,4 +32,7 @@ $http_kernel = $phpbb_container->get('http_kernel');
 $symfony_request = $phpbb_container->get('symfony_request');
 $response = $http_kernel->handle($symfony_request);
 $response->send();
+
+\QafooLabs\Profiler::setTransactionName("app.php: ".$symfony_request->attributes->get('_controller', 'notfound'));
+
 $http_kernel->terminate($symfony_request, $response);
