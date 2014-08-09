@@ -188,3 +188,8 @@ else
 
 $starttime = explode(' ', microtime());
 $starttime = $starttime[1] + $starttime[0];
+
+if (($profilerkey = getenv('QAFOO_PROFILER_KEY')))
+{
+    \QafooLabs\Profiler::start($profilerkey);
+}
