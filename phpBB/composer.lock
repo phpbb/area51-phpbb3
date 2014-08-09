@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "6bc742a2b9feb426db9987d27085f915",
+    "hash": "dd25187cb48c1a881bb8e4713a47544b",
     "packages": [
         {
             "name": "lusitanian/oauth",
@@ -105,6 +105,33 @@
                 "psr-3"
             ],
             "time": "2012-12-21 11:40:51"
+        },
+        {
+            "name": "qafoolabs/profiler",
+            "version": "v0.5.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/QafooLabs/profiler.git",
+                "reference": "79d95cee611509d294daa93f840cf95a8def217e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/QafooLabs/profiler/zipball/79d95cee611509d294daa93f840cf95a8def217e",
+                "reference": "79d95cee611509d294daa93f840cf95a8def217e",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "QafooLabs\\Profiler": "src/main"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Simple library that wraps Xhprof profile collection and sends to Qafoo Profiler",
+            "time": "2014-07-31 10:34:24"
         },
         {
             "name": "symfony/config",
@@ -2430,7 +2457,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "qafoolabs/profiler": 0
+    },
     "platform": {
         "php": ">=5.3.3"
     },
