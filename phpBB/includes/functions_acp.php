@@ -107,12 +107,31 @@ function adm_page_header($page_title)
 		'S_CONTENT_FLOW_END'	=> ($user->lang['DIRECTION'] == 'ltr') ? 'right' : 'left',
 	));
 
-	// application/xhtml+xml not used because of IE
-	header('Content-type: text/html; charset=UTF-8');
+	// An array of http headers that phpbb will set. The following event may override these.
+	$http_headers = array(
+		// application/xhtml+xml not used because of IE
+		'Content-type' => 'text/html; charset=UTF-8',
+		'Cache-Control' => 'private, no-cache="set-cookie"',
+		'Expires' => '0',
+		'Pragma' => 'no-cache',
+	);
 
-	header('Cache-Control: private, no-cache="set-cookie"');
-	header('Expires: 0');
-	header('Pragma: no-cache');
+	/**
+	* Execute code and/or overwrite _common_ template variables after they have been assigned.
+	*
+	* @event core.adm_page_header_after
+	* @var	string	page_title			Page title
+	* @var	array	http_headers			HTTP headers that should be set by phpbb
+	*
+	* @since 3.1.0-RC3
+	*/
+	$vars = array('page_title', 'http_headers');
+	extract($phpbb_dispatcher->trigger_event('core.adm_page_header_after', compact($vars)));
+
+	foreach ($http_headers as $hname => $hval)
+	{
+		header((string) $hname . ': ' . (string) $hval);
+	}
 
 	return;
 }
@@ -149,7 +168,7 @@ function adm_page_footer($copyright_html = true)
 	phpbb_check_and_display_sql_report($request, $auth, $db);
 
 	$template->assign_vars(array(
-		'DEBUG_OUTPUT'		=> phpbb_generate_debug_output($db, $config, $auth, $user),
+		'DEBUG_OUTPUT'		=> phpbb_generate_debug_output($db, $config, $auth, $user, $phpbb_dispatcher),
 		'TRANSLATION_INFO'	=> (!empty($user->lang['TRANSLATION_INFO'])) ? $user->lang['TRANSLATION_INFO'] : '',
 		'S_COPYRIGHT_HTML'	=> $copyright_html,
 		'CREDIT_LINE'		=> $user->lang('POWERED_BY', '<a href="https://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Limited'),

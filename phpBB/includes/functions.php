@@ -1061,7 +1061,7 @@ function phpbb_timezone_select($user, $default = '', $truncate = false)
 		foreach ($unsorted_timezones as $timezone)
 		{
 			$tz = new DateTimeZone($timezone);
-			$dt = new \phpbb\datetime($user, 'now', $tz);
+			$dt = $user->create_datetime('now', $tz);
 			$offset = $dt->getOffset();
 			$current_time = $dt->format($user->lang['DATETIME_FORMAT'], true);
 			$offset_string = phpbb_format_timezone_offset($offset);
@@ -2540,7 +2540,7 @@ function check_link_hash($token, $link_name)
 */
 function add_form_key($form_name)
 {
-	global $config, $template, $user;
+	global $config, $template, $user, $phpbb_dispatcher;
 
 	$now = time();
 	$token_sid = ($user->data['user_id'] == ANONYMOUS && !empty($config['form_token_sid_guests'])) ? $user->session_id : '';
@@ -2550,6 +2550,27 @@ function add_form_key($form_name)
 		'creation_time' => $now,
 		'form_token'	=> $token,
 	));
+
+	/**
+	* Perform additional actions on creation of the form token
+	*
+	* @event core.add_form_key
+	* @var	string	form_name			The form name
+	* @var	int		now					Current time timestamp
+	* @var	string	s_fields			Generated hidden fields
+	* @var	string	token				Form token
+	* @var	string	token_sid			User session ID
+	*
+	* @since 3.1.0-RC3
+	*/
+	$vars = array(
+		'form_name',
+		'now',
+		's_fields',
+		'token',
+		'token_sid',
+	);
+	extract($phpbb_dispatcher->trigger_event('core.add_form_key', compact($vars)));
 
 	$template->assign_vars(array(
 		'S_FORM_TOKEN'	=> $s_fields,
@@ -2730,11 +2751,6 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 	global $db, $user, $template, $auth, $phpEx, $phpbb_root_path, $config;
 	global $request, $phpbb_container;
 
-	if (!class_exists('phpbb_captcha_factory', false))
-	{
-		include($phpbb_root_path . 'includes/captcha/captcha_factory.' . $phpEx);
-	}
-
 	$err = '';
 
 	// Make sure user->setup() has been called
@@ -2844,7 +2860,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		{
 			case LOGIN_ERROR_ATTEMPTS:
 
-				$captcha = phpbb_captcha_factory::get_instance($config['captcha_plugin']);
+				$captcha = $phpbb_container->get('captcha.factory')->get_instance($config['captcha_plugin']);
 				$captcha->init(CONFIRM_LOGIN);
 				// $captcha->reset();
 
@@ -2956,7 +2972,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 */
 function login_forum_box($forum_data)
 {
-	global $db, $phpbb_container, $request, $template, $user;
+	global $db, $phpbb_container, $request, $template, $user, $phpbb_dispatcher;
 
 	$password = $request->variable('password', '', true);
 
@@ -3016,6 +3032,17 @@ function login_forum_box($forum_data)
 
 		$template->assign_var('LOGIN_ERROR', $user->lang['WRONG_PASSWORD']);
 	}
+
+	/**
+	* Performing additional actions, load additional data on forum login
+	*
+	* @event core.login_forum_box
+	* @var	array	forum_data		Array with forum data
+	* @var	string	password		Password entered
+	* @since 3.1.0-RC3
+	*/
+	$vars = array('forum_data', 'password');
+	extract($phpbb_dispatcher->trigger_event('core.login_forum_box', compact($vars)));
 
 	page_header($user->lang['LOGIN']);
 
@@ -4881,7 +4908,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		}
 	}
 
-	$dt = new \phpbb\datetime($user, 'now', $user->timezone);
+	$dt = $user->create_datetime();
 	$timezone_offset = 'GMT' . phpbb_format_timezone_offset($dt->getOffset());
 	$timezone_name = $user->timezone->getName();
 	if (isset($user->lang['timezones'][$timezone_name]))
@@ -5041,6 +5068,20 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'SITE_LOGO_IMG'			=> $user->img('site_logo'),
 	));
 
+	// An array of http headers that phpbb will set. The following event may override these.
+	$http_headers = array(
+		// application/xhtml+xml not used because of IE
+		'Content-type' => 'text/html; charset=UTF-8',
+		'Cache-Control' => 'private, no-cache="set-cookie"',
+		'Expires' => '0',
+		'Pragma' => 'no-cache',
+	);
+	if (!empty($user->data['is_bot']))
+	{
+		// Let reverse proxies know we detected a bot.
+		$http_headers['X-PHPBB-IS-BOT'] = 'yes';
+	}
+
 	/**
 	* Execute code and/or overwrite _common_ template variables after they have been assigned.
 	*
@@ -5051,23 +5092,16 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 	*									session item, e.g. forum for
 	*									session_forum_id
 	* @var	int		item_id				Restrict online users to item id
+	* @var	array		http_headers			HTTP headers that should be set by phpbb
 	*
 	* @since 3.1.0-b3
 	*/
-	$vars = array('page_title', 'display_online_list', 'item_id', 'item');
+	$vars = array('page_title', 'display_online_list', 'item_id', 'item', 'http_headers');
 	extract($phpbb_dispatcher->trigger_event('core.page_header_after', compact($vars)));
 
-	// application/xhtml+xml not used because of IE
-	header('Content-type: text/html; charset=UTF-8');
-
-	header('Cache-Control: private, no-cache="set-cookie"');
-	header('Expires: 0');
-	header('Pragma: no-cache');
-
-	if (!empty($user->data['is_bot']))
+	foreach ($http_headers as $hname => $hval)
 	{
-		// Let reverse proxies know we detected a bot.
-		header('X-PHPBB-IS-BOT: yes');
+		header((string) $hname . ': ' . (string) $hval);
 	}
 
 	return;
@@ -5095,9 +5129,10 @@ function phpbb_check_and_display_sql_report(\phpbb\request\request_interface $re
 * @param \phpbb\config\config				$config		Config object
 * @param \phpbb\auth\auth					$auth		Auth object
 * @param \phpbb\user						$user		User object
+* @param \phpbb\event\dispatcher_interface	$phpbb_dispatcher	Event dispatcher
 * @return string
 */
-function phpbb_generate_debug_output(phpbb\db\driver\driver_interface $db, \phpbb\config\config $config, \phpbb\auth\auth $auth, \phpbb\user $user)
+function phpbb_generate_debug_output(\phpbb\db\driver\driver_interface $db, \phpbb\config\config $config, \phpbb\auth\auth $auth, \phpbb\user $user, \phpbb\event\dispatcher_interface $phpbb_dispatcher)
 {
 	$debug_info = array();
 
@@ -5135,6 +5170,17 @@ function phpbb_generate_debug_output(phpbb\db\driver\driver_interface $db, \phpb
 			$debug_info[] = '<a href="' . build_url() . '&amp;explain=1">SQL Explain</a>';
 		}
 	}
+
+	/**
+	* Modify debug output information
+	*
+	* @event core.phpbb_generate_debug_output
+	* @var	array	debug_info		Array of strings with debug information
+	*
+	* @since 3.1.0-RC3
+	*/
+	$vars = array('debug_info');
+	extract($phpbb_dispatcher->trigger_event('core.phpbb_generate_debug_output', compact($vars)));
 
 	return implode(' | ', $debug_info);
 }
@@ -5174,7 +5220,7 @@ function page_footer($run_cron = true, $display_template = true, $exit_handler =
 	phpbb_check_and_display_sql_report($request, $auth, $db);
 
 	$template->assign_vars(array(
-		'DEBUG_OUTPUT'			=> phpbb_generate_debug_output($db, $config, $auth, $user),
+		'DEBUG_OUTPUT'			=> phpbb_generate_debug_output($db, $config, $auth, $user, $phpbb_dispatcher),
 		'TRANSLATION_INFO'		=> (!empty($user->lang['TRANSLATION_INFO'])) ? $user->lang['TRANSLATION_INFO'] : '',
 		'CREDIT_LINE'			=> $user->lang('POWERED_BY', '<a href="https://www.phpbb.com/">phpBB</a>&reg; Forum Software &copy; phpBB Limited'),
 
