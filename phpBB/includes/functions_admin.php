@@ -27,8 +27,6 @@ if (!defined('IN_PHPBB'))
 * @param string	$table	constant or fullname of the table
 * @param int	$parent_id parent_id of the current set (default = 0)
 * @param array	$where	contains strings to compare closer on the where statement (additional)
-*
-* @author EXreaction
 */
 function recalc_nested_sets(&$new_id, $pkey, $table, $parent_id = 0, $where = array())
 {
@@ -315,8 +313,6 @@ function get_forum_branch($forum_id, $type = 'all', $order = 'descending', $incl
 * @param bool	$add_log			True if log entry should be added
 *
 * @return bool						False on error
-*
-* @author bantu
 */
 function copy_forum_permissions($src_forum_id, $dest_forum_ids, $clear_dest_perms = true, $add_log = true)
 {
@@ -722,9 +718,9 @@ function delete_topics($where_type, $where_ids, $auto_sync = true, $post_count_s
 	$phpbb_notifications = $phpbb_container->get('notification_manager');
 
 	$phpbb_notifications->delete_notifications(array(
-		'topic',
-		'approve_topic',
-		'topic_in_queue',
+		'notification.type.topic',
+		'notification.type.approve_topic',
+		'notification.type.topic_in_queue',
 	), $topic_ids);
 
 	return $return;
@@ -739,9 +735,9 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 
 	// Notifications types to delete
 	$delete_notifications_types = array(
-		'quote',
-		'approve_post',
-		'post_in_queue',
+		'notification.type.quote',
+		'notification.type.approve_post',
+		'notification.type.post_in_queue',
 	);
 
 	/**
@@ -1224,8 +1220,6 @@ function delete_attachments($mode, $ids, $resync = true)
 * @param bool		$auto_sync		Will call sync() if this is true
 *
 * @return array		Array with affected forums
-*
-* @author bantu
 */
 function delete_topic_shadows($forum_id, $sql_more = '', $auto_sync = true)
 {

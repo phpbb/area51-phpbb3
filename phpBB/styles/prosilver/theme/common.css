@@ -189,10 +189,6 @@ ol ol ul, ol ul ul, ul ol ul, ul ul ul {
 	}
 }
 
-#simple-wrap {
-	padding: 6px 0;
-}
-
 #page-body {
 	margin: 4px 0;
 	clear: both;
@@ -768,6 +764,7 @@ table.info tbody th {
 	float: left;
 	width: auto;
 	text-align: left;
+	max-width: 100%;
 }
 
 .left-box.profile-details {
@@ -778,6 +775,7 @@ table.info tbody th {
 	float: right;
 	width: auto;
 	text-align: right;
+	max-width: 100%;
 }
 
 dl.details {

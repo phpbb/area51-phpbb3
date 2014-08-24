@@ -289,7 +289,6 @@ function phpbb_gmgetdate($time = false)
 * @param array	$allowed_units	only allow these units (data array indexes)
 *
 * @return mixed					data array if $string_only is false
-* @author bantu
 */
 function get_formatted_filesize($value, $string_only = true, $allowed_units = false)
 {
@@ -463,7 +462,6 @@ function phpbb_version_compare($version1, $version2, $operator = null)
 * @param int	$perms		Permissions to set
 *
 * @return bool	true on success, otherwise false
-* @author faw, phpBB Limited
 */
 function phpbb_chmod($filename, $perms = CHMOD_READ)
 {
@@ -1146,12 +1144,12 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 
 			// Mark all topic notifications read for this user
 			$phpbb_notifications->mark_notifications_read(array(
-				'topic',
-				'quote',
-				'bookmark',
-				'post',
-				'approve_topic',
-				'approve_post',
+				'notification.type.topic',
+				'notification.type.quote',
+				'notification.type.bookmark',
+				'notification.type.post',
+				'notification.type.approve_topic',
+				'notification.type.approve_post',
 			), false, $user->data['user_id'], $post_time);
 
 			if ($config['load_db_lastread'] && $user->data['is_registered'])
@@ -1211,8 +1209,8 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 		$phpbb_notifications = $phpbb_container->get('notification_manager');
 
 		$phpbb_notifications->mark_notifications_read_by_parent(array(
-			'topic',
-			'approve_topic',
+			'notification.type.topic',
+			'notification.type.approve_topic',
 		), $forum_id, $user->data['user_id'], $post_time);
 
 		// Mark all post/quote notifications read for this user in this forum
@@ -1228,10 +1226,10 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 		$db->sql_freeresult($result);
 
 		$phpbb_notifications->mark_notifications_read_by_parent(array(
-			'quote',
-			'bookmark',
-			'post',
-			'approve_post',
+			'notification.type.quote',
+			'notification.type.bookmark',
+			'notification.type.post',
+			'notification.type.approve_post',
 		), $topic_ids, $user->data['user_id'], $post_time);
 
 		// Add 0 to forums array to mark global announcements correctly
@@ -1334,15 +1332,15 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 
 		// Mark post notifications read for this user in this topic
 		$phpbb_notifications->mark_notifications_read(array(
-			'topic',
-			'approve_topic',
+			'notification.type.topic',
+			'notification.type.approve_topic',
 		), $topic_id, $user->data['user_id'], $post_time);
 
 		$phpbb_notifications->mark_notifications_read_by_parent(array(
-			'quote',
-			'bookmark',
-			'post',
-			'approve_post',
+			'notification.type.quote',
+			'notification.type.bookmark',
+			'notification.type.post',
+			'notification.type.approve_post',
 		), $topic_id, $user->data['user_id'], $post_time);
 
 		if ($config['load_db_lastread'] && $user->data['is_registered'])
@@ -3404,8 +3402,6 @@ function short_ipv6($ip, $length)
 *
 * @return mixed		false if specified address is not valid,
 *					string otherwise
-*
-* @author bantu
 */
 function phpbb_ip_normalise($address)
 {
@@ -3434,8 +3430,6 @@ function phpbb_ip_normalise($address)
 *
 * @return mixed		false on failure,
 *					string otherwise
-*
-* @author APTX
 */
 function phpbb_inet_ntop($in_addr)
 {
@@ -3505,8 +3499,6 @@ function phpbb_inet_ntop($in_addr)
 *
 * @return mixed		false if address is invalid,
 *					in_addr representation of the given address otherwise (string)
-*
-* @author APTX
 */
 function phpbb_inet_pton($address)
 {
@@ -3586,8 +3578,6 @@ function phpbb_inet_pton($address)
 *
 * Since null can also be returned, you probably want to compare the result
 * with === true or === false,
-*
-* @author bantu
 */
 function phpbb_checkdnsrr($host, $type = 'MX')
 {
@@ -4674,7 +4664,7 @@ function phpbb_get_group_avatar($user_row, $alt = 'GROUP_AVATAR', $ignore_config
 /**
 * Get avatar
 *
-* @param array $row Row cleaned by \phpbb\avatar\driver\driver::clean_row
+* @param array $row Row cleaned by \phpbb\avatar\manager::clean_row
 * @param string $alt Optional language string for alt tag within image, can be a language key or text
 * @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
 *
