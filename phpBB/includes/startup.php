@@ -191,5 +191,8 @@ $starttime = $starttime[1] + $starttime[0];
 
 if (($profilerkey = getenv('QAFOO_PROFILER_KEY')))
 {
-    \QafooLabs\Profiler::start($profilerkey);
+	$_SERVER['QAFOO_PROFILER_ENABLE_ARGUMENTS'] = 1;
+	$_SERVER['QAFOO_PROFILER_ENABLE_LAYERS'] = 1;
+	
+	\QafooLabs\Profiler::start($profilerkey);
 }
