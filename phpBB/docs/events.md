@@ -434,6 +434,38 @@ memberlist_view_user_statistics_before
 * Since: 3.1.0-a1
 * Purpose: Add entries before the user statistics part of any user profile
 
+mcp_warn_post_add_warning_field_after
+===
+* Locations:
+    + styles/prosilver/template/mcp_warn_post.html
+    + styles/subsilver2/template/mcp_warn_post.html
+* Since: 3.1.0-RC4
+* Purpose: Add content during warning for a post - after add warning field.
+
+mcp_warn_post_add_warning_field_before
+===
+* Locations:
+    + styles/prosilver/template/mcp_warn_post.html
+    + styles/subsilver2/template/mcp_warn_post.html
+* Since: 3.1.0-RC4
+* Purpose: Add content during warning for a post - before add warning field.
+
+mcp_warn_user_add_warning_field_after
+===
+* Locations:
+    + styles/prosilver/template/mcp_warn_user.html
+    + styles/subsilver2/template/mcp_warn_user.html
+* Since: 3.1.0-RC4
+* Purpose: Add content during warning a user - after add warning field.
+
+mcp_warn_user_add_warning_field_before
+===
+* Locations:
+    + styles/prosilver/template/mcp_warn_user.html
+    + styles/subsilver2/template/mcp_warn_user.html
+* Since: 3.1.0-RC4
+* Purpose: Add content during warning a user - before add warning field.
+
 navbar_header_logged_out_content
 ===
 * Locations:
@@ -1226,6 +1258,14 @@ viewtopic_body_postrow_post_before
     + styles/subsilver2/template/viewtopic_body.html
 * Since: 3.1.0-a4
 * Purpose: Add data before posts
+
+viewtopic_body_postrow_post_content_footer
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+    + styles/subsilver2/template/viewtopic_body.html
+* Since: 3.1.0-RC4
+* Purpose: Add data at the end of the posts.
 
 viewtopic_body_postrow_post_notices_after
 ===
