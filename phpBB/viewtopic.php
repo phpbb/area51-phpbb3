@@ -451,7 +451,7 @@ $s_watching_topic = array(
 	'is_watching'	=> false,
 );
 
-if (($config['email_enable'] || $config['jab_enable']) && $config['allow_topic_notify'])
+if ($config['allow_topic_notify'])
 {
 	$notify_status = (isset($topic_data['notify_status'])) ? $topic_data['notify_status'] : null;
 	watch_topic_forum('topic', $s_watching_topic, $user->data['user_id'], $forum_id, $topic_id, $notify_status, $start, $topic_data['topic_title']);
@@ -2119,9 +2119,11 @@ $page_title = $topic_data['topic_title'] . ($start ? ' - ' . sprintf($user->lang
 * @var	array	topic_data		Array with topic data
 * @var	int		forum_id		Forum ID of the topic
 * @var	int		start			Start offset used to calculate the page
+* @var	array	post_list		Array with post_ids we are going to display
 * @since 3.1.0-a1
+* @change 3.1.0-RC4 Added post_list var
 */
-$vars = array('page_title', 'topic_data', 'forum_id', 'start');
+$vars = array('page_title', 'topic_data', 'forum_id', 'start', 'post_list');
 extract($phpbb_dispatcher->trigger_event('core.viewtopic_modify_page_title', compact($vars)));
 
 // Output the page
