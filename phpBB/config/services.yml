@@ -100,6 +100,7 @@ services:
             - @controller.provider
             - @ext.manager
             - @symfony_request
+            - @filesystem
             - %core.root_path%
             - %core.php_ext%
 
@@ -156,21 +157,6 @@ services:
         class: phpbb\db\tools
         arguments:
             - @dbal.conn
-
-    event.subscriber_loader:
-        class: phpbb\event\extension_subscriber_loader
-        arguments:
-            - @dispatcher
-            - @event.listener_collection
-        calls:
-            - [load, []]
-
-    event.listener_collection:
-        class: phpbb\di\service_collection
-        arguments:
-            - @service_container
-        tags:
-            - { name: service_collection, tag: event.listener }
 
     ext.manager:
         class: phpbb\extension\manager

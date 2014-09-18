@@ -177,11 +177,13 @@ $migrator = $phpbb_container->get('migrator');
 $migrator->create_migrations_table();
 
 $phpbb_extension_manager = $phpbb_container->get('ext.manager');
-$finder = $phpbb_extension_manager->get_finder();
 
-$migrations = $finder
+$migrations = $phpbb_extension_manager
+	->get_finder()
 	->core_path('phpbb/db/migration/data/')
+	->extension_directory('/migrations')
 	->get_classes();
+
 $migrator->set_migrations($migrations);
 
 // What is a safe limit of execution time? Half the max execution time should be safe.

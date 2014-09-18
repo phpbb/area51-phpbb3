@@ -15,6 +15,7 @@ namespace phpbb\controller;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RequestContext;
 
 /**
@@ -44,6 +45,11 @@ class helper
 	protected $symfony_request;
 
 	/**
+	* @var \phpbb\filesystem The filesystem object
+	*/
+	protected $filesystem;
+
+	/**
 	* phpBB root path
 	* @var string
 	*/
@@ -64,15 +70,17 @@ class helper
 	* @param \phpbb\controller\provider $provider Path provider
 	* @param \phpbb\extension\manager $manager Extension manager object
 	* @param \phpbb\symfony_request $symfony_request Symfony Request object
+	* @param \phpbb\filesystem $filesystem The filesystem object
 	* @param string $phpbb_root_path phpBB root path
 	* @param string $php_ext PHP file extension
 	*/
-	public function __construct(\phpbb\template\template $template, \phpbb\user $user, \phpbb\config\config $config, \phpbb\controller\provider $provider, \phpbb\extension\manager $manager, \phpbb\symfony_request $symfony_request, $phpbb_root_path, $php_ext)
+	public function __construct(\phpbb\template\template $template, \phpbb\user $user, \phpbb\config\config $config, \phpbb\controller\provider $provider, \phpbb\extension\manager $manager, \phpbb\symfony_request $symfony_request, \phpbb\filesystem $filesystem, $phpbb_root_path, $php_ext)
 	{
 		$this->template = $template;
 		$this->user = $user;
 		$this->config = $config;
 		$this->symfony_request = $symfony_request;
+		$this->filesystem = $filesystem;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
 		$provider->find_routing_files($manager->get_finder());
@@ -108,10 +116,11 @@ class helper
 	* @param string	$route		Name of the route to travel
 	* @param array	$params		String or array of additional url parameters
 	* @param bool	$is_amp		Is url using &amp; (true) or & (false)
-	* @param string|bool	$session_id	Possibility to use a custom session id instead of the global one
+	* @param string|bool		$session_id	Possibility to use a custom session id instead of the global one
+	* @param bool|string		$reference_type The type of reference to be generated (one of the constants)
 	* @return string The URL already passed through append_sid()
 	*/
-	public function route($route, array $params = array(), $is_amp = true, $session_id = false)
+	public function route($route, array $params = array(), $is_amp = true, $session_id = false, $reference_type = UrlGeneratorInterface::ABSOLUTE_PATH)
 	{
 		$anchor = '';
 		if (isset($params['#']))
@@ -119,27 +128,39 @@ class helper
 			$anchor = '#' . $params['#'];
 			unset($params['#']);
 		}
-		$url_generator = new UrlGenerator($this->route_collection, new RequestContext());
-		$route_url = $url_generator->generate($route, $params);
 
-		if (strpos($route_url, '/') === 0)
-		{
-			$route_url = substr($route_url, 1);
-		}
+		$context = new RequestContext();
+		$context->fromRequest($this->symfony_request);
+
+		$script_name = $this->symfony_request->getScriptName();
+		$page_name = substr($script_name, -1, 1) == '/' ? '' : utf8_basename($script_name);
+
+		$base_url = $context->getBaseUrl();
+
+		// If enable_mod_rewrite is false we need to replace the current front-end by app.php, otherwise we need to remove it.
+		$base_url = str_replace('/' . $page_name, empty($this->config['enable_mod_rewrite']) ? '/app.' . $this->php_ext : '', $base_url);
+
+		// We need to update the base url to move to the directory of the app.php file.
+		$base_url = str_replace('/app.' . $this->php_ext, '/' . $this->phpbb_root_path . 'app.' . $this->php_ext, $base_url);
+
+		$base_url = $this->filesystem->clean_path($base_url);
+
+		$context->setBaseUrl($base_url);
+
+		$url_generator = new UrlGenerator($this->route_collection, $context);
+		$route_url = $url_generator->generate($route, $params, $reference_type);
 
 		if ($is_amp)
 		{
 			$route_url = str_replace(array('&amp;', '&'), array('&', '&amp;'), $route_url);
 		}
 
-		// If enable_mod_rewrite is false, we need to include app.php
-		$route_prefix = $this->phpbb_root_path;
-		if (empty($this->config['enable_mod_rewrite']))
+		if ($reference_type === UrlGeneratorInterface::RELATIVE_PATH && empty($this->config['enable_mod_rewrite']))
 		{
-			$route_prefix .= 'app.' . $this->php_ext . '/';
+			$route_url = 'app.' . $this->php_ext . '/' . $route_url;
 		}
 
-		return append_sid($route_prefix . $route_url . $anchor, false, $is_amp, $session_id);
+		return append_sid($route_url . $anchor, false, $is_amp, $session_id, true);
 	}
 
 	/**

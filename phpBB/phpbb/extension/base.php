@@ -35,6 +35,9 @@ class base implements \phpbb\extension\extension_interface
 	/** @var string */
 	protected $extension_path;
 
+	/** @var string[] */
+	private $migrations = false;
+
 	/**
 	* Constructor
 	*
@@ -122,17 +125,16 @@ class base implements \phpbb\extension\extension_interface
 	*/
 	protected function get_migration_file_list()
 	{
-		static $migrations = false;
-
-		if ($migrations !== false)
+		if ($this->migrations !== false)
 		{
-			return $migrations;
+			return $this->migrations;
 		}
 
 		// Only have the finder search in this extension path directory
 		$migrations = $this->extension_finder
 			->extension_directory('/migrations')
 			->find_from_extension($this->extension_name, $this->extension_path);
+
 		$migrations = $this->extension_finder->get_classes_from_files($migrations);
 
 		return $migrations;
