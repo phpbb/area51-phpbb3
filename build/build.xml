@@ -2,9 +2,9 @@
 
 <project name="phpBB" description="The phpBB forum software" default="all" basedir="../">
 	<!-- a few settings for the build -->
-	<property name="newversion" value="3.1.0-RC5-dev" />
-	<property name="prevversion" value="3.1.0-RC4" />
-	<property name="olderversions" value="3.0.12, 3.1.0-a1, 3.1.0-a2, 3.1.0-a3, 3.1.0-b1, 3.1.0-b2, 3.1.0-b3, 3.1.0-b4, 3.1.0-RC1, 3.1.0-RC2, 3.1.0-RC3" />
+	<property name="newversion" value="3.1.0-RC6-dev" />
+	<property name="prevversion" value="3.1.0-RC5" />
+	<property name="olderversions" value="3.0.12, 3.1.0-a1, 3.1.0-a2, 3.1.0-a3, 3.1.0-b1, 3.1.0-b2, 3.1.0-b3, 3.1.0-b4, 3.1.0-RC1, 3.1.0-RC2, 3.1.0-RC3, 3.1.0-RC4" />
 	<!-- no configuration should be needed beyond this point -->
 
 	<property name="oldversions" value="${olderversions}, ${prevversion}" />
@@ -272,6 +272,9 @@
 				<delete file="${dir}/composer.lock" />
 			</else>
 		</if>
+
+		<!-- Create schema.json -->
+		<exec dir="${dir}" command="php develop/create_schema_files.php" />
 
 		<delete file="${dir}/config.php" />
 		<delete dir="${dir}/develop" />
