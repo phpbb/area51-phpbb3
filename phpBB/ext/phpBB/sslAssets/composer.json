@@ -16,10 +16,12 @@
 		}
 	],
 	"require": {
-		"php": ">=5.3",
-		"phpbb/phpbb": ">=3.1.*@dev"
+		"php": ">=5.3"
 	},
 	"extra": {
-		"display-name": "phpBB 3.1 SSL Asset Rewriting Extension"
+		"display-name": "phpBB 3.1 SSL Asset Rewriting Extension",
+		"soft-require": {
+			"phpbb/phpbb": ">=3.1.*@dev"
+		}
 	}
 }

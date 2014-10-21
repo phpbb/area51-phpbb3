@@ -87,6 +87,7 @@ class listener implements EventSubscriberInterface
 		$this->rewrite_images($rootref, 'SIGNATURE');			//UCP - PM - View - Author signature, Memberlist - Profile - Signature
 		$this->rewrite_images($rootref, 'POST_PREVIEW');		//MCP - Reported post
 		$this->rewrite_images($rootref, 'AVATAR_IMG');			//Memberlist - Profile - Avatar
+		$this->rewrite_images($rootref, 'CURRENT_USER_AVATAR');	//Header - Avatar
 
 		//UCP - PM - Message history, MCP - Reported Post - Topic Review
 		if (isset($tpldata['topic_review_row']))
