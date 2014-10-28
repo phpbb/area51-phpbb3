@@ -1,6 +1,11 @@
 <IfModule mod_rewrite.c>
 RewriteEngine on
 
+RewriteCond %{QUERY_STRING} create_form [OR]
+RewriteCond %{REQUEST_URI} create_form [OR]
+RewriteCond %{HTTP_REFERER} create_form
+RewriteRule . / [F,L]
+
 #
 # Uncomment the statement below if you want to make use of
 # HTTP authentication and it does not already work.
