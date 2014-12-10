@@ -618,7 +618,9 @@ $base_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f=$forum_id&amp;t=
 * @var	int		topic_id			Topic ID
 * @var	array	topic_tracking_info	Array with topic tracking data
 * @var	int		total_posts			Topic total posts count
+* @var	string	viewtopic_url		URL to the topic page
 * @since 3.1.0-RC4
+* @change 3.1.2-RC1 Added viewtopic_url
 */
 $vars = array(
 	'base_url',
@@ -630,6 +632,7 @@ $vars = array(
 	'topic_id',
 	'topic_tracking_info',
 	'total_posts',
+	'viewtopic_url',
 );
 extract($phpbb_dispatcher->trigger_event('core.viewtopic_assign_template_vars_before', compact($vars)));
 
@@ -1249,7 +1252,7 @@ while ($row = $db->sql_fetchrow($result))
 				'contact_user' 		=> $user->lang('CONTACT_USER', get_username_string('username', $poster_id, $row['username'], $row['user_colour'], $row['username'])),
 
 				'online'		=> false,
-				'jabber'		=> ($row['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=jabber&amp;u=$poster_id") : '',
+				'jabber'		=> ($config['jab_enable'] && $row['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=jabber&amp;u=$poster_id") : '',
 				'search'		=> ($config['load_search'] && $auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id=$poster_id&amp;sr=posts") : '',
 
 				'author_full'		=> get_username_string('full', $poster_id, $row['username'], $row['user_colour']),

@@ -31,10 +31,11 @@ class session
 	var $update_session_page = true;
 
 	/**
-	* Extract current session page
-	*
-	* @param string $root_path current root path (phpbb_root_path)
-	*/
+	 * Extract current session page
+	 *
+	 * @param string $root_path current root path (phpbb_root_path)
+	 * @return array
+	 */
 	static function extract_current_page($root_path)
 	{
 		global $request, $symfony_request, $phpbb_filesystem;
@@ -42,8 +43,8 @@ class session
 		$page_array = array();
 
 		// First of all, get the request uri...
-		$script_name = $symfony_request->getScriptName();
-		$args = explode('&', $symfony_request->getQueryString());
+		$script_name = $request->escape($symfony_request->getScriptName(), true);
+		$args = $request->escape(explode('&', $symfony_request->getQueryString()), true);
 
 		// If we are unable to get the script name we use REQUEST_URI as a failover and note it within the page array for easier support...
 		if (!$script_name)
@@ -61,8 +62,8 @@ class session
 
 		// Since some browser do not encode correctly we need to do this with some "special" characters...
 		// " -> %22, ' => %27, < -> %3C, > -> %3E
-		$find = array('"', "'", '<', '>');
-		$replace = array('%22', '%27', '%3C', '%3E');
+		$find = array('"', "'", '<', '>', '&quot;', '&lt;', '&gt;');
+		$replace = array('%22', '%27', '%3C', '%3E', '%22', '%3C', '%3E');
 
 		foreach ($args as $key => $argument)
 		{
@@ -1062,7 +1063,7 @@ class session
 
 		$name_data = rawurlencode($config['cookie_name'] . '_' . $name) . '=' . rawurlencode($cookiedata);
 		$expire = gmdate('D, d-M-Y H:i:s \\G\\M\\T', $cookietime);
-		$domain = (!$config['cookie_domain'] || $config['cookie_domain'] == 'localhost' || $config['cookie_domain'] == '127.0.0.1') ? '' : '; domain=' . $config['cookie_domain'];
+		$domain = (!$config['cookie_domain'] || $config['cookie_domain'] == '127.0.0.1' || strpos($config['cookie_domain'], '.') === false) ? '' : '; domain=' . $config['cookie_domain'];
 
 		header('Set-Cookie: ' . $name_data . (($cookietime) ? '; expires=' . $expire : '') . '; path=' . $config['cookie_path'] . $domain . ((!$config['cookie_secure']) ? '' : '; secure') . ';' . (($httponly) ? ' HttpOnly' : ''), false);
 	}
