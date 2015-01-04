@@ -73,7 +73,7 @@ class acp_logs
 				}
 
 				$phpbb_log = $phpbb_container->get('log');
-				$phpbb_log->delete($mode, $conditions);
+				//$phpbb_log->delete($mode, $conditions);
 			}
 			else
 			{

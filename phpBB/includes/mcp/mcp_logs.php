@@ -119,7 +119,7 @@ class mcp_logs
 						'log_id'	=> array('IN' => $marked),
 					);
 
-					$phpbb_log->delete('mod', $conditions);
+					//$phpbb_log->delete('mod', $conditions);
 				}
 				else if ($deleteall)
 				{
@@ -140,7 +140,7 @@ class mcp_logs
 						$conditions['topic_id'] = $topic_id;
 					}
 
-					$phpbb_log->delete('mod', $conditions);
+					//$phpbb_log->delete('mod', $conditions);
 				}
 			}
 			else
