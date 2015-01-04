@@ -1,0 +1,59 @@
+<!-- INCLUDE overall_header.html -->
+
+<h1>{L_ACP_TEAM_SECURITY_SETTINGS}</h1>
+
+<p>{L_ACP_TEAM_SECURITY_SETTINGS_EXPLAIN}</p>
+
+<form id="acp_teamsecurity" method="post" action="{U_ACTION}">
+	<fieldset>
+		<legend>{L_GENERAL_OPTIONS}</legend>
+		<dl>
+			<dt><label for="sec_login_email">{L_ACP_LOGIN_EMAIL}{L_COLON}</label><br /><span>{L_ACP_LOGIN_EMAIL_EXPLAIN}</span></dt>
+			<dd>
+				<label><input type="radio" class="radio" id="sec_login_email" name="sec_login_email" value="1"<!-- IF S_ACP_LOGIN_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="sec_login_email" value="0"<!-- IF not S_ACP_LOGIN_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_ACP_GROUP_SECURITY_OPTIONS}</legend>
+		<dl>
+			<dt><label for="sec_login_attempts">{L_ACP_LOGIN_ATTEMPTS}{L_COLON}</label><br /><span>{L_ACP_LOGIN_ATTEMPTS_EXPLAIN}</span></dt>
+			<dd>
+				<label><input type="radio" class="radio" id="sec_login_attempts" name="sec_login_attempts" value="1"<!-- IF S_ACP_LOGIN_ATTEMPTS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="sec_login_attempts" value="0"<!-- IF not S_ACP_LOGIN_ATTEMPTS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="sec_strong_pass">{L_ACP_STRONG_PASS}{L_COLON}</label><br /><span>{L_ACP_STRONG_PASS_EXPLAIN}</span></dt>
+			<dd>
+				<label><input type="radio" class="radio" id="sec_strong_pass" name="sec_strong_pass" value="1"<!-- IF S_ACP_STRONG_PASS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="sec_strong_pass" value="0"<!-- IF not S_ACP_STRONG_PASS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="sec_min_pass_chars">{L_ACP_MIN_PASS_CHARS}{L_COLON}</label><br /><span>{L_ACP_MIN_PASS_CHARS_EXPLAIN}</span></dt>
+			<dd><input type="number" id="sec_min_pass_chars" name="sec_min_pass_chars" value="{ACP_MIN_PASS_CHARS}" size="3" maxlength="3" min="0" max="999" /> {L_CHARS}</dd>
+		</dl>
+		<dl>
+			<dt><label for="sec_usergroups">{L_ACP_GROUPS}{L_COLON}</label><br /><span>{L_ACP_GROUPS_EXPLAIN}</span></dt>
+			<dd><select name="sec_usergroups[]" id="sec_usergroups" size="10" multiple="multiple">
+				<!-- BEGIN group_options -->
+					<option value="{group_options.VALUE}"<!-- IF group_options.S_SELECTED --> selected="selected"<!-- ENDIF -->>{group_options.LABEL}</option>
+				<!-- END group_options -->
+			</select></dd>
+		</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_ACP_SUBMIT_CHANGES}</legend>
+		<p class="submit-buttons">
+			<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+			<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+		</p>
+		{S_FORM_TOKEN}
+	</fieldset>
+</form>
+
+<!-- INCLUDE overall_footer.html -->
