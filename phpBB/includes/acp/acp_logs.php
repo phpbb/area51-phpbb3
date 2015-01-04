@@ -73,6 +73,7 @@ class acp_logs
 				}
 
 				$phpbb_log = $phpbb_container->get('log');
+				// Prevent log deletion on *.phpbb.com
 				//$phpbb_log->delete($mode, $conditions);
 			}
 			else

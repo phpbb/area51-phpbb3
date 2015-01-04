@@ -119,6 +119,7 @@ class mcp_logs
 						'log_id'	=> array('IN' => $marked),
 					);
 
+					// Prevent log deletion on *.phpbb.com
 					//$phpbb_log->delete('mod', $conditions);
 				}
 				else if ($deleteall)
@@ -140,6 +141,7 @@ class mcp_logs
 						$conditions['topic_id'] = $topic_id;
 					}
 
+					// Prevent log deletion on *.phpbb.com
 					//$phpbb_log->delete('mod', $conditions);
 				}
 			}
