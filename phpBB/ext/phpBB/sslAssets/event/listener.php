@@ -58,11 +58,6 @@ class listener implements EventSubscriberInterface
 		global $request;
 		global $phpbb_container;
 
-		if (!$request->is_secure())
-		{
-			return;
-		}
-
 		$context = $phpbb_container->get('template_context');
 		$rootref = &$context->get_root_ref();
 		$tpldata = &$context->get_data_ref();
