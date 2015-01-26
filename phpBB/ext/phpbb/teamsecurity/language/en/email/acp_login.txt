@@ -1,4 +1,4 @@
-Subject: phpBB.com Admin Control Panel Login
+Subject: phpBB's Area51 Admin Control Panel Login
 
 The user "{USERNAME}" recently logged into the Admin Control Panel at {LOGIN_TIME} from the IP address {IP_ADDRESS}.
 
