@@ -130,6 +130,10 @@ class session
 		$script_path .= (substr($script_path, -1, 1) == '/') ? '' : '/';
 		$root_script_path .= (substr($root_script_path, -1, 1) == '/') ? '' : '/';
 
+		$forum_id = $request->variable('f', 0);
+		// maximum forum id value is maximum value of mediumint unsigned column
+		$forum_id = ($forum_id > 0 && $forum_id < 16777215) ? $forum_id : 0;
+
 		$page_array += array(
 			'page_name'			=> $page_name,
 			'page_dir'			=> $page_dir,
@@ -139,7 +143,7 @@ class session
 			'root_script_path'	=> str_replace(' ', '%20', htmlspecialchars($root_script_path)),
 
 			'page'				=> $page,
-			'forum'				=> request_var('f', 0),
+			'forum'				=> $forum_id,
 		);
 
 		return $page_array;
@@ -1082,7 +1086,7 @@ class session
 	*/
 	function check_ban($user_id = false, $user_ips = false, $user_email = false, $return = false)
 	{
-		global $config, $db;
+		global $config, $db, $phpbb_dispatcher;
 
 		if (defined('IN_CHECK_BAN') || defined('SKIP_CHECK_BAN'))
 		{
@@ -1195,6 +1199,20 @@ class session
 			}
 		}
 		$db->sql_freeresult($result);
+
+		/**
+		* Event to set custom ban type
+		*
+		* @event core.session_set_custom_ban
+		* @var	bool		return				If $return is false this routine does not return on finding a banned user, it outputs a relevant message and stops execution
+		* @var	bool		banned				Check if user already banned
+		* @var	array|false	ban_row				Ban data
+		* @var	string		ban_triggered_by	Method that caused ban, can be your custom method
+		* @since 3.1.3-RC1
+		*/
+		$ban_row = isset($ban_row) ? $ban_row : false;
+		$vars = array('return', 'banned', 'ban_row', 'ban_triggered_by');
+		extract($phpbb_dispatcher->trigger_event('core.session_set_custom_ban', compact($vars)));
 
 		if ($banned && !$return)
 		{

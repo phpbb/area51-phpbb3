@@ -372,7 +372,7 @@ $template->assign_vars(array(
 	'U_MCP'				=> ($auth->acl_get('m_', $forum_id)) ? append_sid("{$phpbb_root_path}mcp.$phpEx", "f=$forum_id&amp;i=main&amp;mode=forum_view", true, $user->session_id) : '',
 	'U_POST_NEW_TOPIC'	=> ($auth->acl_get('f_post', $forum_id) || $user->data['user_id'] == ANONYMOUS) ? append_sid("{$phpbb_root_path}posting.$phpEx", 'mode=post&amp;f=' . $forum_id) : '',
 	'U_VIEW_FORUM'		=> append_sid("{$phpbb_root_path}viewforum.$phpEx", "f=$forum_id" . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . (($start == 0) ? '' : "&amp;start=$start")),
-	'U_CANONICAL'		=> generate_board_url() . '/' . append_sid("viewforum.$phpEx", "f=$forum_id" . ((strlen($u_sort_param)) ? "&amp;$u_sort_param" : '') . (($start) ? "&amp;start=$start" : ''), true, ''),
+	'U_CANONICAL'		=> generate_board_url() . '/' . append_sid("viewforum.$phpEx", "f=$forum_id" . (($start) ? "&amp;start=$start" : ''), true, ''),
 	'U_MARK_TOPICS'		=> ($user->data['is_registered'] || $config['load_anon_lastread']) ? append_sid("{$phpbb_root_path}viewforum.$phpEx", 'hash=' . generate_link_hash('global') . "&amp;f=$forum_id&amp;mark=topics&amp;mark_time=" . time()) : '',
 ));
 
@@ -393,15 +393,29 @@ $sql_array = array(
 /**
 * Event to modify the SQL query before the topic data is retrieved
 *
+* It may also be used to override the above assigned template vars
+*
 * @event core.viewforum_get_topic_data
 * @var	array	forum_data			Array with forum data
 * @var	array	sql_array			The SQL array to get the data of all topics
+* @var	array	forum_id			The forum_id whose topics are being listed
+* @var	array	topics_count		The total number of topics for display
+* @var	array	sort_days			The oldest topic displayable in elapsed days
+* @var	array	sort_key			The sorting by. It is one of the first character of (in low case):
+*									Author, Post time, Replies, Subject, Views
+* @var	array	sort_dir			Either "a" for ascending or "d" for descending
 * @since 3.1.0-a1
 * @change 3.1.0-RC4 Added forum_data var
+* @change 3.1.4-RC1 Added forum_id, topics_count, sort_days, sort_key and sort_dir vars
 */
 $vars = array(
 	'forum_data',
 	'sql_array',
+	'forum_id',
+	'topics_count',
+	'sort_days',
+	'sort_key',
+	'sort_dir',
 );
 extract($phpbb_dispatcher->trigger_event('core.viewforum_get_topic_data', compact($vars)));
 
@@ -888,6 +902,28 @@ if (sizeof($topic_list))
 		$pagination->generate_template_pagination($view_topic_url, 'topicrow.pagination', 'start', $replies + 1, $config['posts_per_page'], 1, true, true);
 
 		$s_type_switch = ($row['topic_type'] == POST_ANNOUNCE || $row['topic_type'] == POST_GLOBAL) ? 1 : 0;
+
+		/**
+		* Event after the topic data has been assigned to the template
+		*
+		* @event core.viewforum_topic_row_after
+		* @var	array	row				Array with the topic data
+		* @var	array	rowset			Array with topics data (in topic_id => topic_data format)
+		* @var	bool	s_type_switch	Flag indicating if the topic type is [global] announcement
+		* @var	int		topic_id		The topic ID
+		* @var	array	topic_list		Array with current viewforum page topic ids
+		* @var	array	topic_row		Template array with topic data
+		* @since 3.1.3-RC1
+		*/
+		$vars = array(
+			'row',
+			'rowset',
+			's_type_switch',
+			'topic_id',
+			'topic_list',
+			'topic_row',
+		);
+		extract($phpbb_dispatcher->trigger_event('core.viewforum_topic_row_after', compact($vars)));
 
 		if ($unread_topic)
 		{
