@@ -15,7 +15,6 @@
 /phpBB/store/*
 /phpBB/styles/*
 !/phpBB/styles/prosilver
-!/phpBB/styles/subsilver2
 /phpBB/vendor
 /tests/phpbb_unit_tests.sqlite*
 /tests/test_config*.php
