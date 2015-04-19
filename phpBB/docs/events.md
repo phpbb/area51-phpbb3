@@ -833,6 +833,13 @@ overall_header_stylesheets_after
 * Purpose: Add asset calls after stylesheets within the `</head>` tag.
 Note that INCLUDECSS will not work with this event.
 
+posting_editor_bbcode_status_after
+===
+* Locations:
+    + styles/prosilver/template/posting_editor.html
+* Since: 3.1.4-RC1
+* Purpose: Add content after bbcode status
+
 posting_editor_buttons_after
 ===
 * Locations:
@@ -875,6 +882,20 @@ posting_editor_options_prepend
 * Since: 3.1.0-a1
 * Purpose: Add posting options on the posting screen
 
+posting_editor_smilies_after
+===
+* Locations:
+    + styles/prosilver/template/posting_editor.html
+* Since: 3.1.4-RC1
+* Purpose: Add content after smilies
+
+posting_editor_smilies_before
+===
+* Locations:
+    + styles/prosilver/template/posting_editor.html
+* Since: 3.1.4-RC1
+* Purpose: Add content before the smilies
+
 posting_editor_subject_after
 ===
 * Locations:
@@ -902,6 +923,27 @@ posting_pm_header_find_username_before
     + styles/prosilver/template/posting_pm_header.html
 * Since: 3.1.0-RC4
 * Purpose: Add content before the find username link on composing pm
+
+posting_pm_layout_include_pm_header_after
+===
+* Locations:
+    + styles/prosilver/template/posting_pm_layout.html
+* Since: 3.1.4-RC1
+* Purpose: Add content after the include of posting_pm_header.html
+
+posting_pm_layout_include_pm_header_before
+===
+* Locations:
+    + styles/prosilver/template/posting_pm_layout.html
+* Since: 3.1.4-RC1
+* Purpose: Add content before the include of posting_pm_header.html
+
+posting_poll_body_options_after
+===
+* Locations:
+    + styles/prosilver/template/posting_poll_body.html
+* Since: 3.1.4-RC1
+* Purpose: Add content after the poll options on creating a poll
 
 quickreply_editor_panel_after
 ===
