@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "25df57c9c90534dcc86d31175b248719",
+    "hash": "1247a3b86cc5f64a291bc3ac9cf11935",
     "packages": [
         {
             "name": "lusitanian/oauth",
@@ -145,7 +145,7 @@
                     "Psr\\Log\\": ""
                 }
             },
-            "notification-url": "http://packagist.org/downloads/",
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -162,6 +162,33 @@
                 "psr-3"
             ],
             "time": "2012-12-21 11:40:51"
+        },
+        {
+            "name": "qafoolabs/profiler",
+            "version": "v1.3.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/QafooLabs/profiler.git",
+                "reference": "b1a823768e731006987dd95793fd250aa9d04b1f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/QafooLabs/profiler/zipball/b1a823768e731006987dd95793fd250aa9d04b1f",
+                "reference": "b1a823768e731006987dd95793fd250aa9d04b1f",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "QafooLabs\\Profiler": "src/main"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Simple library that wraps Xhprof profile collection and sends to Qafoo Profiler",
+            "time": "2015-02-19 11:46:10"
         },
         {
             "name": "s9e/text-formatter",
@@ -756,12 +783,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/security-core.git",
-                "reference": "abe4db6553a89be8c827b7a86dac144e25726cda"
+                "reference": "0ca0beb028a0c40003852c56e5454d06789b9a20"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/security-core/zipball/abe4db6553a89be8c827b7a86dac144e25726cda",
-                "reference": "abe4db6553a89be8c827b7a86dac144e25726cda",
+                "url": "https://api.github.com/repos/symfony/security-core/zipball/0ca0beb028a0c40003852c56e5454d06789b9a20",
+                "reference": "0ca0beb028a0c40003852c56e5454d06789b9a20",
                 "shasum": ""
             },
             "require": {
@@ -773,6 +800,7 @@
                 "symfony/event-dispatcher": "~2.1|~3.0.0",
                 "symfony/expression-language": "~2.6|~3.0.0",
                 "symfony/http-foundation": "~2.4|~3.0.0",
+                "symfony/phpunit-bridge": "~2.7|~3.0.0",
                 "symfony/translation": "~2.0,>=2.0.5|~3.0.0",
                 "symfony/validator": "~2.5,>=2.5.5|~3.0.0"
             },
@@ -810,7 +838,7 @@
             ],
             "description": "Symfony Security Component - Core Library",
             "homepage": "http://symfony.com",
-            "time": "2015-01-25 04:39:35"
+            "time": "2015-03-30 15:55:07"
         },
         {
             "name": "symfony/security-csrf",
@@ -819,12 +847,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/security-csrf.git",
-                "reference": "3f875078e322bf1fb6a546a607fe9adaab212f6c"
+                "reference": "4b1b875074c6c010b58e2a1e9fb0d50f0d85f482"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/security-csrf/zipball/3f875078e322bf1fb6a546a607fe9adaab212f6c",
-                "reference": "3f875078e322bf1fb6a546a607fe9adaab212f6c",
+                "url": "https://api.github.com/repos/symfony/security-csrf/zipball/4b1b875074c6c010b58e2a1e9fb0d50f0d85f482",
+                "reference": "4b1b875074c6c010b58e2a1e9fb0d50f0d85f482",
                 "shasum": ""
             },
             "require": {
@@ -832,7 +860,8 @@
                 "symfony/security-core": "~2.4|~3.0.0"
             },
             "require-dev": {
-                "symfony/http-foundation": "~2.1|~3.0.0"
+                "symfony/http-foundation": "~2.1|~3.0.0",
+                "symfony/phpunit-bridge": "~2.7|~3.0.0"
             },
             "suggest": {
                 "symfony/http-foundation": "For using the class SessionTokenStorage."
@@ -864,7 +893,7 @@
             ],
             "description": "Symfony Security Component - CSRF Library",
             "homepage": "http://symfony.com",
-            "time": "2015-01-09 06:51:41"
+            "time": "2015-02-18 10:38:04"
         },
         {
             "name": "symfony/twig-bridge",
@@ -873,12 +902,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/TwigBridge.git",
-                "reference": "bd5f5e3cde85eb2dfa074134bc9ac66b30ca6fc7"
+                "reference": "d89abdba17d7e0025417e27f041feed7c5ab6f66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/TwigBridge/zipball/bd5f5e3cde85eb2dfa074134bc9ac66b30ca6fc7",
-                "reference": "bd5f5e3cde85eb2dfa074134bc9ac66b30ca6fc7",
+                "url": "https://api.github.com/repos/symfony/TwigBridge/zipball/d89abdba17d7e0025417e27f041feed7c5ab6f66",
+                "reference": "d89abdba17d7e0025417e27f041feed7c5ab6f66",
                 "shasum": ""
             },
             "require": {
@@ -887,21 +916,24 @@
                 "twig/twig": "~1.18"
             },
             "require-dev": {
+                "symfony/asset": "~2.7|~3.0.0",
                 "symfony/console": "~2.4|~3.0.0",
                 "symfony/expression-language": "~2.4|~3.0.0",
                 "symfony/finder": "~2.3|~3.0.0",
-                "symfony/form": "~2.6|~3.0.0",
+                "symfony/form": "~2.7|~3.0.0",
                 "symfony/http-kernel": "~2.3|~3.0.0",
                 "symfony/intl": "~2.3|~3.0.0",
+                "symfony/phpunit-bridge": "~2.7|~3.0.0",
                 "symfony/routing": "~2.2|~3.0.0",
                 "symfony/security": "~2.6|~3.0.0",
                 "symfony/stopwatch": "~2.2|~3.0.0",
                 "symfony/templating": "~2.1|~3.0.0",
-                "symfony/translation": "~2.2|~3.0.0",
+                "symfony/translation": "~2.7|~3.0.0",
                 "symfony/var-dumper": "~2.6|~3.0.0",
                 "symfony/yaml": "~2.0,>=2.0.5|~3.0.0"
             },
             "suggest": {
+                "symfony/asset": "For using the AssetExtension",
                 "symfony/expression-language": "For using the ExpressionExtension",
                 "symfony/finder": "",
                 "symfony/form": "For using the FormExtension",
@@ -941,7 +973,7 @@
             ],
             "description": "Symfony Twig Bridge",
             "homepage": "http://symfony.com",
-            "time": "2015-02-02 16:43:28"
+            "time": "2015-04-05 18:38:35"
         },
         {
             "name": "symfony/yaml",
@@ -1018,14 +1050,16 @@
                     "Twig_": "lib/"
                 }
             },
-            "notification-url": "http://packagist.org/downloads/",
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "BSD-3-Clause"
             ],
             "authors": [
                 {
                     "name": "Fabien Potencier",
-                    "email": "fabien@symfony.com"
+                    "email": "fabien@symfony.com",
+                    "homepage": "http://fabien.potencier.org",
+                    "role": "Lead Developer"
                 },
                 {
                     "name": "Armin Ronacher",
@@ -1153,12 +1187,12 @@
             "target-dir": "Guzzle/Http",
             "source": {
                 "type": "git",
-                "url": "https://github.com/guzzle/http.git",
+                "url": "https://github.com/Guzzle3/http.git",
                 "reference": "1034125dfd906b73119e535f03153a62fccb1989"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/http/zipball/1034125dfd906b73119e535f03153a62fccb1989",
+                "url": "https://api.github.com/repos/Guzzle3/http/zipball/1034125dfd906b73119e535f03153a62fccb1989",
                 "reference": "1034125dfd906b73119e535f03153a62fccb1989",
                 "shasum": ""
             },
@@ -1202,6 +1236,7 @@
                 "http",
                 "http client"
             ],
+            "abandoned": "guzzle/guzzle",
             "time": "2013-09-06 11:34:26"
         },
         {
@@ -1210,12 +1245,12 @@
             "target-dir": "Guzzle/Parser",
             "source": {
                 "type": "git",
-                "url": "https://github.com/guzzle/parser.git",
+                "url": "https://github.com/Guzzle3/parser.git",
                 "reference": "a25c2ddda1c52fb69a4ee56eb530b13ddd9573c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/parser/zipball/a25c2ddda1c52fb69a4ee56eb530b13ddd9573c2",
+                "url": "https://api.github.com/repos/Guzzle3/parser/zipball/a25c2ddda1c52fb69a4ee56eb530b13ddd9573c2",
                 "reference": "a25c2ddda1c52fb69a4ee56eb530b13ddd9573c2",
                 "shasum": ""
             },
@@ -1246,6 +1281,7 @@
                 "message",
                 "url"
             ],
+            "abandoned": "guzzle/guzzle",
             "time": "2013-07-11 22:46:03"
         },
         {
@@ -1254,12 +1290,12 @@
             "target-dir": "Guzzle/Stream",
             "source": {
                 "type": "git",
-                "url": "https://github.com/guzzle/stream.git",
+                "url": "https://github.com/Guzzle3/stream.git",
                 "reference": "a86111d9ac7db31d65a053c825869409fe8fc83f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/stream/zipball/a86111d9ac7db31d65a053c825869409fe8fc83f",
+                "url": "https://api.github.com/repos/Guzzle3/stream/zipball/a86111d9ac7db31d65a053c825869409fe8fc83f",
                 "reference": "a86111d9ac7db31d65a053c825869409fe8fc83f",
                 "shasum": ""
             },
@@ -1299,6 +1335,7 @@
                 "component",
                 "stream"
             ],
+            "abandoned": "guzzle/guzzle",
             "time": "2013-07-30 22:07:23"
         },
         {
@@ -1432,7 +1469,8 @@
             "authors": [
                 {
                     "name": "Michiel Rook",
-                    "email": "mrook@php.net"
+                    "email": "mrook@php.net",
+                    "role": "Lead"
                 },
                 {
                     "name": "Phing Community",
@@ -1891,12 +1929,12 @@
             "version": "v1.0.2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/fabpot/Pimple.git",
+                "url": "https://github.com/silexphp/Pimple.git",
                 "reference": "ae11e57e8c2bb414b2ff93396dbbfc0eb92feb94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fabpot/Pimple/zipball/ae11e57e8c2bb414b2ff93396dbbfc0eb92feb94",
+                "url": "https://api.github.com/repos/silexphp/Pimple/zipball/ae11e57e8c2bb414b2ff93396dbbfc0eb92feb94",
                 "reference": "ae11e57e8c2bb414b2ff93396dbbfc0eb92feb94",
                 "shasum": ""
             },
@@ -1921,9 +1959,7 @@
             "authors": [
                 {
                     "name": "Fabien Potencier",
-                    "email": "fabien@symfony.com",
-                    "homepage": "http://fabien.potencier.org",
-                    "role": "Lead Developer"
+                    "email": "fabien@symfony.com"
                 }
             ],
             "description": "Pimple is a simple Dependency Injection Container for PHP 5.3",
@@ -2208,7 +2244,8 @@
                 },
                 {
                     "name": "Adam Harvey",
-                    "email": "aharvey@php.net"
+                    "email": "aharvey@php.net",
+                    "role": "Lead"
                 },
                 {
                     "name": "Bernhard Schussek",
@@ -2335,12 +2372,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/BrowserKit.git",
-                "reference": "432c0593d5367b1bb8aa893cb2272172934ad371"
+                "reference": "c135dd2a06216cfcbb00863770c3df075450992e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/BrowserKit/zipball/432c0593d5367b1bb8aa893cb2272172934ad371",
-                "reference": "432c0593d5367b1bb8aa893cb2272172934ad371",
+                "url": "https://api.github.com/repos/symfony/BrowserKit/zipball/c135dd2a06216cfcbb00863770c3df075450992e",
+                "reference": "c135dd2a06216cfcbb00863770c3df075450992e",
                 "shasum": ""
             },
             "require": {
@@ -2349,6 +2386,7 @@
             },
             "require-dev": {
                 "symfony/css-selector": "~2.0,>=2.0.5|~3.0.0",
+                "symfony/phpunit-bridge": "~2.7|~3.0.0",
                 "symfony/process": "~2.0,>=2.0.5|~3.0.0"
             },
             "suggest": {
@@ -2381,7 +2419,7 @@
             ],
             "description": "Symfony BrowserKit Component",
             "homepage": "http://symfony.com",
-            "time": "2015-01-09 06:51:41"
+            "time": "2015-03-30 15:55:07"
         },
         {
             "name": "symfony/css-selector",
@@ -2590,22 +2628,24 @@
         "symfony/console": 20,
         "symfony/dependency-injection": 20,
         "symfony/event-dispatcher": 20,
+        "symfony/filesystem": 20,
         "symfony/http-kernel": 20,
         "symfony/routing": 20,
         "symfony/security-core": 20,
         "symfony/security-csrf": 20,
         "symfony/twig-bridge": 20,
         "symfony/yaml": 20,
+        "qafoolabs/profiler": 0,
         "symfony/browser-kit": 20,
         "symfony/css-selector": 20,
         "symfony/debug": 20,
         "symfony/dom-crawler": 20,
-        "symfony/filesystem": 20,
         "symfony/finder": 20,
         "symfony/http-foundation": 20,
         "symfony/process": 20
     },
     "prefer-stable": false,
+    "prefer-lowest": false,
     "platform": {
         "php": ">=5.3.9"
     },
