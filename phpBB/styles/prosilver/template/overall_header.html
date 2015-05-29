@@ -27,24 +27,38 @@
 	Modified by:
 -->
 
-<link href="{T_THEME_PATH}/print.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet" type="text/css" media="print" title="printonly" />
-<!-- IF S_ALLOW_CDN --><link href="//fonts.googleapis.com/css?family=Open+Sans:600&amp;subset=latin,cyrillic-ext,latin-ext,cyrillic,greek-ext,greek,vietnamese" rel="stylesheet" type="text/css" media="screen, projection" /><!-- ENDIF -->
-<link href="{T_STYLESHEET_LINK}" rel="stylesheet" type="text/css" media="screen, projection" />
-<link href="{T_STYLESHEET_LANG_LINK}" rel="stylesheet" type="text/css" media="screen, projection" />
-<link href="{T_THEME_PATH}/responsive.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet" type="text/css" media="only screen and (max-width: 700px), only screen and (max-device-width: 700px)" />
+<!-- IF S_ALLOW_CDN -->
+<script>
+	WebFontConfig = {
+		google: {
+			families: ['Open Sans:n6']
+		}
+	};
+
+	(function(d) {
+		var wf = d.createElement('script'), s = d.scripts[0];
+		wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js';
+		wf.async = true;
+		s.parentNode.insertBefore(wf, s);
+	})(document);
+</script>
+<!-- ENDIF -->
+<link href="{T_STYLESHEET_LINK}" rel="stylesheet">
+<link href="{T_STYLESHEET_LANG_LINK}" rel="stylesheet">
+<link href="{T_THEME_PATH}/responsive.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet" media="all and (max-width: 700px), all and (max-device-width: 700px)" />
 
 <!-- IF S_CONTENT_DIRECTION eq 'rtl' -->
-	<link href="{T_THEME_PATH}/bidi.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet" type="text/css" media="screen, projection" />
+	<link href="{T_THEME_PATH}/bidi.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet">
 <!-- ENDIF -->
 
 <link href="/header.css" media="all" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="/analytics.js"></script>
 <!-- IF S_PLUPLOAD -->
-	<link href="{T_THEME_PATH}/plupload.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet" type="text/css" media="screen, projection" />
+	<link href="{T_THEME_PATH}/plupload.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet">
 <!-- ENDIF -->
 
 <!--[if lte IE 9]>
-	<link href="{T_THEME_PATH}/tweaks.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet" type="text/css" media="screen, projection" />
+	<link href="{T_THEME_PATH}/tweaks.css?assets_version={T_ASSETS_VERSION}" rel="stylesheet">
 <![endif]-->
 
 <!-- EVENT overall_header_head_append -->
@@ -58,7 +72,7 @@
 
 <!-- EVENT overall_header_body_before -->
 
-<div id="phpbb-header-bar">
+<div id="phpbb-header-bar" role="banner">
 	<ul class="phpbb-menu">
 		<li class="phpbb-logo"><a href="//area51.phpbb.com/"><img src="/images/area51.png" alt="area51 @ phpBB" title="area51.phpbb.com" /></a></li>
 		<li><a href="//area51.phpbb.com">Home</a></li>
@@ -76,7 +90,7 @@
 <h1 style="float:left;margin-right:0px;margin-top:0px;">Development Discussion Board</h1>
 <div style="float:left;margin-left:30px;margin-top:4px;font-size:12px;">phpBB's testing ground of bleeding edge code</div>
                 <!-- IF S_DISPLAY_SEARCH and not S_IN_SEARCH -->
-					<div id="search-box" class="search-box search-header">
+					<div id="search-box" class="search-box search-header" role="search">
 						<form action="{U_SEARCH}" method="get" id="search">
 						<fieldset>
 							<input name="keywords" id="keywords" type="search" maxlength="128" title="{L_SEARCH_KEYWORDS}" class="inputbox search tiny" size="20" value="{SEARCH_WORDS}" placeholder="{L_SEARCH_MINI}" />
@@ -93,7 +107,7 @@
 	<a id="top" class="anchor" accesskey="t"></a>
 	<div id="page-header">
 <!--
-		<div class="headerbar">
+		<div class="headerbar" role="banner">
 			<div class="inner">
 
 			<div id="site-description" style="margin-left:20px;">
@@ -106,7 +120,7 @@
 
 			<!-- EVENT overall_header_searchbox_before -->
 			<!-- IF S_DISPLAY_SEARCH and not S_IN_SEARCH -->
-			<div id="search-box" class="search-box search-header">
+			<div id="search-box" class="search-box search-header" role="search">
 				<form action="{U_SEARCH}" method="get" id="search">
 				<fieldset>
 					<input name="keywords" id="keywords" type="search" maxlength="128" title="{L_SEARCH_KEYWORDS}" class="inputbox search tiny" size="20" value="{SEARCH_WORDS}" placeholder="{L_SEARCH_MINI}" />
@@ -122,13 +136,14 @@
 		</div>
 -->
 
+		<!-- EVENT overall_header_navbar_before -->
 		<!-- INCLUDE navbar_header.html -->
 	</div>
 
 	<!-- EVENT overall_header_page_body_before -->
 
 	<a id="start_here" class="anchor"></a>
-	<div id="page-body">
+	<div id="page-body" role="main">
 		<!-- IF S_BOARD_DISABLED and S_USER_LOGGED_IN and (U_MCP or U_ACP) -->
 		<div id="information" class="rules">
 			<div class="inner">
