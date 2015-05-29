@@ -84,7 +84,9 @@ abstract class phpbb_controller_common_helper_route extends phpbb_test_case
 		);
 
 		$this->config = new \phpbb\config\config(array('enable_mod_rewrite' => '0'));
-		$this->user = new \phpbb\user('\phpbb\datetime');
+		$lang_loader = new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx);
+		$lang = new \phpbb\language\language($lang_loader);
+		$this->user = new \phpbb\user($lang, '\phpbb\datetime');;
 
 		$container = new phpbb_mock_container_builder();
 		$cache_path = $phpbb_root_path . 'cache/twig';
@@ -92,6 +94,7 @@ abstract class phpbb_controller_common_helper_route extends phpbb_test_case
 		$loader = new \phpbb\template\twig\loader($this->filesystem, '');
 		$twig = new \phpbb\template\twig\environment(
 			$this->config,
+			$this->filesystem,
 			$this->phpbb_path_helper,
 			$container,
 			$cache_path,
@@ -104,7 +107,7 @@ abstract class phpbb_controller_common_helper_route extends phpbb_test_case
 				'autoescape'	=> false,
 			)
 		);
-		$this->template = new phpbb\template\twig\twig($this->phpbb_path_helper, $this->config, $this->user, $context, $twig, $cache_path, array(new \phpbb\template\twig\extension($context, $this->user)));
+		$this->template = new phpbb\template\twig\twig($this->phpbb_path_helper, $this->config, $context, $twig, $cache_path, $this->user, array(new \phpbb\template\twig\extension($context, $this->user)));
 		$container->set('template.twig.lexer', new \phpbb\template\twig\lexer($twig));
 
 		$this->extension_manager = new phpbb_mock_extension_manager(
@@ -118,7 +121,7 @@ abstract class phpbb_controller_common_helper_route extends phpbb_test_case
 			)
 		);
 
-		$this->router = new phpbb_mock_router($this->filesystem, $this->extension_manager, dirname(__FILE__) . '/', 'php', PHPBB_ENVIRONMENT);
+		$this->router = new phpbb_mock_router($this->filesystem, dirname(__FILE__) . '/', 'php', PHPBB_ENVIRONMENT, $this->extension_manager);
 		$this->router->find_routing_files($this->extension_manager->all_enabled(false));
 		$this->router->find(dirname(__FILE__) . '/');
 		// Set correct current phpBB root path

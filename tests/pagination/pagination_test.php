@@ -26,10 +26,13 @@ class phpbb_pagination_pagination_test extends phpbb_template_template_test_case
 	{
 		parent::setUp();
 
-		global $phpbb_dispatcher;
+		global $phpbb_dispatcher, $phpbb_root_path, $phpEx;
 
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
-		$this->user = $this->getMock('\phpbb\user', array(), array('\phpbb\datetime'));
+		$this->user = $this->getMock('\phpbb\user', array(), array(
+			new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx)),
+			'\phpbb\datetime'
+		));
 		$this->user->expects($this->any())
 			->method('lang')
 			->will($this->returnCallback(array($this, 'return_callback_implode')));
@@ -38,7 +41,7 @@ class phpbb_pagination_pagination_test extends phpbb_template_template_test_case
 		$manager = new phpbb_mock_extension_manager(dirname(__FILE__) . '/', array());
 
 		$this->config = new \phpbb\config\config(array('enable_mod_rewrite' => '1'));
-		$router = new phpbb_mock_router($filesystem, $manager, dirname(__FILE__) . '/', 'php', PHPBB_ENVIRONMENT);
+		$router = new phpbb_mock_router($filesystem, dirname(__FILE__) . '/', 'php', PHPBB_ENVIRONMENT, $manager);
 		$router->find_routing_files($manager->all_enabled(false));
 		$router->find(dirname(__FILE__) . '/');
 

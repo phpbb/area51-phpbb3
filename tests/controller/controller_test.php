@@ -40,7 +40,7 @@ class phpbb_controller_controller_test extends phpbb_test_case
 
 	public function test_router_find_files()
 	{
-		$router = new \phpbb\routing\router(new \phpbb\filesystem\filesystem(), $this->extension_manager, dirname(__FILE__) . '/', 'php', PHPBB_ENVIRONMENT);
+		$router = new \phpbb\routing\router(new \phpbb\filesystem\filesystem(), dirname(__FILE__) . '/', 'php', PHPBB_ENVIRONMENT, $this->extension_manager);
 		$router->find_routing_files($this->extension_manager->all_enabled(false));
 		$routes = $router->find(__DIR__)->get_routes();
 
@@ -82,7 +82,7 @@ class phpbb_controller_controller_test extends phpbb_test_case
 			include(__DIR__.'/phpbb/controller/foo.php');
 		}
 
-		$resolver = new \phpbb\controller\resolver(new \phpbb\user('\phpbb\datetime'), $container, dirname(__FILE__) . '/');
+		$resolver = new \phpbb\controller\resolver($container, dirname(__FILE__) . '/');
 		$symfony_request = new Request();
 		$symfony_request->attributes->set('_controller', 'foo.controller:handle');
 

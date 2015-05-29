@@ -128,6 +128,9 @@ class bbcode_firstpass extends bbcode
 		// [quote] in second position.
 		// To parse multiline URL we enable dotall option setting only for URL text
 		// but not for link itself, thus [url][/url] is not affected.
+		//
+		// To perform custom validation in extension, use $this->validate_bbcode_by_extension()
+		// method which accepts variable number of parameters
 		$this->bbcodes = array(
 			'code'			=> array('bbcode_id' => 8,	'regexp' => array('#\[code(?:=([a-z]+))?\](.+\[/code\])#uise' => "\$this->bbcode_code('\$1', '\$2')")),
 			'quote'			=> array('bbcode_id' => 0,	'regexp' => array('#\[quote(?:=&quot;(.*?)&quot;)?\](.+)\[/quote\]#uise' => "\$this->bbcode_quote('\$0')")),
@@ -339,22 +342,23 @@ class bbcode_firstpass extends bbcode
 
 		if ($config['max_' . $this->mode . '_img_height'] || $config['max_' . $this->mode . '_img_width'])
 		{
-			$stats = @getimagesize(htmlspecialchars_decode($in));
+			$imagesize = new \fastImageSize\fastImageSize();
+			$size_info = $imagesize->getImageSize(htmlspecialchars_decode($in));
 
-			if ($stats === false)
+			if ($size_info === false)
 			{
 				$error = true;
 				$this->warn_msg[] = $user->lang['UNABLE_GET_IMAGE_SIZE'];
 			}
 			else
 			{
-				if ($config['max_' . $this->mode . '_img_height'] && $config['max_' . $this->mode . '_img_height'] < $stats[1])
+				if ($config['max_' . $this->mode . '_img_height'] && $config['max_' . $this->mode . '_img_height'] < $size_info['height'])
 				{
 					$error = true;
 					$this->warn_msg[] = $user->lang('MAX_IMG_HEIGHT_EXCEEDED', (int) $config['max_' . $this->mode . '_img_height']);
 				}
 
-				if ($config['max_' . $this->mode . '_img_width'] && $config['max_' . $this->mode . '_img_width'] < $stats[0])
+				if ($config['max_' . $this->mode . '_img_width'] && $config['max_' . $this->mode . '_img_width'] < $size_info['width'])
 				{
 					$error = true;
 					$this->warn_msg[] = $user->lang('MAX_IMG_WIDTH_EXCEEDED', (int) $config['max_' . $this->mode . '_img_width']);
@@ -1241,15 +1245,6 @@ class parse_message extends bbcode_firstpass
 		// Parse this message
 		$this->message = $parser->parse(htmlspecialchars_decode($this->message, ENT_QUOTES));
 
-		// Check for out-of-bounds characters that are currently
-		// not supported by utf8_bin in MySQL
-		if (preg_match_all('/[\x{10000}-\x{10FFFF}]/u', $this->message, $matches))
-		{
-			$character_list = implode('<br />', $matches[0]);
-			$this->warn_msg[] = $user->lang('UNSUPPORTED_CHARACTERS_MESSAGE', $character_list);
-			return $update_this_message ? $this->warn_msg : $return_message;
-		}
-
 		// Check for "empty" message. We do not check here for maximum length, because bbcode, smilies, etc. can add to the length.
 		// The maximum length check happened before any parsings.
 		if ($mode === 'post' && utf8_clean_string($this->message) === '')
@@ -1258,10 +1253,25 @@ class parse_message extends bbcode_firstpass
 			return (!$update_this_message) ? $return_message : $this->warn_msg;
 		}
 
+		// Remove quotes that are nested too deep
+		if ($config['max_quote_depth'] > 0)
+		{
+			$this->message = $phpbb_container->get('text_formatter.utils')->remove_bbcode(
+				$this->message,
+				'quote',
+				$config['max_quote_depth']
+			);
+		}
+
 		// Check for errors
 		$errors = $parser->get_errors();
 		if ($errors)
 		{
+			foreach ($errors as $i => $args)
+			{
+				// Translate each error with $user->lang()
+				$errors[$i] = call_user_func_array(array($user, 'lang'), $args);
+			}
 			$this->warn_msg = array_merge($this->warn_msg, $errors);
 
 			return (!$update_this_message) ? $return_message : $this->warn_msg;
@@ -1847,5 +1857,37 @@ class parse_message extends bbcode_firstpass
 	public function set_mimetype_guesser(\phpbb\mimetype\guesser $mimetype_guesser)
 	{
 		$this->mimetype_guesser = $mimetype_guesser;
+	}
+
+	/**
+	* Function to perform custom bbcode validation by extensions
+	* can be used in bbcode_init() to assign regexp replacement
+	* Example: 'regexp' => array('#\[b\](.*?)\[/b\]#uise' => "\$this->validate_bbcode_by_extension('\$1')")
+	*
+	* Accepts variable number of parameters
+	*
+	* @return mixed Validation result
+	*/
+	public function validate_bbcode_by_extension()
+	{
+		global $phpbb_dispatcher;
+
+		$return = false;
+		$params_array = func_get_args();
+
+		/**
+		* Event to validate bbcode with the custom validating methods
+		* provided by extensions
+		*
+		* @event core.validate_bbcode_by_extension
+		* @var array	params_array	Array with the function parameters
+		* @var mixed	return			Validation result to return
+		*
+		* @since 3.1.5-RC1
+		*/
+		$vars = array('params_array', 'return');
+		extract($phpbb_dispatcher->trigger_event('core.validate_bbcode_by_extension', compact($vars)));
+
+		return $return;
 	}
 }

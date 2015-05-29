@@ -138,6 +138,7 @@ $phpbb_container_builder->set_custom_parameters(array(
 $phpbb_container = $phpbb_container_builder->get_container();
 $phpbb_container->register('dbal.conn.driver')->setSynthetic(true);
 $phpbb_container->register('template.twig.environment')->setSynthetic(true);
+$phpbb_container->register('language.loader')->setSynthetic(true);
 $phpbb_container->compile();
 
 $phpbb_class_loader->set_cache($phpbb_container->get('cache.driver'));
@@ -241,7 +242,8 @@ $sub = $request->variable('sub', '');
 // Set PHP error handler to ours
 set_error_handler(defined('PHPBB_MSG_HANDLER') ? PHPBB_MSG_HANDLER : 'msg_handler');
 
-$user = new \phpbb\user('\phpbb\datetime');
+$lang_service = new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx));
+$user = new \phpbb\user($lang_service, '\phpbb\datetime');
 $auth = new \phpbb\auth\auth();
 
 // Add own hook handler, if present. :o
@@ -279,6 +281,7 @@ $cache_path = $phpbb_root_path . 'cache/';
 
 $twig_environment = new \phpbb\template\twig\environment(
 	$config,
+	$phpbb_filesystem,
 	$phpbb_path_helper,
 	$phpbb_container,
 	$cache_path,
@@ -286,14 +289,17 @@ $twig_environment = new \phpbb\template\twig\environment(
 	$phpbb_container->get('template.twig.loader')
 );
 
+$language_loader = new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx);
 $phpbb_container->set('template.twig.environment', $twig_environment);
+$phpbb_container->set('language.loader', $language_loader);
+$twig_context = new \phpbb\template\context();
 $template = new \phpbb\template\twig\twig(
 	$phpbb_path_helper,
 	$config,
-	$user,
-	new \phpbb\template\context(),
+	$twig_context,
 	$twig_environment,
 	$cache_path,
+	$user,
 	array($phpbb_container->get('template.twig.extensions.phpbb'))
 );
 
