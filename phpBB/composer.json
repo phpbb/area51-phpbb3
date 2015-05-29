@@ -42,7 +42,8 @@
 		"symfony/security-csrf": "2.8.*@dev",
 		"symfony/twig-bridge": "2.8.*@dev",
 		"symfony/yaml": "2.8.*@dev",
-		"twig/twig": "1.*"
+		"twig/twig": "1.*",
+		"qafoolabs/profiler": "@stable"
 	},
 	"require-dev": {
 		"fabpot/goutte": "1.0.*",
