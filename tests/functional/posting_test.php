@@ -72,6 +72,20 @@ class phpbb_functional_posting_test extends phpbb_functional_test_case
 		$this->assertContains('&#128512;', $crawler->text());
 	}
 
+	public function test_quote()
+	{
+		$text     = 'Test post </textarea>"\' &&amp;amp;';
+		$expected = '[quote="admin"]' . $text . '[/quote]';
+
+		$this->login();
+		$topic = $this->create_topic(2, 'Test Topic 1', 'Test topic');
+		$post  = $this->create_post(2, $topic['topic_id'], 'Re: Test Topic 1', $text);
+
+		$crawler = self::request('GET', "posting.php?mode=quote&f=2&t={$post['topic_id']}&p={$post['post_id']}&sid={$this->sid}");
+
+		$this->assertContains($expected, $crawler->filter('textarea#message')->text());
+	}
+
 	/**
 	* @testdox max_quote_depth is applied to the text populating the posting form
 	*/
@@ -151,5 +165,19 @@ class phpbb_functional_posting_test extends phpbb_functional_test_case
 		$form->setValues($values);
 		$crawler = self::submit($form);
 		$this->assertEquals(1, $crawler->filter('.successbox')->count());
+	}
+
+	public function test_ticket_8420()
+	{
+		$text = '[b][url=http://example.org] :arrow: here[/url][/b]';
+
+		$this->login();
+		$crawler = self::request('GET', 'posting.php?mode=post&f=2');
+		$form = $crawler->selectButton('Preview')->form(array(
+			'subject' => 'Test subject',
+			'message' => $text
+		));
+		$crawler = self::submit($form);
+		$this->assertEquals($text, $crawler->filter('#message')->text());
 	}
 }

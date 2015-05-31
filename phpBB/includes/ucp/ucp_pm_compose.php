@@ -530,15 +530,9 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 	}
 
 	// Get maximum number of allowed recipients
-	$sql = 'SELECT MAX(g.group_max_recipients) as max_recipients
-		FROM ' . GROUPS_TABLE . ' g, ' . USER_GROUP_TABLE . ' ug
-		WHERE ug.user_id = ' . $user->data['user_id'] . '
-			AND ug.user_pending = 0
-			AND ug.group_id = g.group_id';
-	$result = $db->sql_query($sql);
-	$max_recipients = (int) $db->sql_fetchfield('max_recipients');
-	$db->sql_freeresult($result);
+	$max_recipients = phpbb_get_max_setting_from_group($db, $user->data['user_id'], 'max_recipients');
 
+	// If it is 0, there is no limit set and we use the maximum value within the config.
 	$max_recipients = (!$max_recipients) ? $config['pm_max_recipients'] : $max_recipients;
 
 	// If this is a quote/reply "to all"... we may increase the max_recpients to the number of original recipients
@@ -947,7 +941,11 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 		{
 			$message_link = '';
 		}
-		$message_parser->message = $message_link . '[quote=&quot;' . $quote_username . '&quot;]' . censor_text(trim($message_parser->message)) . "[/quote]\n";
+		$quote_text = $phpbb_container->get('text_formatter.utils')->generate_quote(
+			censor_text(trim($message_parser->message)),
+			array('author' => $quote_username)
+		);
+		$message_parser->message = $message_link . $quote_text . "\n";
 	}
 
 	if (($action == 'reply' || $action == 'quote' || $action == 'quotepost') && !$preview && !$refresh)
@@ -975,7 +973,11 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 		$forward_text[] = sprintf($user->lang['FWD_FROM'], $quote_username_text);
 		$forward_text[] = sprintf($user->lang['FWD_TO'], implode($user->lang['COMMA_SEPARATOR'], $fwd_to_field['to']));
 
-		$message_parser->message = implode("\n", $forward_text) . "\n\n[quote=&quot;{$quote_username}&quot;]\n" . censor_text(trim($message_parser->message)) . "\n[/quote]";
+		$quote_text = $phpbb_container->get('text_formatter.utils')->generate_quote(
+			censor_text(trim($message_parser->message)),
+			array('author' => $quote_username)
+		);
+		$message_parser->message = implode("\n", $forward_text) . "\n\n" . $quote_text;
 		$message_subject = ((!preg_match('/^Fwd:/', $message_subject)) ? 'Fwd: ' : '') . censor_text($message_subject);
 	}
 
@@ -1157,7 +1159,7 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 
 		'SUBJECT'				=> (isset($message_subject)) ? $message_subject : '',
 		'MESSAGE'				=> $message_text,
-		'BBCODE_STATUS'			=> $user->lang(($bbcode_status ? 'BBCODE_IS_ON' : 'BBCODE_IS_OFF'), '<a href="' . $controller_helper->route('phpbb_help_controller', array('mode' => 'bbcode')) . '">', '</a>'),
+		'BBCODE_STATUS'			=> $user->lang(($bbcode_status ? 'BBCODE_IS_ON' : 'BBCODE_IS_OFF'), '<a href="' . $controller_helper->route('phpbb_help_bbcode_controller') . '">', '</a>'),
 		'IMG_STATUS'			=> ($img_status) ? $user->lang['IMAGES_ARE_ON'] : $user->lang['IMAGES_ARE_OFF'],
 		'FLASH_STATUS'			=> ($flash_status) ? $user->lang['FLASH_IS_ON'] : $user->lang['FLASH_IS_OFF'],
 		'SMILIES_STATUS'		=> ($smilies_status) ? $user->lang['SMILIES_ARE_ON'] : $user->lang['SMILIES_ARE_OFF'],
