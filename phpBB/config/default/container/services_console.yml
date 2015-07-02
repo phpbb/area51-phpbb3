@@ -141,6 +141,22 @@ services:
         tags:
             - { name: console.command }
 
+    console.command.reparser.list:
+        class: phpbb\console\command\reparser\list_all
+        arguments:
+            - @user
+            - @text_reparser_collection
+        tags:
+            - { name: console.command }
+
+    console.command.reparser.reparse:
+        class: phpbb\console\command\reparser\reparse
+        arguments:
+            - @user
+            - @text_reparser_collection
+        tags:
+            - { name: console.command }
+
     console.command.attachments.check:
         class: phpbb\console\command\attachments\check
         arguments:
@@ -160,3 +176,4 @@ services:
             - @dbal.conn
         tags:
             - { name: console.command }
+
