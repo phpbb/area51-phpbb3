@@ -247,12 +247,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/s9e/TextFormatter.git",
-                "reference": "326a5a0bbaee59a3d5542fc8e38fe41971931cce"
+                "reference": "beee0e5693f7ca8ed16a94294acf53b6e6207e7c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/s9e/TextFormatter/zipball/89d8df5b3db6cdbaed8f64fb9de1593d7bf9c728",
-                "reference": "326a5a0bbaee59a3d5542fc8e38fe41971931cce",
+                "url": "https://api.github.com/repos/s9e/TextFormatter/zipball/beee0e5693f7ca8ed16a94294acf53b6e6207e7c",
+                "reference": "beee0e5693f7ca8ed16a94294acf53b6e6207e7c",
                 "shasum": ""
             },
             "require": {
@@ -280,6 +280,7 @@
                 "MIT"
             ],
             "description": "Multi-purpose text formatting and markup library. Plugins offer support for BBCodes, Markdown, emoticons, HTML, embedding media (YouTube, etc...), enhanced typography and more.",
+            "homepage": "https://github.com/s9e/TextFormatter/",
             "keywords": [
                 "bbcode",
                 "bbcodes",
@@ -297,7 +298,7 @@
                 "parser",
                 "shortcodes"
             ],
-            "time": "2015-07-05 23:13:46"
+            "time": "2015-07-12 16:53:32"
         },
         {
             "name": "symfony/config",
