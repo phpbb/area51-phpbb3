@@ -154,6 +154,7 @@ services:
         arguments:
             - @user
             - @text_reparser_collection
+            - @config_text
         tags:
             - { name: console.command }
 

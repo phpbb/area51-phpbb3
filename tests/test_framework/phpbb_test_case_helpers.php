@@ -426,23 +426,28 @@ class phpbb_test_case_helpers
 		$cache_key_parser = $prefix . '_parser';
 		$cache_key_renderer = $prefix . '_renderer';
 		$container->set('cache.driver', $cache);
-		$container->setParameter('cache.dir', $cache_dir);
+
+		if (!$container->isFrozen())
+		{
+			$container->setParameter('cache.dir', $cache_dir);
+		}
 
 		// Create a path_helper
-		if (!$container->has('path_helper'))
+		if (!$container->has('path_helper') || $container->getDefinition('path_helper')->isSynthetic())
 		{
-			$container->set(
-				'path_helper',
-				new \phpbb\path_helper(
-					new \phpbb\symfony_request(
-						new phpbb_mock_request()
-					),
-					new \phpbb\filesystem(),
-					$this->test_case->getMock('\phpbb\request\request'),
-					$phpbb_root_path,
-					$phpEx
-				)
-			);
+			$path_helper = $this->test_case->getMockBuilder('phpbb\\path_helper')
+				->disableOriginalConstructor()
+				->setMethods(array('get_web_root_path'))
+				->getMock();
+			$path_helper->expects($this->test_case->any())
+				->method('get_web_root_path')
+				->will($this->test_case->returnValue('phpBB/'));
+
+			$container->set('path_helper', $path_helper);
+		}
+		else
+		{
+			$path_helper = $container->get('path_helper');
 		}
 
 		// Create an event dispatcher
@@ -534,7 +539,7 @@ class phpbb_test_case_helpers
 
 		// Calls configured in services.yml
 		$renderer->configure_quote_helper($quote_helper);
-		$renderer->configure_smilies_path($config, $container->get('path_helper'));
+		$renderer->configure_smilies_path($config, $path_helper);
 		$renderer->configure_user($user, $config, $auth);
 
 		$container->set('text_formatter.renderer', $renderer);
