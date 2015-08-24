@@ -22,6 +22,12 @@ acp_email_options_after
 * Since: 3.1.2-RC1
 * Purpose: Add settings to mass email form
 
+acp_forums_custom_settings
+===
+* Location: adm/style/acp_forums.html
+* Since: 3.1.6-RC1
+* Purpose: Add its own box (fieldset) for extension settings
+
 acp_forums_main_settings_append
 ===
 * Location: adm/style/acp_forums.html
@@ -284,6 +290,34 @@ acp_users_prefs_view_prepend
 * Since: 3.1.0-b3
 * Purpose: Add user options fieldset to the top of ACP users view prefs settings
 
+attachment_file_after
+===
+* Locations:
+    + styles/prosilver/template/attachment.html
+* Since: 3.1.6-RC1
+* Purpose: Add content after the attachment.
+
+attachment_file_append
+===
+* Locations:
+    + styles/prosilver/template/attachment.html
+* Since: 3.1.6-RC1
+* Purpose: Add custom attachment types displaying to the bottom of attachment block.
+
+attachment_file_before
+===
+* Locations:
+    + styles/prosilver/template/attachment.html
+* Since: 3.1.6-RC1
+* Purpose: Add content before the attachment.
+
+attachment_file_prepend
+===
+* Locations:
+    + styles/prosilver/template/attachment.html
+* Since: 3.1.6-RC1
+* Purpose: Add custom attachment types displaying to the top of attachment block.
+
 forumlist_body_category_header_after
 ===
 * Locations:
@@ -473,6 +507,20 @@ mcp_ban_unban_before
 * Since: 3.1.0-RC3
 * Purpose: Add additional fields to the unban form in MCP
 
+mcp_forum_topic_title_before
+===
+* Locations:
+    + styles/prosilver/template/mcp_forum.html
+* Since: 3.1.6-RC1
+* Purpose: Add some information before the topic title
+
+mcp_forum_topic_title_after
+===
+* Locations:
+    + styles/prosilver/template/mcp_forum.html
+* Since: 3.1.6-RC1
+* Purpose: Add some information after the topic title
+
 mcp_front_latest_logs_after
 ===
 * Locations:
@@ -514,6 +562,34 @@ mcp_post_additional_options
     + styles/prosilver/template/mcp_post.html
 * Since: 3.1.5-RC1
 * Purpose: Add content within the list of post moderation actions
+
+mcp_topic_options_after
+===
+* Locations:
+    + styles/prosilver/template/mcp_topic.html
+* Since: 3.1.6-RC1
+* Purpose: Add some options (field, checkbox, ...) after the subject field when split a subject
+
+mcp_topic_options_before
+===
+* Locations:
+    + styles/prosilver/template/mcp_topic.html
+* Since: 3.1.6-RC1
+* Purpose: Add some options (field, checkbox, ...) before the subject field when split a subject
+
+mcp_topic_topic_title_after
+===
+* Locations:
+    + styles/prosilver/template/mcp_topic.html
+* Since: 3.1.6-RC1
+* Purpose: Add some information after the topic title
+
+mcp_topic_topic_title_before
+===
+* Locations:
+    + styles/prosilver/template/mcp_topic.html
+* Since: 3.1.6-RC1
+* Purpose: Add some information before the topic title
 
 mcp_warn_post_add_warning_field_after
 ===
@@ -841,6 +917,13 @@ overall_header_content_before
 * Since: 3.1.0-a3
 * Purpose: Add content on all pages before the main content, after the header
 
+overall_header_feeds
+===
+* Locations:
+    + styles/prosilver/template/overall_header.html
+* Since: 3.1.6-RC1
+* Purpose: Add custom feeds
+
 overall_header_head_append
 ===
 * Locations:
@@ -989,6 +1072,13 @@ posting_editor_subject_before
 * Since: 3.1.0-a2
 * Purpose: Add field (e.g. textbox) to the posting screen before the subject
 
+posting_editor_submit_buttons
+===
+* Locations:
+    + styles/prosilver/template/posting_editor.html
+* Since: 3.1.6-RC1
+* Purpose: Add custom buttons in the posting editor
+
 posting_layout_include_panel_body
 ===
 * Locations:
@@ -1030,6 +1120,13 @@ posting_poll_body_options_after
     + styles/prosilver/template/posting_poll_body.html
 * Since: 3.1.4-RC1
 * Purpose: Add content after the poll options on creating a poll
+
+posting_topic_title_before
+===
+* Locations:
+    + styles/prosilver/template/posting_layout.html
+* Since: 3.1.6-RC1
+* Purpose: Allows to add some information on the left of the topic title in the posting form
 
 quickreply_editor_panel_after
 ===
@@ -1163,7 +1260,9 @@ topiclist_row_prepend
 * Locations:
     + styles/prosilver/template/search_results.html
     + styles/prosilver/template/viewforum_body.html
+    + styles/prosilver/template/mcp_forum.html
 * Since: 3.1.0-a1
+* Changed: 3.1.6-RC1 Added event to mcp_forum.html
 * Purpose: Add content into topic rows (inside the elements containing topic titles)
 
 topiclist_row_append
@@ -1171,7 +1270,9 @@ topiclist_row_append
 * Locations:
     + styles/prosilver/template/search_results.html
     + styles/prosilver/template/viewforum_body.html
+    + styles/prosilver/template/mcp_forum.html
 * Since: 3.1.0-a1
+* Changed: 3.1.6-RC1 Added event to mcp_forum.html
 * Purpose: Add content into topic rows (inside the elements containing topic titles)
 
 ucp_agreement_terms_after
@@ -1201,6 +1302,52 @@ ucp_main_front_user_activity_before
     + styles/prosilver/template/ucp_main_front.html
 * Since: 3.1.6-RC1
 * Purpose: Add content right before the user activity info viewing UCP front page
+
+ucp_pm_history_post_buttons_after
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_history.html
+* Since: 3.1.6-RC1
+* Purpose: Add post button to private messages in history review (next to quote etc), at
+the end of the list.
+
+ucp_pm_history_post_buttons_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_history.html
+* Since: 3.1.6-RC1
+* Purpose: Add post button to private messages in history review (next to quote etc), at
+the start of the list.
+
+ucp_pm_history_post_buttons_list_after
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_history.html
+* Since: 3.1.6-RC1
+* Purpose: Add post button custom list to private messages in history review (next to quote etc),
+after the original list.
+
+ucp_pm_history_post_buttons_list_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_history.html
+* Since: 3.1.6-RC1
+* Purpose: Add post button custom list to private messages in history review (next to quote etc),
+before the original list.
+
+ucp_pm_history_review_after
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_history.html
+* Since: 3.1.6-RC1
+* Purpose: Add content after the private messages history review.
+
+ucp_pm_history_review_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_history.html
+* Since: 3.1.6-RC1
+* Purpose: Add content before the private messages history review.
 
 ucp_pm_viewmessage_avatar_after
 ===
@@ -1263,6 +1410,22 @@ ucp_pm_viewmessage_post_buttons_before
 * Since: 3.1.0-RC3
 * Purpose: Add post button to private messages (next to edit, quote etc), at
 the start of the list.
+
+ucp_pm_viewmessage_post_buttons_list_after
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_viewmessage.html
+* Since: 3.1.6-RC1
+* Purpose: Add post button custom list to private messages (next to edit, quote etc),
+after the original list.
+
+ucp_pm_viewmessage_post_buttons_list_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_viewmessage.html
+* Since: 3.1.6-RC1
+* Purpose: Add post button custom list to private messages (next to edit, quote etc),
+before the original list.
 
 ucp_pm_viewmessage_print_head_append
 ===
@@ -1480,6 +1643,20 @@ viewtopic_buttons_top_after
 * Since: 3.1.0-RC5
 * Purpose: Add buttons after Post Reply button on the top of the posts's list
 
+viewtopic_dropdown_bottom_custom
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+* Since: 3.1.6-RC1
+* Purpose: Create a custom dropdown menu
+
+viewtopic_dropdown_top_custom
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+* Since: 3.1.6-RC1
+* Purpose: Create a custom dropdown menu
+
 viewforum_forum_name_append
 ===
 * Locations:
@@ -1559,6 +1736,20 @@ viewtopic_body_footer_before
 * Since: 3.1.0-a1
 * Purpose: Add content to the bottom of the View topic screen below the posts
 and quick reply, directly before the jumpbox in Prosilver.
+
+viewtopic_body_poll_after
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+* Since: 3.1.6-RC1
+* Purpose: Add content after the poll panel.
+
+viewtopic_body_poll_before
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+* Since: 3.1.6-RC1
+* Purpose: Add content before the poll panel.
 
 viewtopic_body_poll_option_after
 ===
