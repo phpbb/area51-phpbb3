@@ -1121,6 +1121,13 @@ posting_poll_body_options_after
 * Since: 3.1.4-RC1
 * Purpose: Add content after the poll options on creating a poll
 
+posting_preview_poll_after
+===
+* Locations:
+    + styles/prosilver/template/posting_preview.html
+* Since: 3.1.7-RC1
+* Purpose: Add content after the poll preview block
+
 posting_topic_title_before
 ===
 * Locations:
@@ -1914,6 +1921,13 @@ viewtopic_body_topic_actions_before
     + styles/prosilver/template/viewtopic_body.html
 * Since: 3.1.0-a4
 * Purpose: Add data before the topic actions buttons (after the posts sorting options)
+
+viewtopic_topic_title_after
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+* Since: 3.1.7-RC1
+* Purpose: Add content directly after the topic title link on the View topic screen (outside of the h2 HTML tag)
 
 viewtopic_topic_title_append
 ===
