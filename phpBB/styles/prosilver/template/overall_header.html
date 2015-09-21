@@ -92,16 +92,20 @@
 <h1 style="float:left;margin-right:0px;margin-top:0px;">Development Discussion Board</h1>
 <div style="float:left;margin-left:30px;margin-top:4px;font-size:12px;">phpBB's testing ground of bleeding edge code</div>
                 <!-- IF S_DISPLAY_SEARCH and not S_IN_SEARCH -->
-					<div id="search-box" class="search-box search-header" role="search">
-						<form action="{U_SEARCH}" method="get" id="search">
-						<fieldset>
-							<input name="keywords" id="keywords" type="search" maxlength="128" title="{L_SEARCH_KEYWORDS}" class="inputbox search tiny" size="20" value="{SEARCH_WORDS}" placeholder="{L_SEARCH_MINI}" />
-							<button class="button icon-button search-icon" type="submit" title="{L_SEARCH}">{L_SEARCH}</button>
-							<a href="{U_SEARCH}" class="button icon-button search-adv-icon" title="{L_SEARCH_ADV}">{L_SEARCH_ADV}</a>
-							{S_SEARCH_HIDDEN_FIELDS}
-						</fieldset>
-						</form>
-					</div>
+			        <div id="search-box" class="search-box search-header" role="search">
+				        <form action="{U_SEARCH}" method="get" id="search">
+				        <fieldset>
+					        <input name="keywords" id="keywords" type="search" maxlength="128" title="{L_SEARCH_KEYWORDS}" class="inputbox search tiny" size="20" value="{SEARCH_WORDS}" placeholder="{L_SEARCH_MINI}" />
+					        <button class="button" type="submit" title="{L_SEARCH}">
+						        <i class="icon fa-search fa-fw"></i><span>{L_SEARCH}</span>
+					        </button>
+					        <a href="{U_SEARCH}" class="button" title="{L_SEARCH_ADV}">
+						        <i class="icon fa-cog fa-fw"></i><span>{L_SEARCH_ADV}</span>
+					        </a>
+					        {S_SEARCH_HIDDEN_FIELDS}
+				        </fieldset>
+				        </form>
+			        </div>
                 <!-- ENDIF -->
 
 </div>
