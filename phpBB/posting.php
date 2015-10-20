@@ -572,7 +572,6 @@ $plupload = $phpbb_container->get('plupload');
 /* @var $mimetype_guesser \phpbb\mimetype\guesser */
 $mimetype_guesser = $phpbb_container->get('mimetype.guesser');
 $message_parser->set_plupload($plupload);
-$message_parser->set_mimetype_guesser($mimetype_guesser);
 
 if (isset($post_data['post_text']))
 {
@@ -1032,7 +1031,8 @@ if ($submit || $preview || $refresh)
 		$message_parser->bbcode_bitfield = $post_data['bbcode_bitfield'];
 	}
 
-	if ($mode != 'edit' && !$preview && !$refresh && $config['flood_interval'] && !$auth->acl_get('f_ignoreflood', $forum_id))
+	$ignore_flood = $auth->acl_get('u_ignoreflood') ? true : $auth->acl_get('f_ignoreflood', $forum_id);
+	if ($mode != 'edit' && !$preview && !$refresh && $config['flood_interval'] && !$ignore_flood)
 	{
 		// Flood check
 		$last_post_time = 0;
@@ -1257,7 +1257,6 @@ if ($submit || $preview || $refresh)
 	* @var	array	poll		Array with poll data from post (must be used instead of the post_data equivalent)
 	* @var	string	mode		What action to take if the form is submitted
 	*				post|reply|quote|edit|delete|bump|smilies|popup
-	* @var	string	page_title	Title of the mode page
 	* @var	int	post_id		ID of the post
 	* @var	int	topic_id	ID of the topic
 	* @var	int	forum_id	ID of the forum
@@ -1266,12 +1265,12 @@ if ($submit || $preview || $refresh)
 	*				NOTE: Should be actual language strings, NOT language keys.
 	* @since 3.1.0-RC5
 	* @change 3.1.5-RC1 Added poll array to the event
+	* @change 3.2.0-a1 Removed undefined page_title
 	*/
 	$vars = array(
 		'post_data',
 		'poll',
 		'mode',
-		'page_title',
 		'post_id',
 		'topic_id',
 		'forum_id',
@@ -1384,7 +1383,6 @@ if ($submit || $preview || $refresh)
 			* @var	array	data		Array with post data going to be stored in the database
 			* @var	string	mode		What action to take if the form is submitted
 			*				post|reply|quote|edit|delete
-			* @var	string	page_title	Title of the mode page
 			* @var	int	post_id		ID of the post
 			* @var	int	topic_id	ID of the topic
 			* @var	int	forum_id	ID of the forum
@@ -1394,13 +1392,13 @@ if ($submit || $preview || $refresh)
 			*				NOTE: Should be actual language strings, NOT language keys.
 			* @since 3.1.0-RC5
 			* @changed 3.1.6-RC1 remove submit and error from event  Submit and Error are checked previously prior to running event
+			* @change 3.2.0-a1 Removed undefined page_title
 			*/
 			$vars = array(
 				'post_data',
 				'poll',
 				'data',
 				'mode',
-				'page_title',
 				'post_id',
 				'topic_id',
 				'forum_id',
@@ -1422,7 +1420,6 @@ if ($submit || $preview || $refresh)
 			* @var	array	data		Array with post data going to be stored in the database
 			* @var	string	mode		What action to take if the form is submitted
 			*				post|reply|quote|edit|delete
-			* @var	string	page_title	Title of the mode page
 			* @var	int	post_id		ID of the post
 			* @var	int	topic_id	ID of the topic
 			* @var	int	forum_id	ID of the forum
@@ -1433,13 +1430,13 @@ if ($submit || $preview || $refresh)
 			*				NOTE: Should be actual language strings, NOT language keys.
 			* @since 3.1.0-RC5
 			* @changed 3.1.6-RC1 remove submit and error from event  Submit and Error are checked previously prior to running event
+			* @change 3.2.0-a1 Removed undefined page_title
 			*/
 			$vars = array(
 				'post_data',
 				'poll',
 				'data',
 				'mode',
-				'page_title',
 				'post_id',
 				'topic_id',
 				'forum_id',

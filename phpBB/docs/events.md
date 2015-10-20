@@ -190,6 +190,13 @@ acp_ranks_list_header_before
 * Purpose: Add content after the last header-column (but before the action column)
 in the ranks list in the ACP
 
+acp_styles_list_before
+===
+* Locations:
+    + adm/style/acp_styles.html
+* Since: 3.1.7-RC1
+* Purpose: Add content before list of styles
+
 acp_users_profile_before
 ===
 * Locations:
@@ -1169,6 +1176,13 @@ quickreply_editor_message_before
     + styles/prosilver/template/quickreply_editor.html
 * Since: 3.1.0-a4
 * Purpose: Add content before the quick reply textbox
+
+quickreply_editor_subject_before
+===
+* Locations:
+    + styles/prosilver/template/quickreply_editor.html
+* Since: 3.1.7-RC1
+* Purpose: Add content before the quick reply subject textbox
 
 search_body_form_before
 ===

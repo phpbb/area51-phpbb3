@@ -154,7 +154,7 @@ switch ($mode)
 		$db->sql_freeresult($result);
 
 		$sql_ary = array(
-			'SELECT'	=> 'u.user_id, u.group_id as default_group, u.username, u.username_clean, u.user_colour, u.user_rank, u.user_posts, u.user_allow_pm, g.group_id',
+			'SELECT'	=> 'u.user_id, u.group_id as default_group, u.username, u.username_clean, u.user_colour, u.user_type, u.user_rank, u.user_posts, u.user_allow_pm, g.group_id',
 
 			'FROM'		=> array(
 				USER_GROUP_TABLE => 'ug',
@@ -316,6 +316,8 @@ switch ($mode)
 
 							'RANK_IMG'		=> $user_rank_data['img'],
 							'RANK_IMG_SRC'	=> $user_rank_data['img_src'],
+
+							'S_INACTIVE'	=> $row['user_type'] == USER_INACTIVE,
 
 							'U_PM'			=> ($config['allow_privmsg'] && $auth->acl_get('u_sendpm') && ($row['user_allow_pm'] || $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_'))) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;u=' . $row['user_id']) : '',
 
@@ -1390,13 +1392,19 @@ switch ($mode)
 			);
 		}
 
+		$user_types = array(USER_NORMAL, USER_FOUNDER);
+		if ($auth->acl_get('a_user'))
+		{
+			$user_types[] = USER_INACTIVE;
+		}
+
 		$start = $pagination->validate_start($start, $config['topics_per_page'], $config['num_users']);
 
 		// Get us some users :D
 		$sql = "SELECT u.user_id
 			FROM " . USERS_TABLE . " u
 				$sql_from
-			WHERE u.user_type IN (" . USER_NORMAL . ', ' . USER_FOUNDER . ")
+			WHERE " . $db->sql_in_set('u.user_type', $user_types) . "
 				$sql_where
 			ORDER BY $order_by";
 		$result = $db->sql_query_limit($sql, $config['topics_per_page'], $start);
@@ -1494,6 +1502,20 @@ switch ($mode)
 				usort($user_list,  'phpbb_sort_last_active');
 			}
 
+			// do we need to display contact fields as such
+			$use_contact_fields = false;
+
+			/**
+			 * Modify list of users before member row is created
+			 *
+			 * @event core.memberlist_memberrow_before
+			 * @var array	user_list			Array containing list of users
+			 * @var bool	use_contact_fields	Should we display contact fields as such?
+			 * @since 3.1.7-RC1
+			 */
+			$vars = array('user_list', 'use_contact_fields');
+			extract($phpbb_dispatcher->trigger_event('core.memberlist_memberrow_before', compact($vars)));
+
 			for ($i = 0, $end = sizeof($user_list); $i < $end; ++$i)
 			{
 				$user_id = $user_list[$i];
@@ -1504,7 +1526,7 @@ switch ($mode)
 				$cp_row = array();
 				if ($config['load_cpf_memberlist'])
 				{
-					$cp_row = (isset($profile_fields_cache[$user_id])) ? $cp->generate_profile_fields_template_data($profile_fields_cache[$user_id], false) : array();
+					$cp_row = (isset($profile_fields_cache[$user_id])) ? $cp->generate_profile_fields_template_data($profile_fields_cache[$user_id], $use_contact_fields) : array();
 				}
 
 				$memberrow = array_merge(phpbb_show_profile($row, false, false, false), array(
@@ -1512,6 +1534,7 @@ switch ($mode)
 
 					'S_CUSTOM_PROFILE'	=> (isset($cp_row['row']) && sizeof($cp_row['row'])) ? true : false,
 					'S_GROUP_LEADER'	=> $is_leader,
+					'S_INACTIVE'		=> $row['user_type'] == USER_INACTIVE,
 
 					'U_VIEW_PROFILE'	=> get_username_string('profile', $user_id, $row['username']),
 				));
