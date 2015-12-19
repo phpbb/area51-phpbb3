@@ -3624,7 +3624,7 @@ function obtain_users_online_string($online_users, $item_id = 0, $item = 'forum'
 				USERS_TABLE	=> 'u',
 			),
 			'WHERE'		=> $db->sql_in_set('u.user_id', $online_users['online_users']),
-			'ORDER BY'	=> 'u.username_clean ASC',
+			'ORDER_BY'	=> 'u.username_clean ASC',
 		);
 
 		/**
@@ -4582,6 +4582,8 @@ function page_footer($run_cron = true, $display_template = true, $exit_handler =
 	{
 		return;
 	}
+
+	$user->update_session_infos();
 
 	phpbb_check_and_display_sql_report($request, $auth, $db);
 

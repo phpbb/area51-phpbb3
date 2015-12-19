@@ -28,7 +28,7 @@ if (!defined('IN_PHPBB'))
 */
 
 // phpBB Version
-define('PHPBB_VERSION', '3.2.0-a1-dev');
+@define('PHPBB_VERSION', '3.2.0-a3-dev');
 
 // QA-related
 // define('PHPBB_QA', 1);
@@ -221,6 +221,9 @@ define('CAPTCHA_MAX_CHARS', 7);
 // Additional constants
 define('VOTE_CONVERTED', 127);
 
+// BC global FTW
+global $table_prefix;
+
 // Table names
 define('ACL_GROUPS_TABLE',			$table_prefix . 'acl_groups');
 define('ACL_OPTIONS_TABLE',			$table_prefix . 'acl_options');
@@ -232,7 +235,7 @@ define('BANLIST_TABLE',				$table_prefix . 'banlist');
 define('BBCODES_TABLE',				$table_prefix . 'bbcodes');
 define('BOOKMARKS_TABLE',			$table_prefix . 'bookmarks');
 define('BOTS_TABLE',				$table_prefix . 'bots');
-define('CONFIG_TABLE',				$table_prefix . 'config');
+@define('CONFIG_TABLE',				$table_prefix . 'config');
 define('CONFIG_TEXT_TABLE',			$table_prefix . 'config_text');
 define('CONFIRM_TABLE',				$table_prefix . 'confirm');
 define('DISALLOW_TABLE',			$table_prefix . 'disallow');

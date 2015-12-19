@@ -159,7 +159,7 @@
 					<div class="list-inner">
 						<!-- EVENT topiclist_row_prepend -->
 						<!-- IF topicrow.S_UNREAD_TOPIC and not S_IS_BOT -->
-							<a href="{topicrow.U_NEWEST_POST}">
+							<a class="unread" href="{topicrow.U_NEWEST_POST}">
 								<i class="icon fa-file fa-fw icon-red icon-md" aria-hidden="true"></i><span class="sr-only">{NEW_POST}</span>
 							</a> 
 						<!-- ENDIF -->
@@ -189,6 +189,13 @@
 						<!-- IF topicrow.REPLIES --><span class="responsive-show left-box" style="display: none;">{L_REPLIES}{L_COLON} <strong>{topicrow.REPLIES}</strong></span><!-- ENDIF -->
 						<!-- ENDIF -->
 
+						<div class="responsive-hide">
+							<!-- IF topicrow.S_HAS_POLL --><i class="icon fa-bar-chart fa-fw" aria-hidden="true"></i><!-- ENDIF -->
+							<!-- IF topicrow.ATTACH_ICON_IMG --><i class="icon fa-paperclip fa-fw" aria-hidden="true"></i><!-- ENDIF -->
+							{L_POST_BY_AUTHOR} {topicrow.TOPIC_AUTHOR_FULL} &raquo; {topicrow.FIRST_POST_TIME}
+							<!-- IF topicrow.S_POST_GLOBAL and FORUM_ID != topicrow.FORUM_ID --> &raquo; {L_IN} <a href="{topicrow.U_VIEW_FORUM}">{topicrow.FORUM_NAME}</a><!-- ENDIF -->
+						</div>
+
 						<!-- IF .topicrow.pagination -->
 						<div class="pagination">
 							<span><i class="icon fa-clone fa-fw" aria-hidden="true"></i></span>
@@ -204,13 +211,6 @@
 							</ul>
 						</div>
 						<!-- ENDIF -->
-
-						<div class="responsive-hide">
-							<!-- IF topicrow.S_HAS_POLL --><i class="icon fa-bar-chart fa-fw" aria-hidden="true"></i><!-- ENDIF -->
-							<!-- IF topicrow.ATTACH_ICON_IMG --><i class="icon fa-paperclip fa-fw" aria-hidden="true"></i><!-- ENDIF -->
-							{L_POST_BY_AUTHOR} {topicrow.TOPIC_AUTHOR_FULL} &raquo; {topicrow.FIRST_POST_TIME}
-							<!-- IF topicrow.S_POST_GLOBAL and FORUM_ID != topicrow.FORUM_ID --> &raquo; {L_IN} <a href="{topicrow.U_VIEW_FORUM}">{topicrow.FORUM_NAME}</a><!-- ENDIF -->
-						</div>
 
 						<!-- EVENT topiclist_row_append -->
 					</div>
@@ -248,20 +248,6 @@
 	<!-- ENDIF -->
 <!-- END topicrow -->
 
-<!-- IF S_SELECT_SORT_DAYS and not S_DISPLAY_ACTIVE -->
-	<form method="post" action="{S_FORUM_ACTION}">
-		<fieldset class="display-options">
-	<!-- IF not S_IS_BOT -->
-			<label>{L_DISPLAY_TOPICS}{L_COLON} {S_SELECT_SORT_DAYS}</label>
-			<label>{L_SORT_BY} {S_SELECT_SORT_KEY}</label>
-			<label>{S_SELECT_SORT_DIR}</label>
-			<input type="submit" name="sort" value="{L_GO}" class="button2" />
-	<!-- ENDIF -->
-		</fieldset>
-	</form>
-	<hr />
-<!-- ENDIF -->
-
 <!-- IF .topicrow and not S_DISPLAY_ACTIVE -->
 	<div class="action-bar bar-bottom">
 		<!-- IF not S_IS_BOT and S_DISPLAY_POST_INFO -->
@@ -276,6 +262,12 @@
 			</a>
 
 			<!-- EVENT viewforum_buttons_bottom_after -->
+		<!-- ENDIF -->
+
+		<!-- IF S_SELECT_SORT_DAYS and not S_IS_BOT -->
+			<form method="post" action="{S_FORUM_ACTION}">
+			<!-- INCLUDE display_options.html -->
+			</form>
 		<!-- ENDIF -->
 
 		<div class="pagination">

@@ -197,13 +197,14 @@ class helper
 			$this->language_cookie = $lang;
 		}
 
-		$lang = (!empty($lang) && strpos($lang, '/')) ? $lang : null;
+		$lang = (!empty($lang) && strpos($lang, '/') === false) ? $lang : null;
 
 		$this->render_language_select($lang);
 
 		if ($lang !== null)
 		{
 			$this->language->set_user_language($lang, true);
+			$this->installer_config->set('user_language', $lang);
 		}
 	}
 

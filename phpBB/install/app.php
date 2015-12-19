@@ -20,8 +20,8 @@ define('PHPBB_ENVIRONMENT', 'production');
 $phpbb_root_path = '../';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
 
-$startup_new_path = $phpbb_root_path . 'install/update/update/new/install_new/startup.' . $phpEx;
-$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'install_new/startup.' . $phpEx;
+$startup_new_path = $phpbb_root_path . 'install/update/update/new/install/startup.' . $phpEx;
+$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'install/startup.' . $phpEx;
 require($startup_path);
 
 /** @var \phpbb\filesystem\filesystem $phpbb_filesystem */
@@ -29,7 +29,6 @@ $phpbb_filesystem = $phpbb_installer_container->get('filesystem');
 
 /** @var \phpbb\template\template $template */
 $template = $phpbb_installer_container->get('template');
-
 
 // Path to templates
 $paths = array($phpbb_root_path . 'install/update/new/adm/style', $phpbb_admin_path . 'style');
@@ -42,17 +41,17 @@ $template->set_custom_style(array(
 	),
 ), $paths);
 
-/* @var $phpbb_dispatcher \phpbb\event\dispatcher */
+/** @var $phpbb_dispatcher \phpbb\event\dispatcher */
 $phpbb_dispatcher = $phpbb_installer_container->get('dispatcher');
 
 /** @var \phpbb\language\language $language */
 $language = $phpbb_installer_container->get('language');
-$language->add_lang(array('common', 'acp/common', 'acp/board', 'install_new', 'posting'));
+$language->add_lang(array('common', 'acp/common', 'acp/board', 'install', 'posting'));
 
-/* @var $http_kernel \Symfony\Component\HttpKernel\HttpKernel */
+/** @var $http_kernel \Symfony\Component\HttpKernel\HttpKernel */
 $http_kernel = $phpbb_installer_container->get('http_kernel');
 
-/* @var $symfony_request \phpbb\symfony_request */
+/** @var $symfony_request \phpbb\symfony_request */
 $symfony_request = $phpbb_installer_container->get('symfony_request');
 $response = $http_kernel->handle($symfony_request);
 $response->send();

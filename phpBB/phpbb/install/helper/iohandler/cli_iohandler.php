@@ -125,8 +125,13 @@ class cli_iohandler extends iohandler_base
 	{
 		$this->io->newLine();
 
+		if (strpos($error_title, '<br />') !== false)
+		{
+			$error_title = strip_tags(str_replace('<br />', "\n", $error_title));
+		}
 		$message = $this->translate_message($error_title, $error_description);
-		$this->io->error($message['title'] . "\n" . $message['description']);
+		$message_string = $message['title'] . (!empty($message['description']) ? "\n" . $message['description'] : '');
+		$this->io->error($message_string);
 
 		if ($this->progress_bar !== null)
 		{
@@ -143,7 +148,8 @@ class cli_iohandler extends iohandler_base
 		$this->io->newLine();
 
 		$message = $this->translate_message($warning_title, $warning_description);
-		$this->io->warning($message['title'] . "\n" . $message['description']);
+		$message_string = $message['title'] . (!empty($message['description']) ? "\n" . $message['description'] : '');
+		$this->io->warning($message_string);
 
 		if ($this->progress_bar !== null)
 		{
@@ -172,7 +178,8 @@ class cli_iohandler extends iohandler_base
 		$this->io->newLine();
 
 		$message = $this->translate_message($error_title, $error_description);
-		$this->io->success($message['title'] . "\n" . $message['description']);
+		$message_string = $message['title'] . (!empty($message['description']) ? "\n" . $message['description'] : '');
+		$this->io->success($message_string);
 
 		if ($this->progress_bar !== null)
 		{

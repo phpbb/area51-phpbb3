@@ -191,12 +191,12 @@
 				$progressText.attr('id', 'progress-bar-text');
 				$progressFiller = $('<span />');
 				$progressFiller.attr('id', 'progress-bar-filler');
+				$progressFiller.html($progressText);
 
 				$statusText = $('<p />');
 				$statusText.attr('id', 'progress-status-text');
 
 				$progressBar.append($progressFiller);
-				$progressBar.append($progressText);
 
 				$progressBarWrapper.append($statusText);
 				$progressBarWrapper.append($progressBar);
@@ -243,8 +243,20 @@
 	 */
 	function parseMessage(messageJSON) {
 		$('#loading_indicator').css('display', 'none');
+		var responseObject;
 
-		var responseObject = JSON.parse(messageJSON);
+		try {
+			responseObject = JSON.parse(messageJSON);
+		} catch (err) {
+			if (window.console) {
+				console.log('Failed to parse JSON object\n\nMessage: ' + err.message + '\n\nServer Response: ' + messageJSON);
+			} else {
+				alert('Failed to parse JSON object\n\nMessage: ' + err.message + '\n\nServer Response: ' + messageJSON);
+			}
+
+			resetPolling();
+			return;
+		}
 
 		// Parse object
 		if (responseObject.hasOwnProperty('errors')) {
