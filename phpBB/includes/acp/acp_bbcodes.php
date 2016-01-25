@@ -25,20 +25,26 @@ class acp_bbcodes
 
 	function main($id, $mode)
 	{
-		global $db, $user, $auth, $template, $cache, $request, $phpbb_dispatcher, $phpbb_container;
-		global $config, $phpbb_root_path, $phpbb_admin_path, $phpEx, $phpbb_log;
+		global $db, $user, $template, $cache, $request, $phpbb_dispatcher, $phpbb_container;
+		global $phpbb_log;
 
 		$user->add_lang('acp/posting');
 
 		// Set up general vars
 		$action	= $request->variable('action', '');
 		$bbcode_id = $request->variable('bbcode', 0);
+		$submit = $request->is_set_post('submit');
 
 		$this->tpl_name = 'acp_bbcodes';
 		$this->page_title = 'ACP_BBCODES';
 		$form_key = 'acp_bbcodes';
 
 		add_form_key($form_key);
+
+		if ($submit && !check_form_key($form_key))
+		{
+			trigger_error($user->lang['FORM_INVALID'] . adm_back_link($this->u_action), E_USER_WARNING);
+		}
 
 		// Set up mode-specific vars
 		switch ($action)
@@ -367,7 +373,7 @@ class acp_bbcodes
 		*
 		* @event core.acp_bbcodes_display_form
 		* @var	string	action			Type of the action: modify|create
-		* @var	string	sql_ary			The SQL array to get custom bbcode data
+		* @var	array	sql_ary			The SQL array to get custom bbcode data
 		* @var	array	template_data	Array with form template data
 		* @var	string	u_action		The u_action link
 		* @since 3.1.0-a3

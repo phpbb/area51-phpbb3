@@ -31,8 +31,8 @@ class acp_users
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $auth, $template, $cache;
-		global $phpbb_root_path, $phpbb_admin_path, $phpEx, $table_prefix, $file_uploads;
+		global $config, $db, $user, $auth, $template;
+		global $phpbb_root_path, $phpbb_admin_path, $phpEx;
 		global $phpbb_dispatcher, $request;
 		global $phpbb_container, $phpbb_log;
 
@@ -298,13 +298,11 @@ class acp_users
 								case 'banuser':
 									$ban[] = $user_row['username'];
 									$reason = 'USER_ADMIN_BAN_NAME_REASON';
-									$log = 'LOG_USER_BAN_USER';
 								break;
 
 								case 'banemail':
 									$ban[] = $user_row['user_email'];
 									$reason = 'USER_ADMIN_BAN_EMAIL_REASON';
-									$log = 'LOG_USER_BAN_EMAIL';
 								break;
 
 								case 'banip':
@@ -322,7 +320,6 @@ class acp_users
 									$db->sql_freeresult($result);
 
 									$reason = 'USER_ADMIN_BAN_IP_REASON';
-									$log = 'LOG_USER_BAN_IP';
 								break;
 							}
 
@@ -1271,17 +1268,10 @@ class acp_users
 				$user->add_lang('mcp');
 
 				// Set up general vars
-				$start		= $request->variable('start', 0);
 				$deletemark	= (isset($_POST['delmarked'])) ? true : false;
 				$deleteall	= (isset($_POST['delall'])) ? true : false;
 				$confirm	= (isset($_POST['confirm'])) ? true : false;
 				$marked		= $request->variable('mark', array(0));
-				$message	= $request->variable('message', '', true);
-
-				// Sort keys
-				$sort_days	= $request->variable('st', 0);
-				$sort_key	= $request->variable('sk', 't');
-				$sort_dir	= $request->variable('sd', 'd');
 
 				// Delete entries if requested and able
 				if ($deletemark || $deleteall || $confirm)
@@ -1546,7 +1536,6 @@ class acp_users
 					$selected = ($i == $data['bday_month']) ? ' selected="selected"' : '';
 					$s_birthday_month_options .= "<option value=\"$i\"$selected>$i</option>";
 				}
-				$s_birthday_year_options = '';
 
 				$now = getdate();
 				$s_birthday_year_options = '<option value="0"' . ((!$data['bday_year']) ? ' selected="selected"' : '') . '>--</option>';
@@ -1627,7 +1616,7 @@ class acp_users
 				if ($submit)
 				{
 					$error = validate_data($data, array(
-						'dateformat'	=> array('string', false, 1, 30),
+						'dateformat'	=> array('string', false, 1, 64),
 						'lang'			=> array('match', false, '#^[a-z_\-]{2,}$#i'),
 						'tz'			=> array('timezone'),
 
@@ -1919,9 +1908,8 @@ class acp_users
 						$driver = $phpbb_avatar_manager->get_driver($current_driver);
 
 						$avatars_enabled = true;
-						$config_name = $phpbb_avatar_manager->get_driver_config_name($driver);
 						$template->set_filenames(array(
-							'avatar' => "acp_avatar_options_{$config_name}.html",
+							'avatar' => $driver->get_acp_template_name(),
 						));
 
 						if ($driver->prepare_form($request, $template, $user, $avatar_data, $error))
@@ -2296,10 +2284,6 @@ class acp_users
 					{
 						trigger_error($user->lang['NOT_ALLOWED_MANAGE_GROUP'] . adm_back_link($this->u_action . '&amp;u=' . $user_id), E_USER_WARNING);
 					}
-				}
-				else
-				{
-					$founder_manage = 0;
 				}
 
 				switch ($action)

@@ -26,7 +26,7 @@ class acp_groups
 	function main($id, $mode)
 	{
 		global $config, $db, $user, $auth, $template, $cache;
-		global $phpbb_root_path, $phpbb_admin_path, $phpEx, $table_prefix, $file_uploads;
+		global $phpbb_root_path, $phpbb_admin_path, $phpEx;
 		global $request, $phpbb_container, $phpbb_dispatcher;
 
 		$user->add_lang('acp/groups');
@@ -305,8 +305,6 @@ class acp_groups
 				{
 					include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 				}
-
-				$data = $submit_ary = array();
 
 				if ($action == 'edit' && !$group_id)
 				{
@@ -676,9 +674,8 @@ class acp_groups
 						$driver = $phpbb_avatar_manager->get_driver($current_driver);
 
 						$avatars_enabled = true;
-						$config_name = $phpbb_avatar_manager->get_driver_config_name($driver);
 						$template->set_filenames(array(
-							'avatar' => "acp_avatar_options_{$config_name}.html",
+							'avatar' => $driver->get_acp_template_name(),
 						));
 
 						if ($driver->prepare_form($request, $template, $user, $avatar_data, $avatar_error))
@@ -933,11 +930,12 @@ class acp_groups
 			// used for easy access to the data within a group
 			$cached_group_data[$type][$row['group_id']] = $row;
 			$cached_group_data[$type][$row['group_id']]['total_members'] = 0;
+			$cached_group_data[$type][$row['group_id']]['pending_members'] = 0;
 		}
 		$db->sql_freeresult($result);
 
 		// How many people are in which group?
-		$sql = 'SELECT COUNT(ug.user_id) AS total_members, ug.group_id
+		$sql = 'SELECT COUNT(ug.user_id) AS total_members, SUM(ug.user_pending) AS pending_members, ug.group_id
 			FROM ' . USER_GROUP_TABLE . ' ug
 			WHERE ' . $db->sql_in_set('ug.group_id', array_keys($lookup)) . '
 			GROUP BY ug.group_id';
@@ -947,6 +945,7 @@ class acp_groups
 		{
 			$type = $lookup[$row['group_id']];
 			$cached_group_data[$type][$row['group_id']]['total_members'] = $row['total_members'];
+			$cached_group_data[$type][$row['group_id']]['pending_members'] = $row['pending_members'];
 		}
 		$db->sql_freeresult($result);
 
@@ -975,6 +974,7 @@ class acp_groups
 
 					'GROUP_NAME'	=> $group_name,
 					'TOTAL_MEMBERS'	=> $row['total_members'],
+					'PENDING_MEMBERS' => $row['pending_members']
 				));
 			}
 		}
@@ -1095,7 +1095,6 @@ class acp_groups
 			ORDER BY group_legend ASC, group_type DESC, group_name ASC';
 		$result = $db->sql_query($sql);
 
-		$s_group_select_legend = '';
 		while ($row = $db->sql_fetchrow($result))
 		{
 			$group_name = $group_helper->get_name($row['group_name']);
@@ -1133,7 +1132,6 @@ class acp_groups
 			ORDER BY t.teampage_position ASC';
 		$result = $db->sql_query($sql);
 
-		$category_data = array();
 		while ($row = $db->sql_fetchrow($result))
 		{
 			if ($row['teampage_id'] == $category_id)
@@ -1176,7 +1174,6 @@ class acp_groups
 			ORDER BY g.group_type DESC, g.group_name ASC';
 		$result = $db->sql_query($sql);
 
-		$s_group_select_teampage = '';
 		while ($row = $db->sql_fetchrow($result))
 		{
 			$group_name = $group_helper->get_name($row['group_name']);

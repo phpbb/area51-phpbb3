@@ -22,6 +22,7 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpKernel\DependencyInjection\MergeExtensionConfigurationPass;
 
 class container_builder
@@ -89,7 +90,7 @@ class container_builder
 	 *
 	 * @var array
 	 */
-	protected $custom_parameters = null;
+	protected $custom_parameters = [];
 
 	/**
 	 * @var \phpbb\config_php_file
@@ -106,13 +107,16 @@ class container_builder
 	 */
 	private $container_extensions;
 
+	/** @var \Exception */
+	private $build_exception;
+
 	/**
 	 * Constructor
 	 *
 	 * @param string $phpbb_root_path Path to the phpbb includes directory.
 	 * @param string $php_ext php file extension
 	 */
-	function __construct($phpbb_root_path, $php_ext)
+	public function __construct($phpbb_root_path, $php_ext)
 	{
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
@@ -125,62 +129,96 @@ class container_builder
 	 */
 	public function get_container()
 	{
-		$container_filename = $this->get_container_filename();
-		$config_cache = new ConfigCache($container_filename, defined('DEBUG'));
-		if ($this->use_cache && $config_cache->isFresh())
+		try
 		{
-			require($config_cache->getPath());
-			$this->container = new \phpbb_cache_container();
-		}
-		else
-		{
-			$this->container_extensions = array(new extension\core($this->get_config_path()));
-
-			if ($this->use_extensions)
+			$container_filename = $this->get_container_filename();
+			$config_cache = new ConfigCache($container_filename, defined('DEBUG'));
+			if ($this->use_cache && $config_cache->isFresh())
 			{
-				$this->load_extensions();
+				require($config_cache->getPath());
+				$this->container = new \phpbb_cache_container();
 			}
-
-			// Inject the config
-			if ($this->config_php_file)
+			else
 			{
-				$this->container_extensions[] = new extension\config($this->config_php_file);
-			}
+				$this->container_extensions = array(new extension\core($this->get_config_path()));
 
-			$this->container = $this->create_container($this->container_extensions);
-
-			// Easy collections through tags
-			$this->container->addCompilerPass(new pass\collection_pass());
-
-			// Event listeners "phpBB style"
-			$this->container->addCompilerPass(new RegisterListenersPass('dispatcher', 'event.listener_listener', 'event.listener'));
-
-			// Event listeners "Symfony style"
-			$this->container->addCompilerPass(new RegisterListenersPass('dispatcher'));
-
-			$filesystem = new filesystem();
-			$loader     = new YamlFileLoader($this->container, new FileLocator($filesystem->realpath($this->get_config_path())));
-			$loader->load($this->container->getParameter('core.environment') . '/config.yml');
-
-			$this->inject_custom_parameters();
-
-			if ($this->compile_container)
-			{
-				$this->container->compile();
-
-				if ($this->use_cache)
+				if ($this->use_extensions)
 				{
-					$this->dump_container($config_cache);
+					$this->load_extensions();
+				}
+
+				// Inject the config
+				if ($this->config_php_file)
+				{
+					$this->container_extensions[] = new extension\config($this->config_php_file);
+				}
+
+				$this->container = $this->create_container($this->container_extensions);
+
+				// Easy collections through tags
+				$this->container->addCompilerPass(new pass\collection_pass());
+
+				// Event listeners "phpBB style"
+				$this->container->addCompilerPass(new RegisterListenersPass('dispatcher', 'event.listener_listener', 'event.listener'));
+
+				// Event listeners "Symfony style"
+				$this->container->addCompilerPass(new RegisterListenersPass('dispatcher'));
+
+				if ($this->use_extensions)
+				{
+					$this->register_ext_compiler_pass();
+				}
+
+				$filesystem = new filesystem();
+				$loader     = new YamlFileLoader($this->container, new FileLocator($filesystem->realpath($this->get_config_path())));
+				$loader->load($this->container->getParameter('core.environment') . '/config.yml');
+
+				$this->inject_custom_parameters();
+
+				if ($this->compile_container)
+				{
+					$this->container->compile();
+
+					if ($this->use_cache)
+					{
+						$this->dump_container($config_cache);
+					}
 				}
 			}
-		}
 
-		if ($this->compile_container && $this->config_php_file)
+			if ($this->compile_container && $this->config_php_file)
+			{
+				$this->container->set('config.php', $this->config_php_file);
+			}
+
+			return $this->container;
+		}
+		catch (\Exception $e)
 		{
-			$this->container->set('config.php', $this->config_php_file);
-		}
+			// Don't try to recover if we are in the development environment
+			if ($this->get_environment() === 'development')
+			{
+				throw $e;
+			}
 
-		return $this->container;
+			if ($this->build_exception === null)
+			{
+				$this->build_exception = $e;
+
+				return $this
+					->without_extensions()
+					->without_cache()
+					->with_custom_parameters(array_merge($this->custom_parameters, [
+						'container_exception' => $e,
+					]))
+					->get_container();
+			}
+			else
+			{
+				// Rethrow the original exception if it's still failing
+				throw $this->build_exception;
+			}
+		}
 	}
 
 	/**
@@ -445,13 +483,11 @@ class container_builder
 	 */
 	protected function inject_custom_parameters()
 	{
-		if ($this->custom_parameters !== null)
+		foreach ($this->custom_parameters as $key => $value)
 		{
-			foreach ($this->custom_parameters as $key => $value)
-			{
-				$this->container->setParameter($key, $value);
-			}
+			$this->container->setParameter($key, $value);
 		}
+
 	}
 
 	/**
@@ -511,5 +547,35 @@ class container_builder
 	protected function get_environment()
 	{
 		return $this->environment ?: PHPBB_ENVIRONMENT;
+	}
+
+	private function register_ext_compiler_pass()
+	{
+		$finder = new Finder();
+		$finder
+			->name('*_pass.php')
+			->path('di/pass')
+			->files()
+			->ignoreDotFiles(true)
+			->ignoreUnreadableDirs(true)
+			->ignoreVCS(true)
+			->followLinks()
+			->in($this->phpbb_root_path . 'ext/')
+		;
+
+		/** @var \SplFileInfo $pass */
+		foreach ($finder as $pass)
+		{
+			$filename = $pass->getPathname();
+			$filename = substr($filename, 0, -strlen('.' . $pass->getExtension()));
+			$filename = str_replace(DIRECTORY_SEPARATOR, '/', $filename);
+			$className = preg_replace('#^.*ext/#', '', $filename);
+			$className = '\\' . str_replace('/', '\\', $className);
+
+			if (class_exists($className) && in_array('Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface', class_implements($className), true))
+			{
+				$this->container->addCompilerPass(new $className());
+			}
+		}
 	}
 }
