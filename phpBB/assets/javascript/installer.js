@@ -177,7 +177,7 @@
 	 * @param progressObject
 	 */
 	function setProgress(progressObject) {
-		var $statusText, $progressBar, $progressText, $progressFiller;
+		var $statusText, $progressBar, $progressText, $progressFiller, $progressFillerText;
 
 		if (progressObject.task_name.length) {
 			if (!progressBarTriggered) {
@@ -189,27 +189,34 @@
 				$progressBar.attr('id', 'progress-bar');
 				$progressText = $('<p />');
 				$progressText.attr('id', 'progress-bar-text');
-				$progressFiller = $('<span />');
+				$progressFiller = $('<div />');
 				$progressFiller.attr('id', 'progress-bar-filler');
-				$progressFiller.html($progressText);
+				$progressFillerText = $('<p />');
+				$progressFillerText.attr('id', 'progress-bar-filler-text');
 
 				$statusText = $('<p />');
 				$statusText.attr('id', 'progress-status-text');
 
+				$progressFiller.append($progressFillerText);
+				$progressBar.append($progressText);
 				$progressBar.append($progressFiller);
 
 				$progressBarWrapper.append($statusText);
 				$progressBarWrapper.append($progressBar);
+
+				$progressFillerText.css('width', $progressBar.width());
 
 				progressBarTriggered = true;
 			} else if (progressObject.hasOwnProperty('restart')) {
 				clearInterval(progressTimer);
 
 				$progressFiller = $('#progress-bar-filler');
+				$progressFillerText = $('#progress-bar-filler-text');
 				$progressText = $('#progress-bar-text');
 				$statusText = $('#progress-status-text');
 
 				$progressText.text('0%');
+				$progressFillerText.text('0%');
 				$progressFiller.css('width', '0%');
 
 				currentProgress = 0;
@@ -233,6 +240,22 @@
 			// Set path
 			cookie += '; path=/';
 			document.cookie = cookie;
+		}
+	}
+
+	// Redirects user
+	function redirect(url, use_ajax) {
+		if (use_ajax) {
+			resetPolling();
+
+			var xhReq = createXhrObject();
+			xhReq.open('GET', url, true);
+			xhReq.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+			xhReq.send();
+
+			startPolling(xhReq);
+		} else {
+			window.location.href = url;
 		}
 	}
 
@@ -302,6 +325,10 @@
 		if (responseObject.hasOwnProperty('refresh')) {
 			refreshRequested = true;
 		}
+
+		if (responseObject.hasOwnProperty('redirect')) {
+			redirect(responseObject.redirect.url, responseObject.redirect.use_ajax);
+		}
 	}
 
 	/**
@@ -342,15 +369,20 @@
 	 *
 	 * @param $progressText
 	 * @param $progressFiller
+	 * @param $progressFillerText
 	 * @param progressLimit
 	 */
-	function incrementFiller($progressText, $progressFiller, progressLimit) {
+	function incrementFiller($progressText, $progressFiller, $progressFillerText, progressLimit) {
 		if (currentProgress >= progressLimit || currentProgress >= 100) {
 			clearInterval(progressTimer);
 			return;
 		}
 
+		var $progressBar = $('#progress-bar');
+
 		currentProgress++;
+		$progressFillerText.css('width', $progressBar.width());
+		$progressFillerText.text(currentProgress + '%');
 		$progressText.text(currentProgress + '%');
 		$progressFiller.css('width', currentProgress + '%');
 	}
@@ -362,13 +394,14 @@
 	 */
 	function incrementProgressBar(progressLimit) {
 		var $progressFiller = $('#progress-bar-filler');
+		var $progressFillerText = $('#progress-bar-filler-text');
 		var $progressText = $('#progress-bar-text');
 		var progressStart = $progressFiller.width() / $progressFiller.offsetParent().width() * 100;
 		currentProgress = Math.floor(progressStart);
 
 		clearInterval(progressTimer);
 		progressTimer = setInterval(function() {
-			incrementFiller($progressText, $progressFiller, progressLimit);
+			incrementFiller($progressText, $progressFiller, $progressFillerText, progressLimit);
 		}, 10);
 	}
 
