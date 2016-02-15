@@ -11,6 +11,11 @@
 *
 */
 
+use Facebook\WebDriver\WebDriverBy;
+use Facebook\WebDriver\Exception\WebDriverCurlException;
+use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Facebook\WebDriver\Remote\DesiredCapabilities;
+
 require_once __DIR__ . '/mock/phpbb_mock_null_installer_task.php';
 
 class phpbb_ui_test_case extends phpbb_test_case
@@ -19,13 +24,15 @@ class phpbb_ui_test_case extends phpbb_test_case
 	static protected $port = 8910;
 
 	/**
-	* @var \RemoteWebDriver
+	* @var RemoteWebDriver
 	*/
 	static protected $webDriver;
 
 	static protected $config;
 	static protected $root_url;
 	static protected $already_installed = false;
+	static protected $install_success = false;
+	static protected $db;
 
 	static public function setUpBeforeClass()
 	{
@@ -35,7 +42,7 @@ class phpbb_ui_test_case extends phpbb_test_case
 		{
 			self::markTestSkipped('UI test case requires at least PHP 5.3.19.');
 		}
-		else if (!class_exists('\RemoteWebDriver'))
+		else if (!class_exists('\Facebook\WebDriver\Remote\RemoteWebDriver'))
 		{
 			self::markTestSkipped(
 				'Could not find RemoteWebDriver class. ' .
@@ -60,7 +67,7 @@ class phpbb_ui_test_case extends phpbb_test_case
 		if (!self::$webDriver)
 		{
 			try {
-				$capabilities = array(\WebDriverCapabilityType::BROWSER_NAME => 'firefox');
+				$capabilities = DesiredCapabilities::firefox();
 				self::$webDriver = RemoteWebDriver::create(self::$host . ':' . self::$port, $capabilities);
 			} catch (WebDriverCurlException $e) {
 				self::markTestSkipped('PhantomJS webserver is not running.');
@@ -71,6 +78,25 @@ class phpbb_ui_test_case extends phpbb_test_case
 		{
 			self::install_board();
 			self::$already_installed = true;
+		}
+	}
+
+	public function setUp()
+	{
+		if (!self::$install_success)
+		{
+			$this->fail('Installing phpBB has failed.');
+		}
+	}
+
+	protected function tearDown()
+	{
+		parent::tearDown();
+
+		if (self::$db instanceof \phpbb\db\driver\driver_interface)
+		{
+			// Close the database connections again this test
+			self::$db->sql_close();
 		}
 	}
 
@@ -98,9 +124,11 @@ class phpbb_ui_test_case extends phpbb_test_case
 
 	static public function install_board()
 	{
-		global $phpbb_root_path, $phpEx;
+		global $phpbb_root_path, $phpEx, $db;
 
 		self::recreate_database(self::$config);
+
+		$db = self::get_db();
 
 		$config_file = $phpbb_root_path . "config.$phpEx";
 		$config_file_dev = $phpbb_root_path . "config_dev.$phpEx";
@@ -194,21 +222,40 @@ class phpbb_ui_test_case extends phpbb_test_case
 		$iohandler->set_input('script_path', $parseURL['path']);
 		$iohandler->set_input('submit_server', 'submit');
 
-		do
-		{
-			$installer->run();
-		}
-		while (file_exists($phpbb_root_path . 'store/install_config.php'));
+		$installer->run();
 
 		copy($config_file, $config_file_test);
 
+		self::$install_success = true;
+
+		if (file_exists($phpbb_root_path . 'store/install_config.php'))
+		{
+			self::$install_success = false;
+			@unlink($phpbb_root_path . 'store/install_config.php');
+		}
+
 		if (file_exists($phpbb_root_path . 'cache/install_lock'))
 		{
-			unlink($phpbb_root_path . 'cache/install_lock');
+			@unlink($phpbb_root_path . 'cache/install_lock');
 		}
 
 		global $phpbb_container, $cache, $phpbb_dispatcher, $request, $user, $auth, $db, $config, $phpbb_log, $symfony_request, $phpbb_filesystem, $phpbb_path_helper, $phpbb_extension_manager, $template;
 		$phpbb_container->reset();
 		unset($phpbb_container, $cache, $phpbb_dispatcher, $request, $user, $auth, $db, $config, $phpbb_log, $symfony_request, $phpbb_filesystem, $phpbb_path_helper, $phpbb_extension_manager, $template);
+	}
+
+	static protected function get_db()
+	{
+		global $phpbb_root_path, $phpEx;
+		// so we don't reopen an open connection
+		if (!(self::$db instanceof \phpbb\db\driver\driver_interface))
+		{
+			$dbms = self::$config['dbms'];
+			/** @var \phpbb\db\driver\driver_interface $db */
+			$db = new $dbms();
+			$db->sql_connect(self::$config['dbhost'], self::$config['dbuser'], self::$config['dbpasswd'], self::$config['dbname'], self::$config['dbport']);
+			self::$db = $db;
+		}
+		return self::$db;
 	}
 }
