@@ -105,7 +105,7 @@ $vars = array(
 extract($phpbb_dispatcher->trigger_event('core.modify_posting_parameters', compact($vars)));
 
 // Was cancel pressed? If so then redirect to the appropriate page
-if ($cancel || ($current_time - $lastclick < 2 && $submit))
+if ($cancel)
 {
 	$f = ($forum_id) ? 'f=' . $forum_id . '&amp;' : '';
 	$redirect = ($post_id) ? append_sid("{$phpbb_root_path}viewtopic.$phpEx", $f . 'p=' . $post_id) . '#p' . $post_id : (($topic_id) ? append_sid("{$phpbb_root_path}viewtopic.$phpEx", $f . 't=' . $topic_id) : (($forum_id) ? append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $forum_id) : append_sid("{$phpbb_root_path}index.$phpEx")));
@@ -603,7 +603,7 @@ if ($post_data['post_attachment'] && !$submit && !$refresh && !$preview && $mode
 		WHERE post_msg_id = $post_id
 			AND in_message = 0
 			AND is_orphan = 0
-		ORDER BY filetime DESC";
+		ORDER BY attach_id DESC";
 	$result = $db->sql_query($sql);
 	$message_parser->attachment_data = array_merge($message_parser->attachment_data, $db->sql_fetchrowset($result));
 	$db->sql_freeresult($result);

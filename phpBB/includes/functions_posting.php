@@ -1492,6 +1492,10 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 			break;
 		}
 	}
+	else if (isset($data_ary['post_visibility']) && $data_ary['post_visibility'] !== false)
+	{
+		$post_visibility = $data_ary['post_visibility'];
+	}
 
 	// MODs/Extensions are able to force any visibility on posts
 	if (isset($data_ary['force_approved_state']))
@@ -2299,7 +2303,9 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 
 	$params = $add_anchor = '';
 
-	if ($post_visibility == ITEM_APPROVED)
+	if ($post_visibility == ITEM_APPROVED ||
+		($auth->acl_get('m_softdelete', $data_ary['forum_id']) && $post_visibility == ITEM_DELETED) ||
+		($auth->acl_get('m_approve', $data_ary['forum_id']) && in_array($post_visibility, array(ITEM_UNAPPROVED, ITEM_REAPPROVE))))
 	{
 		$params .= '&amp;t=' . $data_ary['topic_id'];
 

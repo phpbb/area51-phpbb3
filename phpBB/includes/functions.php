@@ -96,7 +96,7 @@ function gen_rand_string_friendly($num_chars = 8)
 */
 function unique_id()
 {
-	return bin2hex(random_bytes(6));
+	return bin2hex(random_bytes(8));
 }
 
 /**
@@ -1813,6 +1813,7 @@ function redirect($url, $return = false, $disable_cd_check = false)
 		echo '<html dir="' . $user->lang['DIRECTION'] . '" lang="' . $user->lang['USER_LANG'] . '">';
 		echo '<head>';
 		echo '<meta charset="utf-8">';
+		echo '<meta http-equiv="X-UA-Compatible" content="IE=edge">';
 		echo '<meta http-equiv="refresh" content="0; url=' . str_replace('&', '&amp;', $url) . '" />';
 		echo '<title>' . $user->lang['REDIRECT'] . '</title>';
 		echo '</head>';
@@ -2233,6 +2234,21 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		$user->setup();
 	}
 
+	/**
+	 * This event allows an extension to modify the login process
+	 *
+	 * @event core.login_box_before
+	 * @var string	redirect	Redirect string
+	 * @var string	l_explain	Explain language string
+	 * @var string	l_success	Success language string
+	 * @var	bool	admin		Is admin?
+	 * @var bool	s_display	Display full login form?
+	 * @var string	err			Error string
+	 * @since 3.1.9-RC1
+	 */
+	$vars = array('redirect', 'l_explain', 'l_success', 'admin', 's_display', 'err');
+	extract($phpbb_dispatcher->trigger_event('core.login_box_before', compact($vars)));
+
 	// Print out error if user tries to authenticate as an administrator without having the privileges...
 	if ($admin && !$auth->acl_get('a_'))
 	{
@@ -2245,7 +2261,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		trigger_error('NO_AUTH_ADMIN');
 	}
 
-	if ($request->is_set_post('login') || ($request->is_set('login') && $request->variable('login', '') == 'external'))
+	if (empty($err) && ($request->is_set_post('login') || ($request->is_set('login') && $request->variable('login', '') == 'external')))
 	{
 		// Get credential
 		if ($admin)
@@ -2314,11 +2330,11 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 			*
 			* @event core.login_box_redirect
 			* @var  string	redirect	Redirect string
-			* @var	boolean	admin		Is admin?
-			* @var	bool	return		If true, do not redirect but return the sanitized URL.
+			* @var	bool	admin		Is admin?
 			* @since 3.1.0-RC5
+			* @changed 3.1.9-RC1 Removed undefined return variable
 			*/
-			$vars = array('redirect', 'admin', 'return');
+			$vars = array('redirect', 'admin');
 			extract($phpbb_dispatcher->trigger_event('core.login_box_redirect', compact($vars)));
 
 			// append/replace SID (may change during the session for AOL users)
@@ -2730,7 +2746,8 @@ function get_preg_expression($mode)
 			return array(
 				'#<!\-\- e \-\-><a href="mailto:(.*?)">.*?</a><!\-\- e \-\->#',
 				'#<!\-\- l \-\-><a (?:class="[\w-]+" )?href="(.*?)(?:(&amp;|\?)sid=[0-9a-f]{32})?">.*?</a><!\-\- l \-\->#',
-				'#<!\-\- ([mw]) \-\-><a (?:class="[\w-]+" )?href="(.*?)">(.*?)</a><!\-\- \1 \-\->#',
+				'#<!\-\- ([mw]) \-\-><a (?:class="[\w-]+" )?href="http://(.*?)">\2</a><!\-\- \1 \-\->#',
+				'#<!\-\- ([mw]) \-\-><a (?:class="[\w-]+" )?href="(.*?)">.*?</a><!\-\- \1 \-\->#',
 				'#<!\-\- s(.*?) \-\-><img src="\{SMILIES_PATH\}\/.*? \/><!\-\- s\1 \-\->#',
 				'#<!\-\- .*? \-\->#s',
 				'#<.*?>#s',
@@ -3307,6 +3324,7 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 			echo '<html dir="ltr">';
 			echo '<head>';
 			echo '<meta charset="utf-8">';
+			echo '<meta http-equiv="X-UA-Compatible" content="IE=edge">';
 			echo '<title>' . $msg_title . '</title>';
 			echo '<style type="text/css">' . "\n" . '/* <![CDATA[ */' . "\n";
 			echo '* { margin: 0; padding: 0; } html { font-size: 100%; height: 100%; margin-bottom: 1px; background-color: #E4EDF0; } body { font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif; color: #536482; background: #E4EDF0; font-size: 62.5%; margin: 0; } ';
@@ -4071,7 +4089,7 @@ function phpbb_get_avatar($row, $alt, $ignore_config = false, $lazy = false)
 /**
 * Generate page header
 */
-function page_header($page_title = '', $display_online_list = false, $item_id = 0, $item = 'forum')
+function page_header($page_title = '', $display_online_list = false, $item_id = 0, $item = 'forum', $send_headers = true)
 {
 	global $db, $config, $template, $SID, $_SID, $_EXTRA_URL, $user, $auth, $phpEx, $phpbb_root_path;
 	global $phpbb_dispatcher, $request, $phpbb_container, $phpbb_admin_path;
@@ -4416,17 +4434,22 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'SITE_LOGO_IMG'			=> $user->img('site_logo'),
 	));
 
-	// An array of http headers that phpbb will set. The following event may override these.
-	$http_headers = array(
-		// application/xhtml+xml not used because of IE
-		'Content-type' => 'text/html; charset=UTF-8',
-		'Cache-Control' => 'private, no-cache="set-cookie"',
-		'Expires' => gmdate('D, d M Y H:i:s', time()) . ' GMT',
-	);
-	if (!empty($user->data['is_bot']))
+	$http_headers = array();
+
+	if ($send_headers)
 	{
-		// Let reverse proxies know we detected a bot.
-		$http_headers['X-PHPBB-IS-BOT'] = 'yes';
+		// An array of http headers that phpbb will set. The following event may override these.
+		$http_headers += array(
+			// application/xhtml+xml not used because of IE
+			'Content-type' => 'text/html; charset=UTF-8',
+			'Cache-Control' => 'private, no-cache="set-cookie"',
+			'Expires' => gmdate('D, d M Y H:i:s', time()) . ' GMT',
+		);
+		if (!empty($user->data['is_bot']))
+		{
+			// Let reverse proxies know we detected a bot.
+			$http_headers['X-PHPBB-IS-BOT'] = 'yes';
+		}
 	}
 
 	/**
