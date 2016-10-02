@@ -52,18 +52,6 @@ function phpbb_load_extensions_autoloaders($phpbb_root_path)
 }
 
 /**
-* Casts a variable to the given type.
-*
-* @deprecated
-*/
-function set_var(&$result, $var, $type, $multibyte = false)
-{
-	// no need for dependency injection here, if you have the object, call the method yourself!
-	$type_cast_helper = new \phpbb\request\type_cast_helper();
-	$type_cast_helper->set_var($result, $var, $type, $multibyte);
-}
-
-/**
 * Generates an alphanumeric random string of given length
 *
 * @return string
@@ -853,7 +841,7 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 				$tracking['tf'][$forum_id][$topic_id36] = true;
 			}
 
-			$tracking['t'][$topic_id36] = base_convert($post_time - $config['board_startdate'], 10, 36);
+			$tracking['t'][$topic_id36] = base_convert($post_time - (int) $config['board_startdate'], 10, 36);
 
 			// If the cookie grows larger than 10000 characters we will remove the smallest value
 			// This can result in old topics being unread - but most of the time it should be accurate...
@@ -1723,8 +1711,8 @@ function redirect($url, $return = false, $disable_cd_check = false)
 
 	if ($url_parts === false)
 	{
-		// Malformed url, redirect to current page...
-		$url = generate_board_url() . '/' . $user->page['page'];
+		// Malformed url
+		trigger_error('INSECURE_REDIRECT', E_USER_ERROR);
 	}
 	else if (!empty($url_parts['scheme']) && !empty($url_parts['host']))
 	{
@@ -2264,6 +2252,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		{
 			$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_ADMIN_AUTH_FAIL');
 		}
+		send_status_line(403, 'Forbidden');
 		trigger_error('NO_AUTH_ADMIN');
 	}
 
@@ -2280,6 +2269,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 				{
 					$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_ADMIN_AUTH_FAIL');
 				}
+				send_status_line(403, 'Forbidden');
 				trigger_error('NO_AUTH_ADMIN');
 			}
 
@@ -2301,6 +2291,8 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		{
 			// We log the attempt to use a different username...
 			$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_ADMIN_AUTH_FAIL');
+
+			send_status_line(403, 'Forbidden');
 			trigger_error('NO_AUTH_ADMIN_USER_DIFFER');
 		}
 

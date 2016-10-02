@@ -38,6 +38,9 @@ class acp_database
 
 		$action	= $request->variable('action', '');
 
+		$form_key = 'acp_database';
+		add_form_key($form_key);
+
 		$template->assign_vars(array(
 			'MODE'	=> $mode
 		));
@@ -59,6 +62,11 @@ class acp_database
 						if (!sizeof($table))
 						{
 							trigger_error($user->lang['TABLE_SELECT_ERROR'] . adm_back_link($this->u_action), E_USER_WARNING);
+						}
+
+						if (!check_form_key($form_key))
+						{
+							trigger_error($user->lang['FORM_INVALID'] . adm_back_link($this->u_action), E_USER_WARNING);
 						}
 
 						$store = $download = $structure = $schema_data = false;
@@ -112,7 +120,6 @@ class acp_database
 										$extractor->flush('DELETE FROM ' . $table_name . ";\n");
 									break;
 
-									case 'mssql':
 									case 'mssql_odbc':
 									case 'mssqlnative':
 										$extractor->flush('TRUNCATE TABLE ' . $table_name . "GO\n");
@@ -352,7 +359,6 @@ class acp_database
 									}
 								break;
 
-								case 'mssql':
 								case 'mssql_odbc':
 								case 'mssqlnative':
 									while (($sql = $fgetd($fp, "GO\n", $read, $seek, $eof)) !== false)

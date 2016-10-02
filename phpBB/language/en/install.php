@@ -113,6 +113,8 @@ $lang = array_merge($lang, array(
 	'PCRE_UTF_SUPPORT_EXPLAIN'			=> 'phpBB will not run if your PHP installation is not compiled with UTF-8 support in the PCRE extension.',
 	'PHP_JSON_SUPPORT'					=> 'PHP JSON support',
 	'PHP_JSON_SUPPORT_EXPLAIN'			=> 'In order for phpBB to function correctly, the PHP JSON extension needs to be available.',
+	'PHP_XML_SUPPORT'					=> 'PHP XML/DOM support',
+	'PHP_XML_SUPPORT_EXPLAIN'			=> 'In order for phpBB to function correctly, the PHP XML/DOM extension needs to be available.',
 	'PHP_SUPPORTED_DB'					=> 'Supported databases',
 	'PHP_SUPPORTED_DB_EXPLAIN'			=> 'You must have support for at least one compatible database within PHP. If no database modules are shown as available you should contact your hosting provider or review the relevant PHP installation documentation for advice.',
 
@@ -183,7 +185,6 @@ $lang = array_merge($lang, array(
 	'TABLE_PREFIX_EXPLAIN'	=> 'The prefix must start with a letter and must only contain letters, numbers and underscores.',
 
 	// Database options
-	'DB_OPTION_MSSQL'		=> 'MSSQL Server 2000+',
 	'DB_OPTION_MSSQL_ODBC'	=> 'MSSQL Server 2000+ via ODBC',
 	'DB_OPTION_MSSQLNATIVE'	=> 'MSSQL Server 2005+ [ Native ]',
 	'DB_OPTION_MYSQL'		=> 'MySQL',
@@ -220,7 +221,7 @@ $lang = array_merge($lang, array(
 	'UPDATE_INCOMPLETE_MORE'		=> 'Please read the information below in order to fix this error.',
 	'UPDATE_INCOMPLETE_EXPLAIN'		=> '<h1>Incomplete update</h1>
 
-		<p>We noticed that the last update of your phpBB installation hasn’t been completed. Visit the <a href="%1$s" title="%1$s">database_update script</a> and run it. If it is missing, please <a href="https://www.phpbb.com/downloads/" title="phpBB downloads">download your package version</a>, upload the "install" folder to your phpBB root directory (where your config.php file is) and <a href="%1$s" title="%1$s">run the database update script</a>.</p>',
+		<p>We noticed that the last update of your phpBB installation hasn’t been completed. Visit the <a href="%1$s" title="%1$s">database updater</a>, ensure <em>Update database only</em> is selected and click on <strong>Submit</strong>. Don\'t forget to delete the "install"-directory after you have updated the database sucessfully.</p>',
 
 	//
 	// Server data

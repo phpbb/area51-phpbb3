@@ -86,7 +86,7 @@ class phpbb_textformatter_s9e_default_formatting_test extends phpbb_test_case
 			),
 			array(
 				'[list]no item[/list]',
-				'<ul>no item</ul>'
+				'<ul><li>no item</li></ul>'
 			),
 			array(
 				'[*]unparsed',
@@ -298,7 +298,7 @@ class phpbb_textformatter_s9e_default_formatting_test extends phpbb_test_case
 			),
 			array(
 				"Emoji: \xF0\x9F\x98\x80",
-				'Emoji: <img alt="' . "\xF0\x9F\x98\x80" . '" class="smilies" draggable="false" width="18" height="18" src="//twemoji.maxcdn.com/36x36/1f600.png">'
+				'Emoji: <img alt="' . "\xF0\x9F\x98\x80" . '" class="smilies" draggable="false" width="18" height="18" src="//twemoji.maxcdn.com/svg/1f600.svg">'
 			),
 			array(
 				"Emoji: \xF0\x9F\x98\x80",

@@ -39,6 +39,7 @@ if (!$auth->acl_gets('u_viewprofile', 'a_user', 'a_useradd', 'a_userdel'))
 {
 	if ($user->data['user_id'] != ANONYMOUS)
 	{
+		send_status_line(403, 'Forbidden');
 		trigger_error('NO_VIEW_USERS');
 	}
 
@@ -485,6 +486,11 @@ meta_refresh(60, append_sid("{$phpbb_root_path}viewonline.$phpEx", "sg=$show_gue
 $start = $pagination->validate_start($start, $config['topics_per_page'], $counter);
 $base_url = append_sid("{$phpbb_root_path}viewonline.$phpEx", "sg=$show_guests&amp;sk=$sort_key&amp;sd=$sort_dir");
 $pagination->generate_template_pagination($base_url, 'pagination', 'start', $counter, $config['topics_per_page'], $start);
+
+$template->assign_block_vars('navlinks', array(
+	'FORUM_NAME'	=> $user->lang('WHO_IS_ONLINE'),
+	'U_VIEW_FORUM'	=> append_sid("{$phpbb_root_path}viewonline.$phpEx"),
+));
 
 // Send data to template
 $template->assign_vars(array(

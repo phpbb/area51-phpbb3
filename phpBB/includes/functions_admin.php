@@ -65,7 +65,7 @@ function recalc_nested_sets(&$new_id, $pkey, $table, $parent_id = 0, $where = ar
 */
 function make_forum_select($select_id = false, $ignore_id = false, $ignore_acl = false, $ignore_nonpost = false, $ignore_emptycat = true, $only_acl_post = false, $return_array = false)
 {
-	global $db, $auth;
+	global $db, $auth, $phpbb_dispatcher;
 
 	// This query is identical to the jumpbox one
 	$sql = 'SELECT forum_id, forum_name, parent_id, forum_type, forum_flags, forum_options, left_id, right_id
@@ -73,16 +73,33 @@ function make_forum_select($select_id = false, $ignore_id = false, $ignore_acl =
 		ORDER BY left_id ASC';
 	$result = $db->sql_query($sql, 600);
 
+	$rowset = array();
+	while ($row = $db->sql_fetchrow($result))
+	{
+		$rowset[(int) $row['forum_id']] = $row;
+	}
+	$db->sql_freeresult($result);
+
 	$right = 0;
 	$padding_store = array('0' => '');
 	$padding = '';
 	$forum_list = ($return_array) ? array() : '';
 
+	/**
+	* Modify the forum list data
+	*
+	* @event core.make_forum_select_modify_forum_list
+	* @var	array	rowset	Array with the forums list data
+	* @since 3.1.10-RC1
+	*/
+	$vars = array('rowset');
+	extract($phpbb_dispatcher->trigger_event('core.make_forum_select_modify_forum_list', compact($vars)));
+
 	// Sometimes it could happen that forums will be displayed here not be displayed within the index page
 	// This is the result of forums not displayed at index, having list permissions and a parent of a forum with no permissions.
 	// If this happens, the padding could be "broken"
 
-	while ($row = $db->sql_fetchrow($result))
+	foreach ($rowset as $row)
 	{
 		if ($row['left_id'] < $right)
 		{
@@ -133,8 +150,7 @@ function make_forum_select($select_id = false, $ignore_id = false, $ignore_acl =
 			$forum_list .= '<option value="' . $row['forum_id'] . '"' . (($disabled) ? ' disabled="disabled" class="disabled-option"' : $selected) . '>' . $padding . $row['forum_name'] . '</option>';
 		}
 	}
-	$db->sql_freeresult($result);
-	unset($padding_store);
+	unset($padding_store, $rowset);
 
 	return $forum_list;
 }
@@ -204,7 +220,7 @@ function group_select_options($group_id, $exclude_ids = false, $manage_founder =
 */
 function get_forum_list($acl_list = 'f_list', $id_only = true, $postable_only = false, $no_cache = false)
 {
-	global $db, $auth;
+	global $db, $auth, $phpbb_dispatcher;
 	static $forum_rows;
 
 	if (!isset($forum_rows))
@@ -258,6 +274,16 @@ function get_forum_list($acl_list = 'f_list', $id_only = true, $postable_only = 
 			$rowset[] = ($id_only) ? (int) $row['forum_id'] : $row;
 		}
 	}
+
+	/**
+	* Modify the forum list data
+	*
+	* @event core.get_forum_list_modify_data
+	* @var	array	rowset	Array with the forum list data
+	* @since 3.1.10-RC1
+	*/
+	$vars = array('rowset');
+	extract($phpbb_dispatcher->trigger_event('core.get_forum_list_modify_data', compact($vars)));
 
 	return $rowset;
 }
@@ -1113,28 +1139,6 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 }
 
 /**
-* Delete Attachments
-*
-* @deprecated 3.2.0-a1 (To be removed: 3.4.0)
-*
-* @param string $mode can be: post|message|topic|attach|user
-* @param mixed $ids can be: post_ids, message_ids, topic_ids, attach_ids, user_ids
-* @param bool $resync set this to false if you are deleting posts or topics
-*/
-function delete_attachments($mode, $ids, $resync = true)
-{
-	global $phpbb_container;
-
-	/** @var \phpbb\attachment\manager $attachment_manager */
-	$attachment_manager = $phpbb_container->get('attachment.manager');
-	$num_deleted = $attachment_manager->delete($mode, $ids, $resync);
-
-	unset($attachment_manager);
-
-	return $num_deleted;
-}
-
-/**
 * Deletes shadow topics pointing to a specified forum.
 *
 * @param int		$forum_id		The forum id
@@ -1243,23 +1247,6 @@ function update_posted_info(&$topic_ids)
 	unset($posted);
 
 	$db->sql_multi_insert(TOPICS_POSTED_TABLE, $sql_ary);
-}
-
-/**
-* Delete attached file
-*
-* @deprecated 3.2.0-a1 (To be removed: 3.4.0)
-*/
-function phpbb_unlink($filename, $mode = 'file', $entry_removed = false)
-{
-	global $phpbb_container;
-
-	/** @var \phpbb\attachment\manager $attachment_manager */
-	$attachment_manager = $phpbb_container->get('attachment.manager');
-	$unlink = $attachment_manager->unlink($filename, $mode, $entry_removed);
-	unset($attachment_manager);
-
-	return $unlink;
 }
 
 /**
@@ -2221,7 +2208,7 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 /**
 * Prune function
 */
-function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync = true)
+function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync = true, $prune_limit = 0)
 {
 	global $db, $phpbb_dispatcher;
 
@@ -2273,9 +2260,19 @@ function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync
 	* @var int		prune_flags		The prune flags
 	* @var bool		auto_sync		Whether or not to perform auto sync
 	* @var string	sql_and			SQL text appended to where clause
+	* @var int		prune_limit		The prune limit
 	* @since 3.1.3-RC1
+	* @changed 3.1.10-RC1			Added prune_limit
 	*/
-	$vars = array('forum_id', 'prune_mode', 'prune_date', 'prune_flags', 'auto_sync', 'sql_and');
+	$vars = array(
+		'forum_id',
+		'prune_mode',
+		'prune_date',
+		'prune_flags',
+		'auto_sync',
+		'sql_and',
+		'prune_limit',
+	);
 	extract($phpbb_dispatcher->trigger_event('core.prune_sql', compact($vars)));
 
 	$sql = 'SELECT topic_id
@@ -2283,7 +2280,7 @@ function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync
 		WHERE ' . $db->sql_in_set('forum_id', $forum_id) . "
 			AND poll_start = 0
 			$sql_and";
-	$result = $db->sql_query($sql);
+	$result = $db->sql_query_limit($sql, $prune_limit);
 
 	$topic_list = array();
 	while ($row = $db->sql_fetchrow($result))
@@ -2300,7 +2297,7 @@ function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync
 				AND poll_start > 0
 				AND poll_last_vote < $prune_date
 				$sql_and";
-		$result = $db->sql_query($sql);
+		$result = $db->sql_query_limit($sql, $prune_limit);
 
 		while ($row = $db->sql_fetchrow($result))
 		{
@@ -2333,12 +2330,15 @@ function auto_prune($forum_id, $prune_mode, $prune_flags, $prune_days, $prune_fr
 		$prune_date = time() - ($prune_days * 86400);
 		$next_prune = time() + ($prune_freq * 86400);
 
-		prune($forum_id, $prune_mode, $prune_date, $prune_flags, true);
+		$result = prune($forum_id, $prune_mode, $prune_date, $prune_flags, true, 300);
 
-		$sql = 'UPDATE ' . FORUMS_TABLE . "
-			SET prune_next = $next_prune
-			WHERE forum_id = $forum_id";
-		$db->sql_query($sql);
+		if ($result['topics'] == 0 && $result['posts'] == 0)
+		{
+			$sql = 'UPDATE ' . FORUMS_TABLE . "
+				SET prune_next = $next_prune
+				WHERE forum_id = $forum_id";
+			$db->sql_query($sql);
+		}
 
 		$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_AUTO_PRUNE', false, array($row['forum_name']));
 	}
@@ -2833,7 +2833,6 @@ function get_database_size()
 
 		break;
 
-		case 'mssql':
 		case 'mssql_odbc':
 		case 'mssqlnative':
 			$sql = 'SELECT @@VERSION AS mssql_version';
