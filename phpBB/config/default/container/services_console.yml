@@ -273,20 +273,20 @@ services:
     console.command.attachments.check:
         class: phpbb\console\command\attachments\check
         arguments:
-            - @user
-            - @config
-            - @dbal.conn
-            - @filesystem
-            - @mimetype.guesser
-            - %core.root_path%
+            - '@user'
+            - '@config'
+            - '@dbal.conn'
+            - '@filesystem'
+            - '@mimetype.guesser'
+            - '%core.root_path%'
         tags:
             - { name: console.command }
 
     console.command.passwords.reset:
         class: phpbb\console\command\passwords\reset
         arguments:
-            - @user
-            - @dbal.conn
+            - '@user'
+            - '@dbal.conn'
         tags:
             - { name: console.command }
 
