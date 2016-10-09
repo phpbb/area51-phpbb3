@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * phpBB Team Security Measures
+ * Team Security Measures extension for the phpBB Forum Software package.
  *
  * @copyright (c) 2014 phpBB Limited <https://www.phpbb.com>
  * @license GNU General Public License, version 2 (GPL-2.0)
@@ -12,7 +12,7 @@ namespace phpbb\teamsecurity\acp;
 
 class teamsecurity_info
 {
-	function module()
+	public function module()
 	{
 		return array(
 			'filename'	=> '\phpbb\teamsecurity\acp\teamsecurity_module',

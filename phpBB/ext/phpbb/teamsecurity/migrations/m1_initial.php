@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * phpBB Team Security Measures
+ * Team Security Measures extension for the phpBB Forum Software package.
  *
  * @copyright (c) 2014 phpBB Limited <https://www.phpbb.com>
  * @license GNU General Public License, version 2 (GPL-2.0)
@@ -12,6 +12,11 @@ namespace phpbb\teamsecurity\migrations;
 
 class m1_initial extends \phpbb\db\migration\migration
 {
+	static public function depends_on()
+	{
+		return array('\phpbb\db\migration\data\v31x\v313');
+	}
+
 	public function update_data()
 	{
 		return array(

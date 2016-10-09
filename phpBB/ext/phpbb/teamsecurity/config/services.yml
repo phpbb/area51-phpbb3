@@ -2,10 +2,10 @@ services:
     phpbb.teamsecurity.listener:
         class: phpbb\teamsecurity\event\listener
         arguments:
-            - @config
-            - @log
-            - @user
-            - %core.root_path%
-            - %core.php_ext%
+            - '@config'
+            - '@log'
+            - '@user'
+            - '%core.root_path%'
+            - '%core.php_ext%'
         tags:
             - { name: event.listener }

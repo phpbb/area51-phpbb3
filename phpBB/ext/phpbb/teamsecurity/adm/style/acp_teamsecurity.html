@@ -14,6 +14,14 @@
 				<label><input type="radio" class="radio" name="sec_login_email" value="0"<!-- IF not S_ACP_LOGIN_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
 			</dd>
 		</dl>
+		<dl>
+			<dt><label for="sec_contact">{L_ACP_CONTACT_EMAIL}{L_COLON}</label><br /><span>{L_ACP_CONTACT_EMAIL_EXPLAIN}</span></dt>
+			<dd><input type="text" id="sec_contact" name="sec_contact" value="{ACP_CONTACT_EMAIL}" size="40" maxlength="255" /></dd>
+		</dl>
+		<dl>
+			<dt><label for="sec_contact_name">{L_ACP_CONTACT_NAME}{L_COLON}</label><br /><span>{L_ACP_CONTACT_NAME_EXPLAIN}</span></dt>
+			<dd><input type="text" id="sec_contact_name" name="sec_contact_name" value="{ACP_CONTACT_NAME}" size="40" maxlength="255" /></dd>
+		</dl>
 	</fieldset>
 
 	<fieldset>
@@ -23,6 +31,13 @@
 			<dd>
 				<label><input type="radio" class="radio" id="sec_login_attempts" name="sec_login_attempts" value="1"<!-- IF S_ACP_LOGIN_ATTEMPTS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
 				<label><input type="radio" class="radio" name="sec_login_attempts" value="0"<!-- IF not S_ACP_LOGIN_ATTEMPTS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="sec_email_changes">{L_ACP_EMAIL_CHANGES}{L_COLON}</label><br /><span>{L_ACP_EMAIL_CHANGES_EXPLAIN}</span></dt>
+			<dd>
+				<label><input type="radio" class="radio" id="sec_email_changes" name="sec_email_changes" value="1"<!-- IF S_ACP_EMAIL_CHANGES --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="sec_email_changes" value="0"<!-- IF not S_ACP_EMAIL_CHANGES --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
 			</dd>
 		</dl>
 		<dl>
