@@ -58,6 +58,24 @@ acp_email_options_after
 * Since: 3.1.2-RC1
 * Purpose: Add settings to mass email form
 
+acp_ext_details_end
+===
+* Location: adm/style/acp_ext_details.html
+* Since: 3.1.11-RC1
+* Purpose: Add more detailed information on extension after the available information.
+
+acp_ext_list_disabled_title_after
+===
+* Location: adm/style/acp_ext_list.html
+* Since: 3.1.11-RC1
+* Purpose: Add text after disabled extensions section title.
+
+acp_ext_list_enabled_title_after
+===
+* Location: adm/style/acp_ext_list.html
+* Since: 3.1.11-RC1
+* Purpose: Add text after enabled extensions section title.
+
 acp_forums_custom_settings
 ===
 * Location: adm/style/acp_forums.html
@@ -183,6 +201,18 @@ acp_groups_position_teampage_add_button_before
 * Location: adm/style/acp_groups_position.html
 * Since: 3.1.7-RC1
 * Purpose: Add content before adding group to teampage submit button
+
+acp_help_phpbb_stats_after
+===
+* Location: adm/style/acp_help_phpbb.html
+* Since: 3.2.0-RC2
+* Purpose: Add content after send statistics tile
+
+acp_help_phpbb_stats_before
+===
+* Location: adm/style/acp_help_phpbb.html
+* Since: 3.2.0-RC2
+* Purpose: Add content before send statistics tile
 
 acp_logs_quick_select_forum_button_append
 ===
@@ -356,6 +386,13 @@ acp_profile_contact_before
     + adm/style/acp_profile.html
 * Since: 3.1.6-RC1
 * Purpose: Add extra options to custom profile field configuration in the ACP
+
+acp_profile_step_one_lang_after
+===
+* Locations:
+    + adm/style/acp_profile.html
+* Since: 3.1.11-RC1
+* Purpose: Add extra lang specific options to custom profile field step one configuration in the ACP
 
 acp_prune_forums_append
 ===
@@ -771,6 +808,13 @@ mcp_forum_actions_after
     + styles/prosilver/template/mcp_forum.html
 * Since: 3.1.11-RC1
 * Purpose: Add some information after actions fieldset
+
+mcp_forum_actions_append
+===
+* Locations:
+    + styles/prosilver/template/mcp_forum.html
+* Since: 3.1.11-RC1
+* Purpose: Add additional options to actions select
 
 mcp_forum_actions_before
 ===
@@ -1343,6 +1387,13 @@ overall_header_page_body_before
 * Since: 3.1.0-b3
 * Purpose: Add content after the page-header, but before the page-body
 
+overall_header_searchbox_after
+===
+* Locations:
+    + styles/prosilver/template/overall_header.html
+* Since: 3.1.11-RC1
+* Purpose: Add content after the search box in the header
+
 overall_header_searchbox_before
 ===
 * Locations:
@@ -1815,12 +1866,26 @@ ucp_main_front_user_activity_after
 * Since: 3.1.6-RC1
 * Purpose: Add content right after the user activity info viewing UCP front page
 
+ucp_main_front_user_activity_append
+===
+* Locations:
+    + styles/prosilver/template/ucp_main_front.html
+* Since: 3.1.11-RC1
+* Purpose: Add content after last user activity info viewing UCP front page
+
 ucp_main_front_user_activity_before
 ===
 * Locations:
     + styles/prosilver/template/ucp_main_front.html
 * Since: 3.1.6-RC1
 * Purpose: Add content right before the user activity info viewing UCP front page
+
+ucp_main_front_user_activity_prepend
+===
+* Locations:
+    + styles/prosilver/template/ucp_main_front.html
+* Since: 3.1.11-RC1
+* Purpose: Add content before first user activity info viewing UCP front page
 
 ucp_pm_history_post_buttons_after
 ===
@@ -1913,6 +1978,13 @@ ucp_pm_viewmessage_custom_fields_before
 * Since: 3.1.0-a1
 * Purpose: Add data before the custom fields on the user profile when viewing
 a private message
+
+ucp_pm_viewmessage_options_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_pm_viewmessage.html
+* Since: 3.1.11-RC1
+* Purpose: Add content right before display options
 
 ucp_pm_viewmessage_post_buttons_after
 ===
@@ -2056,6 +2128,13 @@ ucp_profile_register_details_after
     + styles/prosilver/template/ucp_profile_reg_details.html
 * Since: 3.1.4-RC1
 * Purpose: Add options in profile page fieldset - after confirm password field.
+
+ucp_register_buttons_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_register.html
+* Since: 3.1.11-RC1
+* Purpose: Add content before buttons in registration form.
 
 ucp_register_credentials_before
 ===

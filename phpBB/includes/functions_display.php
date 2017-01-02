@@ -282,6 +282,7 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 			$subforums[$parent_id][$forum_id]['name'] = $row['forum_name'];
 			$subforums[$parent_id][$forum_id]['orig_forum_last_post_time'] = $row['forum_last_post_time'];
 			$subforums[$parent_id][$forum_id]['children'] = array();
+			$subforums[$parent_id][$forum_id]['type'] = $row['forum_type'];
 
 			if (isset($subforums[$parent_id][$row['parent_id']]) && !$row['display_on_index'])
 			{
@@ -490,6 +491,7 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 						'link'		=> append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $subforum_id),
 						'name'		=> $subforum_row['name'],
 						'unread'	=> $subforum_unread,
+						'type'		=> $subforum_row['type'],
 					);
 				}
 				else
@@ -571,6 +573,7 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 				'U_SUBFORUM'	=> $subforum['link'],
 				'SUBFORUM_NAME'	=> $subforum['name'],
 				'S_UNREAD'		=> $subforum['unread'],
+				'IS_LINK'		=> $subforum['type'] == FORUM_LINK,
 			);
 		}
 		$s_subforums_list = (string) implode($user->lang['COMMA_SEPARATOR'], $s_subforums_list);
@@ -726,17 +729,17 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 */
 function generate_forum_rules(&$forum_data)
 {
+	if ($forum_data['forum_rules'])
+	{
+		$forum_data['forum_rules'] = generate_text_for_display($forum_data['forum_rules'], $forum_data['forum_rules_uid'], $forum_data['forum_rules_bitfield'], $forum_data['forum_rules_options']);
+	}
+
 	if (!$forum_data['forum_rules'] && !$forum_data['forum_rules_link'])
 	{
 		return;
 	}
 
 	global $template;
-
-	if ($forum_data['forum_rules'])
-	{
-		$forum_data['forum_rules'] = generate_text_for_display($forum_data['forum_rules'], $forum_data['forum_rules_uid'], $forum_data['forum_rules_bitfield'], $forum_data['forum_rules_options']);
-	}
 
 	$template->assign_vars(array(
 		'S_FORUM_RULES'	=> true,
@@ -1530,6 +1533,23 @@ function phpbb_get_user_rank($user_data, $user_posts)
 			}
 		}
 	}
+
+	/**
+	* Modify a user's rank before displaying
+	*
+	* @event core.get_user_rank_after
+	* @var	array	user_data		Array with user's data
+	* @var	int		user_posts		User_posts to change
+	* @var	array	user_rank_data	User rank data
+	* @since 3.1.11-RC1
+	*/
+
+	$vars = array(
+		'user_data',
+		'user_posts',
+		'user_rank_data',
+	);
+	extract($phpbb_dispatcher->trigger_event('core.get_user_rank_after', compact($vars)));
 
 	return $user_rank_data;
 }

@@ -889,8 +889,15 @@ function update_unread_status($unread, $msg_id, $user_id, $folder_id)
 		SET pm_unread = 0
 		WHERE msg_id = $msg_id
 			AND user_id = $user_id
-			AND folder_id = $folder_id";
+			AND folder_id = $folder_id
+			AND pm_unread = 1";
 	$db->sql_query($sql);
+
+	// If the message is already marked as read, we just skip the rest to avoid negative PM count
+	if (!$db->sql_affectedrows())
+	{
+		return;
+	}
 
 	$sql = 'UPDATE ' . USERS_TABLE . "
 		SET user_unread_privmsg = user_unread_privmsg - 1
