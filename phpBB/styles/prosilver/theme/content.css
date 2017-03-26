@@ -1,8 +1,11 @@
 /* -------------------------------------------------------------- /*
 	$Content
 /* -------------------------------------------------------------- */
+
 /* stylelint-disable selector-max-compound-selectors */
 /* stylelint-disable selector-no-qualifying-type */
+/* stylelint-disable declaration-property-unit-whitelist */
+/* stylelint-disable declaration-property-unit-blacklist */
 
 ul.topiclist {
 	display: block;
@@ -135,17 +138,19 @@ li.header dl.row-item dt .list-inner {
 
 /* Forum list column styles */
 dl.row-item {
-	background-position: 10px 50%;		/* Position of folder icon */
 	background-repeat: no-repeat;
+	background-position: 10px 50%;		/* Position of folder icon */
+	background-size: 32px;
 }
 
 dl.row-item dt {
-	background-position: 5px 95%;		/* Position of topic icon */
 	background-repeat: no-repeat;
+	background-position: 5px 95%;		/* Position of topic icon */
+	background-size: 17px;
 }
 
 dl.row-item dt .list-inner {
-	padding-left: 45px;					/* Space for folder icon */
+	padding-left: 52px;					/* Space for folder icon */
 }
 
 dl.row-item dt,
@@ -256,7 +261,7 @@ dd.option {
 }
 
 .postbody h3 {
-	font-family: 'Trebuchet MS', Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1.5em;
 	line-height: 125%;
 	text-transform: none;
@@ -335,7 +340,7 @@ dd.option {
 /* Content container styles
 ---------------------------------------- */
 .content {
-	font-family: 'Lucida Grande', 'Trebuchet MS', Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1em;
 	line-height: 1.4em;
 	clear: both;
@@ -365,14 +370,14 @@ dd.option {
 }
 
 .content p {
-	font-family: 'Lucida Grande', 'Trebuchet MS', Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1.2em;
 	line-height: 1.4em;
 	margin-bottom: 1em;
 }
 
 dl.faq {
-	font-family: 'Lucida Grande', Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1.1em;
 	line-height: 1.4em;
 	margin-top: 1em;
@@ -446,7 +451,7 @@ dd .signature {
 
 /* Post noticies */
 .notice {
-	font-family: 'Lucida Grande', Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
 	font-size: 1em;
 	line-height: 130%;
 	border-top: 1px dashed transparent;
@@ -484,10 +489,10 @@ blockquote blockquote {
 
 blockquote cite {
 	font-size: 0.9em;
+	font-weight: bold;
 
 	/* Username/source of quoter */
 	font-style: normal;
-	font-weight: bold;
 	display: block;
 	margin-left: 20px;
 }
@@ -513,7 +518,9 @@ blockquote cite > div {
 /* Code block */
 .codebox {
 	font-size: 1em;
+	word-wrap: normal;
 	border: 1px solid transparent;
+	overflow-x: scroll;
 	margin: 1em 0 1.2em;
 	padding: 3px;
 }
@@ -532,7 +539,7 @@ blockquote .codebox {
 }
 
 .codebox code {
-	font: 0.9em Monaco, 'Andale Mono', 'Courier New', Courier, monospace;
+	font: 0.9em Monaco, "Andale Mono", "Courier New", Courier, monospace;
 	line-height: 1.3em;
 	display: block;
 	overflow: auto;
@@ -647,7 +654,7 @@ dl.thumbnail dt a:hover img {
 /* Post poll styles
 ---------------------------------------- */
 fieldset.polls {
-	font-family: 'Trebuchet MS', Verdana, Helvetica, Arial, sans-serif;
+	font-family: "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
 }
 
 fieldset.polls dl {
@@ -790,8 +797,8 @@ dd.profile-contact {
 
 .online {
 	background-image: none;
-	background-position: 100% 0;
 	background-repeat: no-repeat;
+	background-position: 100% 0;
 }
 
 /* Poster profile used by search */
@@ -846,8 +853,8 @@ div.dl_links {
 }
 
 .ellipsis-text {
-	text-overflow: ellipsis;
 	white-space: nowrap;
+	text-overflow: ellipsis;
 	display: inline-block;
 	overflow: hidden;
 }
@@ -887,4 +894,9 @@ table.fixed-width-table {
 #team tr.inactive {
 	font-style: italic;
 }
-/* stylelint-enable */
+/* stylelint-enable selector-no-id */
+
+/* stylelint-enable selector-max-compound-selectors */
+/* stylelint-enable selector-no-qualifying-type */
+/* stylelint-enable declaration-property-unit-whitelist */
+/* stylelint-enable declaration-property-unit-blacklist */

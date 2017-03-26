@@ -3,6 +3,7 @@
 /* -------------------------------------------------------------- */
 /* stylelint-disable selector-max-compound-selectors */
 /* stylelint-disable selector-no-qualifying-type */
+/* stylelint-disable declaration-property-unit-whitelist */
 
 /**
 * common.css
@@ -14,6 +15,10 @@
 
 .rtl p.right {
 	text-align: left;
+}
+
+.rtl p.jumpbox-return {
+	float: right;
 }
 
 .rtl div.rules ul {
@@ -124,6 +129,11 @@
 .rtl .dropdown-extended .header .header_settings,
 .rtl .dropdown-container-right {
 	float: left;
+}
+
+.rtl .jumpbox .dropdown-contents a {
+	margin-right: 0;
+	margin-left: 20px;
 }
 
 /* Notifications
@@ -402,8 +412,8 @@ li.breadcrumbs span:first-child > a {
 }
 
 .rtl ul.topiclist dd {
-	border-right-style: solid;
 	border-right-width: 1px;
+	border-right-style: solid;
 	border-left: none;
 	float: right;
 }
@@ -592,8 +602,8 @@ li.breadcrumbs span:first-child > a {
 .rtl .pollbar4,
 .rtl .pollbar5 {
 	border-right: none;
-	border-left-style: solid;
 	border-left-width: 1px;
+	border-left-style: solid;
 }
 
 /* Poster profile block
@@ -606,8 +616,8 @@ li.breadcrumbs span:first-child > a {
 }
 
 .rtl .pm .postprofile {
-	border-right-style: solid;
 	border-right-width: 1px;
+	border-right-style: solid;
 	border-left: none;
 }
 
@@ -635,10 +645,11 @@ li.breadcrumbs span:first-child > a {
 */
 
 .rtl .caret {
-	float: right;
+	border-right: 1px solid;
+	border-right-color: inherit;
+	border-left: none;
+	right: 6px;
 }
-
-
 
 /* Post control buttons
 --------------------------------------------- */
@@ -659,8 +670,8 @@ li.breadcrumbs span:first-child > a {
  ---------------------------------------- */
 .rtl .contact-icons a {
 	border-right: none;
-	border-left-style: dotted;
 	border-left-width: 1px;
+	border-left-style: dotted;
 	float: right;
 }
 
@@ -800,8 +811,8 @@ li.breadcrumbs span:first-child > a {
 
 /* PM marking colours */
 .rtl .pm-legend {
-	border-right-style: solid;
 	border-right-width: 10px;
+	border-right-style: solid;
 	border-left-width: 0;
 	padding-right: 3px;
 	padding-left: 0;
@@ -948,9 +959,9 @@ li.breadcrumbs span:first-child > a {
 }
 
 .rtl .search-box .inputbox {
-	border-radius: 0 4px 4px 0;
 	border-right-width: 1px;
 	border-left-width: 0;
+	border-radius: 0 4px 4px 0;
 	float: right;
 	padding: 3px;
 }
@@ -960,9 +971,10 @@ li.breadcrumbs span:first-child > a {
 	float: right;
 }
 
-.button-search-end {
+.rtl .button-search-end {
 	border-right-width: 0;
 	border-left-width: 1px;
+	border-radius: 4px 0 0 4px;
 }
 
 .rtl .search-header .button-search-end {
@@ -1126,4 +1138,7 @@ li.breadcrumbs span:first-child > a {
 		margin-right: 0;
 	}
 }
-/* stylelint-enable */
+
+/* stylelint-enable selector-max-compound-selectors */
+/* stylelint-enable selector-no-qualifying-type */
+/* stylelint-enable declaration-property-unit-whitelist */
