@@ -579,7 +579,7 @@ $message_parser->set_plupload($plupload);
 if (isset($post_data['post_text']))
 {
 	$message_parser->message = &$post_data['post_text'];
-	unset($post_data['post_text']);
+//	unset($post_data['post_text']);
 }
 
 // Set some default variables
