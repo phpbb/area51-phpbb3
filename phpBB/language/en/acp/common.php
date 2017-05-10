@@ -88,6 +88,11 @@ $lang = array_merge($lang, array(
 	'ACP_EXTENSION_GROUPS'		=> 'Manage attachment extension groups',
 	'ACP_EXTENSION_MANAGEMENT'	=> 'Extension management',
 	'ACP_EXTENSIONS'			=> 'Manage extensions',
+	'ACP_EXTENSIONS_CATALOG'	=> 'Extensions catalog',
+	'ACP_EXTENSIONS_INSTALL'	=> 'Install extensions',
+	'ACP_EXTENSIONS_REMOVE'		=> 'Remove extensions',
+	'ACP_EXTENSIONS_UPDATE'		=> 'Update extensions',
+	'ACP_EXTENSIONS_MANAGE'		=> 'Manage extension automatically',
 
 	'ACP_FORUM_BASED_PERMISSIONS'	=> 'Forum based permissions',
 	'ACP_FORUM_LOGS'				=> 'Forum logs',
@@ -240,6 +245,17 @@ $lang = array_merge($lang, array(
 	'EXCEPTION' => 'Exception',
 
 	'COLOUR_SWATCH'			=> 'Web-safe colour swatch',
+
+	'COMPOSER_UNSUPPORTED_OPERATION'	=> 'Operation unsupported for the package type “%s”.',
+	'COMPOSER_UPDATING_DEPENDENCIES'	=> 'Updating packages',
+	'COMPOSER_LOADING_REPOSITORIES'		=> 'Loading remote repositories with package information',
+	'COMPOSER_ERROR_CONFLICT'			=> 'Your requirements could not be resolved to an installable set of packages.',
+	'COMPOSER_REPOSITORY_UNAVAILABLE'	=> 'An error occurred while fetching the repository %s.',
+	'COMPOSER_INSTALLING_PACKAGE'		=> '  - Installing %1$s (%2$s)',
+	'COMPOSER_DELETING'					=> '  - Deleting %s',
+	'COMPOSER_UPDATE_NOTHING'			=> 'Nothing to update',
+	'COMPOSER_OUTPUT'					=> 'Composer output',
+
 	'CONFIG_UPDATED'		=> 'Configuration updated successfully.',
 	'CRON_LOCK_ERROR'		=> 'Could not obtain cron lock.',
 	'CRON_NO_SUCH_TASK'		=> 'Could not find cron task “%s”.',
@@ -367,7 +383,7 @@ $lang = array_merge($lang, array(
 	'AVATAR_DIR_SIZE'			=> 'Avatar directory size',
 
 	'BOARD_STARTED'		=> 'Board started',
-	'BOARD_VERSION'		=> 'phpBB',
+	'BOARD_VERSION'		=> 'Board version',
 
 	'DATABASE_SERVER_INFO'	=> 'Database server',
 	'DATABASE_SIZE'			=> 'Database size',
@@ -395,7 +411,7 @@ $lang = array_merge($lang, array(
 	'NUMBER_USERS'		=> 'Number of users',
 	'NUMBER_ORPHAN'		=> 'Orphan attachments',
 
-	'PHP_VERSION'		=> 'PHP',
+	'PHP_VERSION'		=> 'PHP version',
 	'PHP_VERSION_OLD'	=> 'The version of PHP on this server (%1$s) will no longer be supported by future versions of phpBB. The minimum required version will be PHP %2$s. %3$sDetails%4$s',
 
 	'POSTS_PER_DAY'		=> 'Posts per day',
@@ -429,10 +445,6 @@ $lang = array_merge($lang, array(
 	'RESYNC_STATS_EXPLAIN'			=> 'Recalculates the total number of posts, topics, users and files.',
 	'RESYNC_STATS_SUCCESS'			=> 'Resynchronised statistics',
 	'RUN'							=> 'Run now',
-
-	'SOFTWARE_HEADING'			=> 'Installed software',
-	'SOFTWARE_PRODUCT'			=> 'Product',
-	'SOFTWARE_VERSION'			=> 'Version',
 
 	'STATISTIC'					=> 'Statistic',
 	'STATISTIC_RESYNC_OPTIONS'	=> 'Resynchronise or reset statistics',

@@ -126,7 +126,7 @@
 	text-align: right;
 }
 
-.rtl .dropdown-extended .header .header_settings,
+.rtl .dropdown-extended .header .header-settings,
 .rtl .dropdown-container-right {
 	float: left;
 }
@@ -138,23 +138,23 @@
 
 /* Notifications
 ----------------------------------------- */
-.rtl .notification_list ul li img {
+.rtl .notification-avatar {
 	float: right;
 	margin-right: 0;
 	margin-left: 5px;
 }
 
-.rtl .notification_list div.notifications {
+.rtl .notification-menu .notifications {
 	margin-right: 50px;
 	margin-left: 0;
 }
 
-.rtl .notification_text {
+.rtl .notification-text {
 	margin-right: 58px;
 	margin-left: 0;
 }
 
-.rtl .notification_list p.notification-time {
+.rtl .notification-time {
 	text-align: left;
 }
 
@@ -535,7 +535,6 @@ li.breadcrumbs span:first-child > a {
 
 /* Quote block */
 .rtl blockquote {
-	background-position: 99% 8px;
 	margin: 0.5em 25px 0 1px;
 }
 
@@ -546,8 +545,12 @@ li.breadcrumbs span:first-child > a {
 
 .rtl blockquote cite {
 	/* Username/source of quoter */
-	margin-right: 20px;
 	margin-left: 0;
+}
+
+.rtl blockquote cite:before,
+.rtl .uncited:before {
+	padding-left: 5px;
 }
 
 .rtl blockquote .codebox {
@@ -629,10 +632,6 @@ li.breadcrumbs span:first-child > a {
 
 .rtl .postprofile .avatar {
 	float: right;
-}
-
-.rtl .online {
-	background-position: 0 0;
 }
 
 .rtl dl.pmlist dd {
