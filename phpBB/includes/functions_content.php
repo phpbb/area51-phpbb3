@@ -336,7 +336,7 @@ function get_context($text, $words, $length = 400)
 	$text = str_replace($entities, $characters, $text);
 
 	$word_indizes = array();
-	if (sizeof($words))
+	if (count($words))
 	{
 		$match = '';
 		// find the starting indizes of all words
@@ -361,12 +361,12 @@ function get_context($text, $words, $length = 400)
 		}
 		unset($match);
 
-		if (sizeof($word_indizes))
+		if (count($word_indizes))
 		{
 			$word_indizes = array_unique($word_indizes);
 			sort($word_indizes);
 
-			$wordnum = sizeof($word_indizes);
+			$wordnum = count($word_indizes);
 			// number of characters on the right and left side of each word
 			$sequence_length = (int) ($length / (2 * $wordnum)) - 2;
 			$final_text = '';
@@ -434,7 +434,7 @@ function get_context($text, $words, $length = 400)
 		}
 	}
 
-	if (!sizeof($words) || !sizeof($word_indizes))
+	if (!count($words) || !count($word_indizes))
 	{
 		return str_replace($characters, $entities, ((utf8_strlen($text) >= $length + 3) ? utf8_substr($text, 0, $length) . '...' : $text));
 	}
@@ -734,9 +734,11 @@ function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bb
 	* @var string	uid				The BBCode UID
 	* @var string	bitfield		The BBCode Bitfield
 	* @var int		flags			The BBCode Flags
+	* @var string	message_parser	The message_parser object
 	* @since 3.1.0-a1
+	* @changed 3.1.11-RC1			Added message_parser to vars
 	*/
-	$vars = array('text', 'uid', 'bitfield', 'flags');
+	$vars = array('text', 'uid', 'bitfield', 'flags', 'message_parser');
 	extract($phpbb_dispatcher->trigger_event('core.modify_text_for_storage_after', compact($vars)));
 
 	return $message_parser->warn_msg;
@@ -1011,7 +1013,7 @@ function censor_text($text)
 		}
 	}
 
-	if (sizeof($censors))
+	if (count($censors))
 	{
 		return preg_replace($censors['match'], $censors['replace'], $text);
 	}
@@ -1069,7 +1071,7 @@ function smiley_text($text, $force_option = false)
 */
 function parse_attachments($forum_id, &$message, &$attachments, &$update_count_ary, $preview = false)
 {
-	if (!sizeof($attachments))
+	if (!count($attachments))
 	{
 		return;
 	}
@@ -1104,7 +1106,7 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 	}
 
 	// Grab attachments (security precaution)
-	if (sizeof($attach_ids))
+	if (count($attach_ids))
 	{
 		global $db;
 
@@ -1141,7 +1143,7 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 
 	foreach ($attachments as $attachment)
 	{
-		if (!sizeof($attachment))
+		if (!count($attachment))
 		{
 			continue;
 		}
@@ -1433,7 +1435,7 @@ function truncate_string($string, $max_length = 60, $max_store_length = 255, $al
 	$chars = array_map('utf8_htmlspecialchars', $_chars);
 
 	// Now check the length ;)
-	if (sizeof($chars) > $max_length)
+	if (count($chars) > $max_length)
 	{
 		// Cut off the last elements from the array
 		$string = implode('', array_slice($chars, 0, $max_length - utf8_strlen($append)));
@@ -1641,7 +1643,7 @@ function phpbb_generate_string_list($items, $user)
 		return '';
 	}
 
-	$count = sizeof($items);
+	$count = count($items);
 	$last_item = array_pop($items);
 	$lang_key = 'STRING_LIST_MULTI';
 

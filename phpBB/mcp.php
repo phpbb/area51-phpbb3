@@ -38,7 +38,7 @@ $template->assign_var('S_IN_MCP', true);
 $id = $request->variable('i', '');
 
 $mode = $request->variable('mode', array(''));
-$mode = sizeof($mode) ? array_shift($mode) : $request->variable('mode', '');
+$mode = count($mode) ? array_shift($mode) : $request->variable('mode', '');
 
 // Only Moderators can go beyond this point
 if (!$user->data['is_registered'])
@@ -61,7 +61,7 @@ if ($forum_action !== '' && $request->variable('sort', false, false, \phpbb\requ
 	$action = $forum_action;
 }
 
-if (sizeof($action_ary))
+if (count($action_ary))
 {
 	list($action, ) = each($action_ary);
 }

@@ -2,19 +2,15 @@ language: php
 
 matrix:
   include:
-    - php: 5.5
+    - php: 5.6
       env: DB=none;NOTESTS=1
-    - php: 5.5
-      env: DB=mysqli
-    - php: 5.5
-      env: DB=mysql
-    - php: 5.5
+    - php: 5.6
       env: DB=mariadb
-    - php: 5.5
+    - php: 5.6
       env: DB=postgres
-    - php: 5.5
+    - php: 5.6
       env: DB=sqlite3
-    - php: 5.5
+    - php: 5.6
       env: DB=mysqli;SLOWTESTS=1
     - php: 5.6
       env: DB=mysqli
@@ -28,7 +24,6 @@ matrix:
       env: DB=mysqli
   allow_failures:
     - php: hhvm
-    - php: nightly
   fast_finish: true
 
 addons:
@@ -53,6 +48,6 @@ script:
   - travis/check-executable-files.sh $DB $TRAVIS_PHP_VERSION $NOTESTS ./
   - travis/check-stylesheet.sh $NOTESTS
   - sh -c "if [ '$SLOWTESTS' != '1' -a '$DB' = 'mysqli' ]; then phpBB/vendor/bin/phpunit tests/lint_test.php; fi"
-  - sh -c "if [ '$NOTESTS' != '1' -a '$SLOWTESTS' != '1' ]; then phpBB/vendor/bin/phpunit --configuration travis/phpunit-$DB-travis.xml; fi"
+  - sh -c "if [ '$NOTESTS' != '1' -a '$SLOWTESTS' != '1' ]; then phpBB/vendor/bin/phpunit --configuration travis/phpunit-$DB-travis.xml --verbose --stop-on-error; fi"
   - sh -c "if [ '$SLOWTESTS' = '1' ]; then phpBB/vendor/bin/phpunit --configuration travis/phpunit-$DB-travis.xml --group slow; fi"
   - sh -c "set -x;if [ '$NOTESTS' = '1' -a '$TRAVIS_PULL_REQUEST' != 'false' ]; then git-tools/commit-msg-hook-range.sh origin/$TRAVIS_BRANCH..FETCH_HEAD; fi"

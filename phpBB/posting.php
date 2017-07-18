@@ -342,11 +342,6 @@ switch ($mode)
 			$is_authed = true;
 			$mode = 'soft_delete';
 		}
-		else if (!$is_authed)
-		{
-			// Display the same error message for softdelete we use for delete
-			$mode = 'delete';
-		}
 	break;
 }
 /**
@@ -395,13 +390,13 @@ $vars = array(
 );
 extract($phpbb_dispatcher->trigger_event('core.modify_posting_auth', compact($vars)));
 
-if (!$is_authed)
+if (!$is_authed || !empty($error))
 {
-	$check_auth = ($mode == 'quote') ? 'reply' : $mode;
+	$check_auth = ($mode == 'quote') ? 'reply' : (($mode == 'soft_delete') ? 'delete' : $mode);
 
 	if ($user->data['is_registered'])
 	{
-		trigger_error('USER_CANNOT_' . strtoupper($check_auth));
+		trigger_error(empty($error) ? 'USER_CANNOT_' . strtoupper($check_auth) : implode('<br/>', $error));
 	}
 	$message = $user->lang['LOGIN_EXPLAIN_' . strtoupper($mode)];
 
@@ -566,7 +561,7 @@ if ($mode == 'edit')
 	);
 }
 
-$orig_poll_options_size = sizeof($post_data['poll_options']);
+$orig_poll_options_size = count($post_data['poll_options']);
 
 $message_parser = new parse_message();
 /* @var $plupload \phpbb\plupload\plupload */
@@ -869,7 +864,7 @@ if ($submit || $preview || $refresh)
 	}
 
 	// Delete Poll
-	if ($poll_delete && $mode == 'edit' && sizeof($post_data['poll_options']) &&
+	if ($poll_delete && $mode == 'edit' && count($post_data['poll_options']) &&
 		((!$post_data['poll_last_vote'] && $post_data['poster_id'] == $user->data['user_id'] && $auth->acl_get('f_delete', $forum_id)) || $auth->acl_get('m_delete', $forum_id)))
 	{
 		if ($submit && check_form_key('posting'))
@@ -1019,7 +1014,7 @@ if ($submit || $preview || $refresh)
 	// Parse message
 	if ($update_message)
 	{
-		if (sizeof($message_parser->warn_msg))
+		if (count($message_parser->warn_msg))
 		{
 			$error[] = implode('<br />', $message_parser->warn_msg);
 			$message_parser->warn_msg = array();
@@ -1031,7 +1026,7 @@ if ($submit || $preview || $refresh)
 		}
 
 		// On a refresh we do not care about message parsing errors
-		if (sizeof($message_parser->warn_msg) && $refresh && !$preview)
+		if (count($message_parser->warn_msg) && $refresh && !$preview)
 		{
 			$message_parser->warn_msg = array();
 		}
@@ -1074,7 +1069,10 @@ if ($submit || $preview || $refresh)
 	// Validate username
 	if (($post_data['username'] && !$user->data['is_registered']) || ($mode == 'edit' && $post_data['poster_id'] == ANONYMOUS && $post_data['username'] && $post_data['post_username'] && $post_data['post_username'] != $post_data['username']))
 	{
-		include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+		if (!function_exists('validate_username'))
+		{
+			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+		}
 
 		$user->add_lang('ucp');
 
@@ -1190,6 +1188,11 @@ if ($submit || $preview || $refresh)
 	{
 		// We have a poll but the editing user is not permitted to create/edit it.
 		// So we just keep the original poll-data.
+		// Decode the poll title and options text fisrt.
+		$original_poll_data['poll_title'] = $bbcode_utils->unparse($original_poll_data['poll_title']);
+		$original_poll_data['poll_option_text'] = $bbcode_utils->unparse($original_poll_data['poll_option_text']);
+		$original_poll_data['poll_options'] = explode("\n", $original_poll_data['poll_option_text']);
+
 		$poll = array_merge($original_poll_data, array(
 			'enable_bbcode'		=> $post_data['enable_bbcode'],
 			'enable_urls'		=> $post_data['enable_urls'],
@@ -1245,7 +1248,7 @@ if ($submit || $preview || $refresh)
 		}
 	}
 
-	if (sizeof($message_parser->warn_msg))
+	if (count($message_parser->warn_msg))
 	{
 		$error[] = implode('<br />', $message_parser->warn_msg);
 	}
@@ -1290,7 +1293,7 @@ if ($submit || $preview || $refresh)
 	extract($phpbb_dispatcher->trigger_event('core.posting_modify_submission_errors', compact($vars)));
 
 	// Store message, sync counters
-	if (!sizeof($error) && $submit)
+	if (!count($error) && $submit)
 	{
 		if ($submit)
 		{
@@ -1487,7 +1490,7 @@ if ($submit || $preview || $refresh)
 }
 
 // Preview
-if (!sizeof($error) && $preview)
+if (!count($error) && $preview)
 {
 	$post_data['post_time'] = ($mode == 'edit') ? $post_data['post_time'] : $current_time;
 
@@ -1529,7 +1532,7 @@ if (!sizeof($error) && $preview)
 		}
 
 		$template->assign_vars(array(
-			'S_HAS_POLL_OPTIONS'	=> (sizeof($post_data['poll_options'])),
+			'S_HAS_POLL_OPTIONS'	=> (count($post_data['poll_options'])),
 			'S_IS_MULTI_CHOICE'		=> ($post_data['poll_max_options'] > 1) ? true : false,
 
 			'POLL_QUESTION'		=> $parse_poll->message,
@@ -1558,7 +1561,7 @@ if (!sizeof($error) && $preview)
 	}
 
 	// Attachment Preview
-	if (sizeof($message_parser->attachment_data))
+	if (count($message_parser->attachment_data))
 	{
 		$template->assign_var('S_HAS_ATTACHMENTS', true);
 
@@ -1576,7 +1579,7 @@ if (!sizeof($error) && $preview)
 		unset($attachment_data);
 	}
 
-	if (!sizeof($error))
+	if (!count($error))
 	{
 		$template->assign_vars(array(
 			'PREVIEW_SUBJECT'		=> $preview_subject,
@@ -1599,7 +1602,7 @@ if ($generate_quote && $config['max_quote_depth'] > 0)
 }
 
 // Decode text for message display
-$post_data['bbcode_uid'] = ($mode == 'quote' && !$preview && !$refresh && !sizeof($error)) ? $post_data['bbcode_uid'] : $message_parser->bbcode_uid;
+$post_data['bbcode_uid'] = ($mode == 'quote' && !$preview && !$refresh && !count($error)) ? $post_data['bbcode_uid'] : $message_parser->bbcode_uid;
 $message_parser->decode_message($post_data['bbcode_uid']);
 
 if ($generate_quote)
@@ -1647,7 +1650,7 @@ $attachment_data = $message_parser->attachment_data;
 $filename_data = $message_parser->filename_data;
 $post_data['post_text'] = $message_parser->message;
 
-if (sizeof($post_data['poll_options']) || (isset($post_data['poll_title']) && !$bbcode_utils->is_empty($post_data['poll_title'])))
+if (count($post_data['poll_options']) || (isset($post_data['poll_title']) && !$bbcode_utils->is_empty($post_data['poll_title'])))
 {
 	$message_parser->message = $post_data['poll_title'];
 	$message_parser->bbcode_uid = $post_data['bbcode_uid'];
@@ -1772,7 +1775,7 @@ $page_data = array(
 	'FORUM_NAME'			=> $post_data['forum_name'],
 	'FORUM_DESC'			=> ($post_data['forum_desc']) ? generate_text_for_display($post_data['forum_desc'], $post_data['forum_desc_uid'], $post_data['forum_desc_bitfield'], $post_data['forum_desc_options']) : '',
 	'TOPIC_TITLE'			=> censor_text($post_data['topic_title']),
-	'MODERATORS'			=> (sizeof($moderators)) ? implode($user->lang['COMMA_SEPARATOR'], $moderators[$forum_id]) : '',
+	'MODERATORS'			=> (count($moderators)) ? implode($user->lang['COMMA_SEPARATOR'], $moderators[$forum_id]) : '',
 	'USERNAME'				=> ((!$preview && $mode != 'quote') || $preview) ? $post_data['username'] : '',
 	'SUBJECT'				=> $post_data['post_subject'],
 	'MESSAGE'				=> $post_data['post_text'],
@@ -1784,7 +1787,7 @@ $page_data = array(
 	'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
 	'MINI_POST_IMG'			=> $user->img('icon_post_target', $user->lang['POST']),
 	'POST_DATE'				=> ($post_data['post_time']) ? $user->format_date($post_data['post_time']) : '',
-	'ERROR'					=> (sizeof($error)) ? implode('<br />', $error) : '',
+	'ERROR'					=> (count($error)) ? implode('<br />', $error) : '',
 	'TOPIC_TIME_LIMIT'		=> (int) $post_data['topic_time_limit'],
 	'EDIT_REASON'			=> $request->variable('edit_reason', '', true),
 	'SHOW_PANEL'			=> $request->variable('show_panel', ''),
@@ -1844,7 +1847,7 @@ if (($mode == 'post' || ($mode == 'edit' && $post_id == $post_data['topic_first_
 	$page_data = array_merge($page_data, array(
 		'S_SHOW_POLL_BOX'		=> true,
 		'S_POLL_VOTE_CHANGE'	=> ($auth->acl_get('f_votechg', $forum_id) && $auth->acl_get('f_vote', $forum_id)),
-		'S_POLL_DELETE'			=> ($mode == 'edit' && sizeof($post_data['poll_options']) && ((!$post_data['poll_last_vote'] && $post_data['poster_id'] == $user->data['user_id'] && $auth->acl_get('f_delete', $forum_id)) || $auth->acl_get('m_delete', $forum_id))),
+		'S_POLL_DELETE'			=> ($mode == 'edit' && count($post_data['poll_options']) && ((!$post_data['poll_last_vote'] && $post_data['poster_id'] == $user->data['user_id'] && $auth->acl_get('f_delete', $forum_id)) || $auth->acl_get('m_delete', $forum_id))),
 		'S_POLL_DELETE_CHECKED'	=> (!empty($poll_delete)) ? true : false,
 
 		'L_POLL_OPTIONS_EXPLAIN'	=> $user->lang('POLL_OPTIONS_' . (($mode == 'edit') ? 'EDIT_' : '') . 'EXPLAIN', (int) $config['max_poll_options']),

@@ -84,7 +84,7 @@ class messenger
 			return;
 		}
 
-		$pos = isset($this->addresses['to']) ? sizeof($this->addresses['to']) : 0;
+		$pos = isset($this->addresses['to']) ? count($this->addresses['to']) : 0;
 
 		$this->addresses['to'][$pos]['email'] = trim($address);
 
@@ -109,7 +109,7 @@ class messenger
 			return;
 		}
 
-		$pos = isset($this->addresses['cc']) ? sizeof($this->addresses['cc']) : 0;
+		$pos = isset($this->addresses['cc']) ? count($this->addresses['cc']) : 0;
 		$this->addresses['cc'][$pos]['email'] = trim($address);
 		$this->addresses['cc'][$pos]['name'] = trim($realname);
 	}
@@ -124,7 +124,7 @@ class messenger
 			return;
 		}
 
-		$pos = isset($this->addresses['bcc']) ? sizeof($this->addresses['bcc']) : 0;
+		$pos = isset($this->addresses['bcc']) ? count($this->addresses['bcc']) : 0;
 		$this->addresses['bcc'][$pos]['email'] = trim($address);
 		$this->addresses['bcc'][$pos]['name'] = trim($realname);
 	}
@@ -140,7 +140,7 @@ class messenger
 			return;
 		}
 
-		$pos = isset($this->addresses['im']) ? sizeof($this->addresses['im']) : 0;
+		$pos = isset($this->addresses['im']) ? count($this->addresses['im']) : 0;
 		$this->addresses['im'][$pos]['uid'] = trim($address);
 		$this->addresses['im'][$pos]['name'] = trim($realname);
 	}
@@ -306,10 +306,16 @@ class messenger
 
 	/**
 	* Send the mail out to the recipients set previously in var $this->addresses
+	*
+	* @param int	$method	User notification method NOTIFY_EMAIL|NOTIFY_IM|NOTIFY_BOTH
+	* @param bool	$break	Flag indicating if the function only formats the subject
+	*						and the message without sending it
+	*
+	* @return bool
 	*/
 	function send($method = NOTIFY_EMAIL, $break = false)
 	{
-		global $config, $user;
+		global $config, $user, $phpbb_dispatcher;
 
 		// We add some standard variables we always use, no need to specify them always
 		$this->assign_vars(array(
@@ -317,6 +323,30 @@ class messenger
 			'EMAIL_SIG'	=> str_replace('<br />', "\n", "-- \n" . htmlspecialchars_decode($config['board_email_sig'])),
 			'SITENAME'	=> htmlspecialchars_decode($config['sitename']),
 		));
+
+		$subject = $this->subject;
+		$message = $this->msg;
+		/**
+		* Event to modify notification message text before parsing
+		*
+		* @event core.modify_notification_message
+		* @var	int		method	User notification method NOTIFY_EMAIL|NOTIFY_IM|NOTIFY_BOTH
+		* @var	bool	break	Flag indicating if the function only formats the subject
+		*						and the message without sending it
+		* @var	string	subject	The message subject
+		* @var	string	message	The message text
+		* @since 3.1.11-RC1
+		*/
+		$vars = array(
+			'method',
+			'break',
+			'subject',
+			'message',
+		);
+		extract($phpbb_dispatcher->trigger_event('core.modify_notification_message', compact($vars)));
+		$this->subject = $subject;
+		$this->msg = $message;
+		unset($subject, $message);
 
 		// Parse message through template
 		$this->msg = trim($this->template->assign_display('body'));
@@ -473,7 +503,7 @@ class messenger
 		$vars = array('headers');
 		extract($phpbb_dispatcher->trigger_event('core.modify_email_headers', compact($vars)));
 
-		if (sizeof($this->extra_headers))
+		if (count($this->extra_headers))
 		{
 			$headers = array_merge($headers, $this->extra_headers);
 		}
@@ -618,7 +648,7 @@ class messenger
 		if (!$use_queue)
 		{
 			include_once($phpbb_root_path . 'includes/functions_jabber.' . $phpEx);
-			$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], htmlspecialchars_decode($config['jab_password']), $config['jab_use_ssl']);
+			$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], htmlspecialchars_decode($config['jab_password']), $config['jab_use_ssl'], $config['jab_verify_peer'], $config['jab_verify_peer_name'], $config['jab_allow_self_signed']);
 
 			if (!$this->jabber->connect())
 			{
@@ -784,7 +814,7 @@ class queue
 			}
 
 			$package_size = $data_ary['package_size'];
-			$num_items = (!$package_size || sizeof($data_ary['data']) < $package_size) ? sizeof($data_ary['data']) : $package_size;
+			$num_items = (!$package_size || count($data_ary['data']) < $package_size) ? count($data_ary['data']) : $package_size;
 
 			/*
 			* This code is commented out because it causes problems on some web hosts.
@@ -793,9 +823,9 @@ class queue
 			* web host and the package size setting is wrong.
 
 			// If the amount of emails to be sent is way more than package_size than we need to increase it to prevent backlogs...
-			if (sizeof($data_ary['data']) > $package_size * 2.5)
+			if (count($data_ary['data']) > $package_size * 2.5)
 			{
-				$num_items = sizeof($data_ary['data']);
+				$num_items = count($data_ary['data']);
 			}
 			*/
 
@@ -818,7 +848,7 @@ class queue
 					}
 
 					include_once($phpbb_root_path . 'includes/functions_jabber.' . $phpEx);
-					$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], htmlspecialchars_decode($config['jab_password']), $config['jab_use_ssl']);
+					$this->jabber = new jabber($config['jab_host'], $config['jab_port'], $config['jab_username'], htmlspecialchars_decode($config['jab_password']), $config['jab_use_ssl'], $config['jab_verify_peer'], $config['jab_verify_peer_name'], $config['jab_allow_self_signed']);
 
 					if (!$this->jabber->connect())
 					{
@@ -884,7 +914,7 @@ class queue
 			}
 
 			// No more data for this object? Unset it
-			if (!sizeof($this->queue_data[$object]['data']))
+			if (!count($this->queue_data[$object]['data']))
 			{
 				unset($this->queue_data[$object]);
 			}
@@ -900,7 +930,7 @@ class queue
 			}
 		}
 
-		if (!sizeof($this->queue_data))
+		if (!count($this->queue_data))
 		{
 			@unlink($this->cache_file);
 		}
@@ -935,7 +965,7 @@ class queue
 	*/
 	function save()
 	{
-		if (!sizeof($this->data))
+		if (!count($this->data))
 		{
 			return;
 		}
@@ -949,7 +979,7 @@ class queue
 
 			foreach ($this->queue_data as $object => $data_ary)
 			{
-				if (isset($this->data[$object]) && sizeof($this->data[$object]))
+				if (isset($this->data[$object]) && count($this->data[$object]))
 				{
 					$this->data[$object]['data'] = array_merge($data_ary['data'], $this->data[$object]['data']);
 				}
@@ -1037,7 +1067,7 @@ function smtpmail($addresses, $subject, $message, &$err_msg, $headers = false)
 	$mail_rcpt = $mail_to = $mail_cc = array();
 
 	// Build correct addresses for RCPT TO command and the client side display (TO, CC)
-	if (isset($addresses['to']) && sizeof($addresses['to']))
+	if (isset($addresses['to']) && count($addresses['to']))
 	{
 		foreach ($addresses['to'] as $which_ary)
 		{
@@ -1046,7 +1076,7 @@ function smtpmail($addresses, $subject, $message, &$err_msg, $headers = false)
 		}
 	}
 
-	if (isset($addresses['bcc']) && sizeof($addresses['bcc']))
+	if (isset($addresses['bcc']) && count($addresses['bcc']))
 	{
 		foreach ($addresses['bcc'] as $which_ary)
 		{
@@ -1054,7 +1084,7 @@ function smtpmail($addresses, $subject, $message, &$err_msg, $headers = false)
 		}
 	}
 
-	if (isset($addresses['cc']) && sizeof($addresses['cc']))
+	if (isset($addresses['cc']) && count($addresses['cc']))
 	{
 		foreach ($addresses['cc'] as $which_ary)
 		{
@@ -1089,7 +1119,7 @@ function smtpmail($addresses, $subject, $message, &$err_msg, $headers = false)
 	$options['ssl'] = array('verify_peer' => $verify_peer, 'verify_peer_name' => $verify_peer_name, 'allow_self_signed' => $allow_self_signed);
 	$socket_context = stream_context_create($options);
 
-	$smtp->socket = stream_socket_client($remote_socket, $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $socket_context);
+	$smtp->socket = @stream_socket_client($remote_socket, $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $socket_context);
 	$collector->uninstall();
 	$error_contents = $collector->format_errors();
 
@@ -1772,11 +1802,11 @@ function mail_encode($str, $eol = "\r\n")
 	$array = utf8_str_split($str);
 	$str = '';
 
-	while (sizeof($array))
+	while (count($array))
 	{
 		$text = '';
 
-		while (sizeof($array) && intval((strlen($text . $array[0]) + 2) / 3) << 2 <= $split_length)
+		while (count($array) && intval((strlen($text . $array[0]) + 2) / 3) << 2 <= $split_length)
 		{
 			$text .= array_shift($array);
 		}

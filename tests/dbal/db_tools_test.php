@@ -339,10 +339,10 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 
 	public function test_perform_schema_changes_drop_tables()
 	{
-		$db_tools = $this->getMock('\phpbb\db\tools\tools', array(
-			'sql_table_exists',
-			'sql_table_drop',
-		), array(&$this->db));
+		$db_tools = $this->getMockBuilder('\phpbb\db\tools\tools')
+			->setMethods(array('sql_table_exists', 'sql_table_drop'))
+			->setConstructorArgs(array(&$this->db))
+			->getMock();
 
 		// pretend all tables exist
 		$db_tools->expects($this->any())->method('sql_table_exists')
@@ -365,10 +365,10 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 
 	public function test_perform_schema_changes_drop_columns()
 	{
-		$db_tools = $this->getMock('\phpbb\db\tools\tools', array(
-			'sql_column_exists',
-			'sql_column_remove',
-		), array(&$this->db));
+		$db_tools = $this->getMockBuilder('\phpbb\db\tools\tools')
+			->setMethods(array('sql_column_exists', 'sql_column_remove'))
+			->setConstructorArgs(array(&$this->db))
+			->getMock();
 
 		// pretend all columns exist
 		$db_tools->expects($this->any())->method('sql_column_exists')
@@ -420,5 +420,42 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 		$this->assertFalse($this->tools->sql_column_exists('prefix_table_name', 'c_bug_13282'));
 		$this->assertTrue($this->tools->sql_column_add('prefix_table_name', 'c_bug_13282', array('TINT:2')));
 		$this->assertTrue($this->tools->sql_column_exists('prefix_table_name', 'c_bug_13282'));
+	}
+
+	public function test_create_index_with_long_name()
+	{
+		// This constant is being used for checking table prefix.
+		$table_prefix = substr(CONFIG_TABLE, 0, -6); // strlen(config)
+
+		if (strlen($table_prefix) > 20)
+		{
+			$this->markTestIncomplete('The table prefix length is too long for proper testing of index shortening function.');
+		}
+
+		$table_suffix = str_repeat('a', 25 - strlen($table_prefix));
+		$table_name = $table_prefix . $table_suffix;
+
+		$this->tools->sql_create_table($table_name, $this->table_data);
+
+		// Index name and table suffix and table prefix have > 30 chars in total.
+		// Index name and table suffix have <= 30 chars in total.
+		$long_index_name = str_repeat('i', 30 - strlen($table_suffix));
+		$this->assertFalse($this->tools->sql_index_exists($table_name, $long_index_name));
+		$this->assertTrue($this->tools->sql_create_index($table_name, $long_index_name, array('c_timestamp')));
+		$this->assertTrue($this->tools->sql_index_exists($table_name, $long_index_name));
+
+		// Index name and table suffix have > 30 chars in total.
+		$very_long_index_name = str_repeat('i', 30);
+		$this->assertFalse($this->tools->sql_index_exists($table_name, $very_long_index_name));
+		$this->assertTrue($this->tools->sql_create_index($table_name, $very_long_index_name, array('c_timestamp')));
+		$this->assertTrue($this->tools->sql_index_exists($table_name, $very_long_index_name));
+
+		$this->tools->sql_table_drop($table_name);
+
+		// Index name has > 30 chars - that should not be possible.
+		$too_long_index_name = str_repeat('i', 31);
+		$this->assertFalse($this->tools->sql_index_exists('prefix_table_name', $too_long_index_name));
+		$this->setExpectedTriggerError(E_USER_ERROR);
+		$this->tools->sql_create_index('prefix_table_name', $too_long_index_name, array('c_timestamp'));
 	}
 }
