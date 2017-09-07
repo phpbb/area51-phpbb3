@@ -1483,6 +1483,20 @@ overall_header_stylesheets_after
 * Purpose: Add asset calls after stylesheets within the `</head>` tag.
 Note that INCLUDECSS will not work with this event.
 
+posting_attach_body_attach_row_controls_append
+===
+* Locations:
+    + styles/prosilver/template/posting_attach_body.html
+* Since: 3.2.2-RC1
+* Purpose: Add content after attachment control elements 
+
+posting_attach_body_attach_row_controls_prepend
+===
+* Locations:
+    + styles/prosilver/template/posting_attach_body.html
+* Since: 3.2.2-RC1
+* Purpose: Add content before attachment control elements 
+
 posting_editor_add_panel_tab
 ===
 * Locations:
@@ -2670,6 +2684,13 @@ viewtopic_topic_title_after
     + styles/prosilver/template/viewtopic_body.html
 * Since: 3.1.7-RC1
 * Purpose: Add content directly after the topic title link on the View topic screen (outside of the h2 HTML tag)
+
+viewtopic_topic_title_before
+===
+* Locations:
+    + styles/prosilver/template/viewtopic_body.html
+* Since: 3.2.2-RC1
+* Purpose: Add content directly before the topic title link on the View topic screen (outside of the h2 HTML tag)
 
 viewtopic_topic_title_append
 ===

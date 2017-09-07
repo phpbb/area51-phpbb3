@@ -156,9 +156,7 @@ class bbcode
 					$phpbb_container->get('path_helper'),
 					$phpbb_container->getParameter('core.cache_dir'),
 					$phpbb_container->get('ext.manager'),
-					new \phpbb\template\twig\loader(
-						$phpbb_filesystem
-					)
+					new \phpbb\template\twig\loader()
 				),
 				$phpbb_container->getParameter('core.cache_dir'),
 				$phpbb_container->get('user'),
@@ -501,7 +499,10 @@ class bbcode
 			// Turn template blocks into PHP assignment statements for the values of $bbcode_tpl..
 			$this->bbcode_template = array();
 
-			$matches = preg_match_all('#<!-- BEGIN (.*?) -->(.*?)<!-- END (?:.*?) -->#', $tpl, $match);
+			// Capture the BBCode template matches
+			// Allow phpBB template or the Twig syntax
+			$matches = (preg_match_all('#<!-- BEGIN (.*?) -->(.*?)<!-- END (?:.*?) -->#', $tpl, $match)) ?:
+							preg_match_all('#{% for (.*?) in .*? %}(.*?){% endfor %}#s', $tpl, $match);
 
 			for ($i = 0; $i < $matches; $i++)
 			{

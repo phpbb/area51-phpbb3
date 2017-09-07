@@ -323,6 +323,9 @@ class factory implements \phpbb\textformatter\cache_interface
 			// Only parse emoticons at the beginning of the text or if they're preceded by any
 			// one of: a new line, a space, a dot, or a right square bracket
 			$configurator->Emoticons->notAfter = '[^\\n .\\]]';
+
+			// Ignore emoticons that are immediately followed by a "word" character
+			$configurator->Emoticons->notBefore = '\\w';
 		}
 
 		// Load the censored words
@@ -518,7 +521,9 @@ class factory implements \phpbb\textformatter\cache_interface
 	protected function extract_templates($template)
 	{
 		// Capture the template fragments
-		preg_match_all('#<!-- BEGIN (.*?) -->(.*?)<!-- END .*? -->#s', $template, $matches, PREG_SET_ORDER);
+		// Allow either phpBB template or the Twig syntax
+		preg_match_all('#<!-- BEGIN (.*?) -->(.*?)<!-- END .*? -->#s', $template, $matches, PREG_SET_ORDER) ?:
+			preg_match_all('#{% for (.*?) in .*? %}(.*?){% endfor %}#s', $template, $matches, PREG_SET_ORDER);
 
 		$fragments = array();
 		foreach ($matches as $match)
