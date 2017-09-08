@@ -8,7 +8,6 @@
 /phpBB/files/*
 /phpBB/images/avatars/gallery/*
 /phpBB/images/avatars/upload/*
-/phpBB/images/ranks/*
 /phpBB/install/schemas/schema.json
 /phpBB/language/*
 !/phpBB/language/en
