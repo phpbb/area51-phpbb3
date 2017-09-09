@@ -46,6 +46,16 @@ class storage
 	}
 
 	/**
+	 * Returns storage name
+	 *
+	 * @return string
+	 */
+	public function get_name()
+	{
+		return $this->storage_name;
+	}
+
+	/**
 	 * Returns an adapter instance
 	 *
 	 * @return \phpbb\storage\adapter\adapter_interface
@@ -191,5 +201,19 @@ class storage
 			// Simulate the stream
 			$adapter->put_contents($path, stream_get_contents($resource));
 		}
+	}
+
+	/**
+	 * Get file info.
+	 *
+	 * @param string	$path	The file
+	 *
+	 * @throws \phpbb\storage\exception\not_implemented	When the adapter doesnt implement the method
+	 *
+	 * @return \phpbb\storage\file_info	Returns file_info object
+	 */
+	public function file_info($path)
+	{
+		return new file_info($this->adapter, $path);
 	}
 }

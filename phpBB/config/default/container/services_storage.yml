@@ -1,4 +1,14 @@
 services:
+
+# Storages
+    storage.avatar:
+        class: phpbb\storage\storage
+        arguments:
+            - '@storage.adapter.factory'
+            - 'avatar'
+        tags:
+            - { name: storage }
+
 # Factory
     storage.adapter.factory:
         class: phpbb\storage\adapter_factory
@@ -8,6 +18,13 @@ services:
             - '@storage.provider_collection'
 
 # Collections
+    storage.storage_collection:
+        class: phpbb\di\service_collection
+        arguments:
+            - '@service_container'
+        tags:
+            - { name: service_collection, tag: storage }
+
     storage.adapter_collection:
         class: phpbb\di\service_collection
         arguments:
@@ -28,6 +45,8 @@ services:
         shared: false
         arguments:
             - '@filesystem'
+            - '@upload_imagesize'
+            - '@mimetype.guesser'
             - '%core.root_path%'
         tags:
             - { name: storage.adapter }

@@ -48,7 +48,7 @@ $lang = array_merge($lang, array(
 	'USER_LANG'			=> 'en-gb',
 
 	// You can define different rules for the determination of plural forms here.
-	// See http://wiki.phpbb.com/Plural_Rules for more information
+	// See https://area51.phpbb.com/docs/dev/32x/language/plurals.html for more information
 	// or ask the translation manager for help.
 	'PLURAL_RULE'		=> 1,
 
@@ -369,7 +369,7 @@ $lang = array_merge($lang, array(
 	'LDAP_SEARCH_FAILED'				=> 'An error occurred while searching the LDAP directory.',
 	'LEGEND'							=> 'Legend',
 	'LIVE_SEARCHES_NOT_ALLOWED'			=> 'Live searches are not allowed.',
-	'LOADING'							=> 'Loading',
+	'LOADING'							=> 'Loading...',
 	'LOCATION'							=> 'Location',
 	'LOCK_POST'							=> 'Lock post',
 	'LOCK_POST_EXPLAIN'					=> 'Prevent editing',
