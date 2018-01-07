@@ -107,6 +107,7 @@ $lang = array_merge($lang, array(
 // Forum Permissions
 $lang = array_merge($lang, array(
 	'ACL_F_LIST'		=> 'Can see forum',
+	'ACL_F_LIST_TOPICS' => 'Can see topics',
 	'ACL_F_READ'		=> 'Can read forum',
 	'ACL_F_SEARCH'		=> 'Can search the forum',
 	'ACL_F_SUBSCRIBE'	=> 'Can subscribe forum',
@@ -199,6 +200,7 @@ $lang = array_merge($lang, array(
 	'ACL_A_ROLES'		=> 'Can manage roles',
 	'ACL_A_SWITCHPERM'	=> 'Can use others permissions',
 
+	'ACL_A_STORAGE'		=> 'Can manage storages',
 	'ACL_A_STYLES'		=> 'Can manage styles',
 	'ACL_A_EXTENSIONS'	=> 'Can manage extensions',
 	'ACL_A_VIEWLOGS'	=> 'Can view logs',

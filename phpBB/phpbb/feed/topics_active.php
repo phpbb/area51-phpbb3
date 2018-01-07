@@ -17,7 +17,7 @@ namespace phpbb\feed;
  * Active Topics feed
  *
  * This will give you the last {$this->num_items} topics
- * with replies made withing the last {$this->sort_days} days
+ * with replies made within the last {$this->sort_days} days
  * including the last post.
  */
 class topics_active extends topic_base
@@ -119,7 +119,7 @@ class topics_active extends topic_base
 				FROM ' . FORUMS_TABLE . '
 				WHERE forum_type = ' . FORUM_POST . '
 					AND ' . $this->db->sql_bit_and('forum_options', FORUM_OPTION_FEED_EXCLUDE, '= 0') . '
-					AND ' . $this->db->sql_bit_and('forum_flags', log(FORUM_FLAG_ACTIVE_TOPICS, 2), '<> 0');
+					AND ' . $this->db->sql_bit_and('forum_flags', round(log(FORUM_FLAG_ACTIVE_TOPICS, 2)), '<> 0');
 			$result = $this->db->sql_query($sql);
 
 			$forum_ids = array();

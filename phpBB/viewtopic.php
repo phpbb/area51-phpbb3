@@ -265,8 +265,12 @@ if (!$topic_data)
 
 $forum_id = (int) $topic_data['forum_id'];
 
+// If the request is missing the f parameter, the forum id in the user session data is 0 at the moment.
+// Let's fix that now so that the user can't hide from the forum's Who Is Online list.
+$user->page['forum'] = $forum_id;
+
 // Now we know the forum_id and can check the permissions
-if ($topic_data['topic_visibility'] != ITEM_APPROVED && !$auth->acl_get('m_approve', $forum_id))
+if (!$phpbb_content_visibility->is_visible('topic', $forum_id, $topic_data))
 {
 	trigger_error('NO_TOPIC');
 }
@@ -2019,10 +2023,13 @@ for ($i = 0, $end = count($post_list); $i < $end; ++$i)
 	* @var	array	user_poster_data	Poster's data from user cache
 	* @var	array	post_row			Template block array of the post
 	* @var	array	topic_data			Array with topic data
+	* @var	array	user_cache			Array with cached user data
+	* @var	array	post_edit_list		Array with post edited list
 	* @since 3.1.0-a1
 	* @changed 3.1.0-a3 Added vars start, current_row_number, end, attachments
 	* @changed 3.1.0-b3 Added topic_data array, total_posts
 	* @changed 3.1.0-RC3 Added poster_id
+	* @changed 3.2.2-RC1 Added user_cache and post_edit_list
 	*/
 	$vars = array(
 		'start',
@@ -2036,6 +2043,8 @@ for ($i = 0, $end = count($post_list); $i < $end; ++$i)
 		'user_poster_data',
 		'post_row',
 		'topic_data',
+		'user_cache',
+		'post_edit_list',
 	);
 	extract($phpbb_dispatcher->trigger_event('core.viewtopic_modify_post_row', compact($vars)));
 

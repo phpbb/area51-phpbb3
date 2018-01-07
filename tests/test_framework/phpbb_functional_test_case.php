@@ -508,7 +508,6 @@ class phpbb_functional_test_case extends phpbb_test_case
 		else
 		{
 			$db->sql_multi_insert(STYLES_TABLE, array(array(
-				'style_id' => $style_id,
 				'style_name' => $style_path,
 				'style_copyright' => '',
 				'style_active' => 1,
@@ -570,6 +569,9 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$config['newest_user_colour'] = '';
 		$config['rand_seed'] = '';
 		$config['rand_seed_last_update'] = time() + 600;
+
+		// Prevent new user to have an invalid style
+		$config['default_style'] = 1;
 
 		// Required by user_add
 		global $db, $cache, $phpbb_dispatcher, $phpbb_container;

@@ -2,8 +2,6 @@
 	$Links
 /* -------------------------------------------------------------- */
 
-/* stylelint-disable declaration-property-unit-whitelist */
-
 /* Links adjustment to correctly display an order of rtl/ltr mixed content */
 a {
 	text-decoration: none;
@@ -47,6 +45,7 @@ th a:hover {
 	top: 50%;
 	right: 0;
 	display: none;
+	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 	margin-top: -20px;
 }
@@ -66,9 +65,10 @@ th a:hover {
 
 
 /* Links for forum/topic lists */
-a.forumtitle {
+a.forumtitle,
+a.topictitle {
 	font-family: "Trebuchet MS", Helvetica, Arial, sans-serif;
-	font-size: 1.2em;
+	font-size: 13px;
 	font-weight: bold;
 	text-decoration: none;
 }
@@ -78,10 +78,6 @@ a.forumtitle:hover {
 }
 
 a.topictitle {
-	font-family: "Trebuchet MS", Helvetica, Arial, sans-serif;
-	font-size: 1.2em;
-	font-weight: bold;
-	text-decoration: none;
 	display: inline;
 }
 
@@ -209,5 +205,3 @@ a.feed-icon-forum {
 a.anchor {
 	display: block;
 }
-
-/* stylelint-enable declaration-property-unit-whitelist */

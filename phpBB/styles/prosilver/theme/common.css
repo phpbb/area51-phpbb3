@@ -3,8 +3,6 @@
 /* -------------------------------------------------------------- */
 /* stylelint-disable selector-max-compound-selectors */
 /* stylelint-disable selector-no-qualifying-type */
-/* stylelint-disable declaration-property-unit-whitelist */
-/* stylelint-disable declaration-property-unit-blacklist */
 
 html {
 	font-size: 100%;
@@ -15,7 +13,7 @@ html {
 
 body {
 	font-family: Verdana, Helvetica, Arial, sans-serif;
-	font-size: 10px;
+	font-size: 16px;
 	line-height: normal;
 	word-wrap: break-word;
 	margin: 0;
@@ -26,7 +24,7 @@ body {
 h1 {
 	/* Forum name */
 	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-	font-size: 2em;
+	font-size: 20px;
 	font-weight: bold;
 	margin-top: 15px;
 	margin-right: 200px;
@@ -35,19 +33,19 @@ h1 {
 h2 {
 	/* Forum header titles */
 	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-	font-size: 2em;
+	font-size: 20px;
 	font-weight: normal;
 	margin: 0.8em 0 0.2em;
 }
 
 h2.solo {
-	margin-bottom: 1em;
+	margin-bottom: 20px;
 }
 
 h3 {
 	/* Sub-headers (also used as post headers, but defined later) */
 	font-family: Arial, Helvetica, sans-serif;
-	font-size: 1.05em;
+	font-size: 12px;
 	font-weight: bold;
 	text-transform: uppercase;
 	border-bottom: 1px solid transparent;
@@ -59,13 +57,13 @@ h3 {
 h4 {
 	/* Forum and topic list titles */
 	font-family: "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
-	font-size: 1.3em;
+	font-size: 13px;
 }
 
 p {
-	font-size: 1.1em;
-	line-height: 1.3em;
-	margin-bottom: 1.5em;
+	font-size: 11px;
+	line-height: 14px;
+	margin-bottom: 16px;
 }
 
 img {
@@ -159,12 +157,6 @@ a:hover {
 	max-width: 1152px;
 	margin: 0 auto;
 	padding: 15px;
-}
-
-@media only screen and (max-width: 1220px), only screen and (max-device-width: 1220px) {
-	.wrap {
-		margin: 0 12px;
-	}
 }
 
 .page-body {
@@ -269,8 +261,8 @@ ul.linklist {
 }
 
 ul.linklist > li {
-	font-size: 1.1em;
-	line-height: 2.2em;
+	font-size: 11px;
+	line-height: 24px;
 	float: left;
 	width: auto;
 	margin-right: 7px;
@@ -458,6 +450,7 @@ a.header-avatar span:after {
 	width: 0;
 	height: 0;
 	-webkit-transform: rotate(360deg); /* better anti-aliasing in webkit */
+	transform: rotate(360deg);
 }
 
 .dropdown-up .pointer,
@@ -549,7 +542,7 @@ a.header-avatar span:after {
 }
 
 .dropdown li {
-	font-size: 1em !important;
+	font-size: 11px !important;
 	line-height: normal !important;
 	text-align: left;
 	white-space: nowrap;
@@ -629,15 +622,15 @@ a.header-avatar span:after {
 }
 
 .breadcrumbs.wrapped .crumb a {
-	letter-spacing: -0.3px;
+	letter-spacing: -0.019em;
 }
 
 .breadcrumbs.wrapped .crumb.wrapped-medium a {
-	letter-spacing: -0.4px;
+	letter-spacing: -0.025em;
 }
 
 .breadcrumbs.wrapped .crumb.wrapped-tiny a {
-	letter-spacing: -0.5px;
+	letter-spacing: -0.031em;
 }
 
 .breadcrumbs .crumb.wrapped-max a {
@@ -671,9 +664,9 @@ table.table1 {
 }
 
 table.table1 thead th {
-	font-size: 1em;
+	font-size: 10px;
 	font-weight: normal;
-	line-height: 1.3em;
+	line-height: 13px;
 	text-transform: uppercase;
 	padding: 0 0 4px 3px;
 }
@@ -687,7 +680,7 @@ table.table1 tbody tr {
 }
 
 table.table1 td {
-	font-size: 1.1em;
+	font-size: 11px;
 }
 
 table.table1 tbody td {
@@ -746,12 +739,12 @@ table.table1 .info div {
 }
 
 table.table1 .autocol {
-	line-height: 2em;
+	line-height: 22px;
 	white-space: nowrap;
 }
 
 table.table1 thead .autocol {
-	padding-left: 1em;
+	padding-left: 10px;
 }
 
 table.table1 span.rank-img {
@@ -819,8 +812,8 @@ table.info tbody th {
 }
 
 dl.details {
-	/* font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif; */
-	font-size: 1.1em;
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
+	font-size: 11px;
 }
 
 dl.details dt {
@@ -857,7 +850,13 @@ fieldset.fields1 ul.recipients {
 
 fieldset.fields1 dd.recipients {
 	clear: left;
-	margin-left: 1em;
+	margin-left: 11px;
+}
+
+fieldset.fields1 ul.recipients input.button2 {
+	font-size: 12px;
+	margin-right: 0;
+	padding: 0;
 }
 
 fieldset.fields1 dl.pmlist > dt {
@@ -876,7 +875,7 @@ fieldset.fields1 dl.pmlist dd.recipients {
 }
 
 .forabg + .action-bar {
-	margin-top: 2em;
+	margin-top: 12px;
 }
 
 .action-bar .button {
@@ -952,6 +951,7 @@ fieldset.fields1 dl.pmlist dd.recipients {
 
 .pagination li.page-jump a i {
 	font-size: 21px;
+	line-height: 21px;
 }
 
 .pagination .arrow a {
@@ -991,12 +991,6 @@ fieldset.fields1 dl.pmlist dd.recipients {
 	padding: 0 25px 20px;
 }
 
-@media only screen and (max-height: 500px), only screen and (max-device-width: 500px) {
-	.phpbb_alert {
-		top: 25px;
-	}
-}
-
 .phpbb_alert .alert_close {
 	float: right;
 	margin-top: -8px;
@@ -1019,7 +1013,7 @@ fieldset.fields1 dl.pmlist dd.recipients {
 .phpbb_alert div.alert_text > select,
 .phpbb_alert div.alert_text > textarea,
 .phpbb_alert div.alert_text > input {
-	font-size: 1.1em;
+	font-size: 11px;
 }
 
 .darkenwrapper {
@@ -1053,25 +1047,61 @@ fieldset.fields1 dl.pmlist dd.recipients {
 }
 
 .spinner {
+	-webkit-animation: rotator 1s linear infinite;
 	animation: rotator 1s linear infinite;
 }
 
 /* stylelint-disable no-unknown-animations */
 .spinner-path {
+	-webkit-transform-origin: center;
 	transform-origin: center;
+	-webkit-animation: dash 1s ease-in-out infinite, colors 4s ease-in-out infinite;
 	animation: dash 1s ease-in-out infinite, colors 4s ease-in-out infinite;
 	stroke-dasharray: 187;
 	stroke-dashoffset: 0;
 }
 /* stylelint-enable no-unknown-animations */
 
-@keyframes rotator {
+/* stylelint-disable at-rule-no-vendor-prefix */
+@-webkit-keyframes rotator {
 	0% {
+		-webkit-transform: rotate(0deg);
 		transform: rotate(0deg);
 	}
 
 	100% {
+		-webkit-transform: rotate(270deg);
 		transform: rotate(270deg);
+	}
+}
+
+@keyframes rotator {
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+
+	100% {
+		-webkit-transform: rotate(270deg);
+		transform: rotate(270deg);
+	}
+}
+
+@-webkit-keyframes dash {
+	0% {
+		stroke-dashoffset: 187;
+	}
+
+	50% {
+		-webkit-transform: rotate(135deg);
+		transform: rotate(135deg);
+		stroke-dashoffset: 46.75;
+	}
+
+	100% {
+		-webkit-transform: rotate(450deg);
+		transform: rotate(450deg);
+		stroke-dashoffset: 187;
 	}
 }
 
@@ -1081,26 +1111,30 @@ fieldset.fields1 dl.pmlist dd.recipients {
 	}
 
 	50% {
+		-webkit-transform: rotate(135deg);
 		transform: rotate(135deg);
 		stroke-dashoffset: 46.75;
 	}
 
 	100% {
+		-webkit-transform: rotate(450deg);
 		transform: rotate(450deg);
 		stroke-dashoffset: 187;
 	}
 }
+/* stylelint-enable at-rule-no-vendor-prefix */
 
 
 /* Miscellaneous styles
 ---------------------------------------- */
 .copyright {
+	font-size: 10px;
 	text-align: center;
 	padding: 5px;
 }
 
 .small {
-	font-size: 0.9em !important;
+	font-size: 90% !important;
 }
 
 .titlespace {
@@ -1112,12 +1146,12 @@ fieldset.fields1 dl.pmlist dd.recipients {
 }
 
 .error {
-	font-size: 1em;
+	font-size: 10px;
 	font-weight: bold;
 }
 
 div.rules {
-	font-size: 1.1em;
+	font-size: 11px;
 	border-radius: 7px;
 	margin: 10px 0;
 	padding: 5px 10px;
@@ -1131,7 +1165,7 @@ div.rules ol {
 p.post-notice {
 	position: relative;
 	min-height: 14px;
-	margin-bottom: 1em;
+	margin-bottom: 11px;
 	padding: 5px;
 }
 
@@ -1171,12 +1205,14 @@ ul.linklist:after,
 	content: "";
 }
 
+/* stylelint-disable declaration-property-unit-whitelist */
 .emoji {
 	width: 1em;
 	min-width: 18px;
 	height: 1em;
 	min-height: 18px;
 }
+/* stylelint-enable declaration-property-unit-whitelist */
 
 .smilies {
 	vertical-align: text-bottom;
@@ -1193,7 +1229,7 @@ ul.linklist:after,
 }
 
 .member-search strong {
-	font-size: 0.95em;
+	font-size: 11px;
 }
 
 .dropdown-extended {
@@ -1209,7 +1245,6 @@ ul.linklist:after,
 }
 
 .dropdown-extended .dropdown-extended-item {
-	font-size: 0.95em;
 	border-top: 1px solid;
 	position: relative;
 	float: none;
@@ -1241,11 +1276,13 @@ ul.linklist:after,
 .dropdown-extended .header {
 	font-family: Arial, "Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-weight: bold;
-	line-height: 3em;
+	line-height: 33px;
 	text-align: left;
 	text-transform: uppercase;
 	border-bottom: 1px solid;
 	border-radius: 5px 5px 0 0;
+
+	/* needs moved to colurs.css */
 	text-shadow: 1px 1px 1px #ffffff;
 	padding: 0 10px;
 }
@@ -1268,7 +1305,7 @@ ul.linklist:after,
 }
 
 .dropdown-extended .footer {
-	font-size: 1.1em;
+	font-size: 12px;
 	text-align: center;
 }
 
@@ -1300,7 +1337,6 @@ ul.linklist:after,
 }
 
 .notification-item p {
-	font-size: 1em;
 	margin-bottom: 4px;
 }
 
@@ -1313,7 +1349,7 @@ ul.linklist:after,
 }
 
 .notification-time {
-	font-size: 0.9em;
+	font-size: 10px;
 	text-align: right;
 	margin: 0;
 }
@@ -1329,7 +1365,7 @@ ul.linklist:after,
 
 .notifications-title {
 	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-	font-size: 1.2em !important;
+	font-size: 13px !important;
 }
 
 .notifications-title strong {
@@ -1337,7 +1373,7 @@ ul.linklist:after,
 }
 
 .notifications-time {
-	font-size: 0.9em !important;
+	font-size: 10px !important;
 }
 
 .notification-text {
@@ -1353,7 +1389,6 @@ ul.linklist:after,
 	opacity: 0.8;
 	position: relative;
 	top: 3px;
-	display: inline-block;
 	float: right;
 	margin-left: 3px;
 	padding: 4px 6px;
@@ -1394,5 +1429,5 @@ ul.linklist:after,
 	border-top: none;
 }
 
-/* stylelint-enable declaration-property-unit-whitelist */
-/* stylelint-enable declaration-property-unit-blacklist */
+/* stylelint-enable selector-max-compound-selectors */
+/* stylelint-enable selector-no-qualifying-type */

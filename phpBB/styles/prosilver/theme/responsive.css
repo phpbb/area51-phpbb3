@@ -3,8 +3,6 @@
 /* -------------------------------------------------------------- */
 /* stylelint-disable selector-max-compound-selectors */
 /* stylelint-disable selector-no-qualifying-type */
-/* stylelint-disable declaration-property-unit-whitelist */
-/* stylelint-disable declaration-property-unit-blacklist */
 
 @media (max-width: 320px) {
 	select,
@@ -79,6 +77,10 @@
 		margin-bottom: 5px;
 	}
 
+	.phpbb_alert {
+		top: 25px;
+	}
+
 	.action-bar > div {
 		margin-bottom: 5px;
 	}
@@ -111,6 +113,21 @@
 	.quick-links .dropdown-trigger span {
 		display: none;
 	}
+
+	.rtl dl.details dt,
+	.rtl dl.details dd {
+		text-align: right;
+		float: none;
+	}
+
+	.rtl dl.details dd {
+		margin-right: 20px;
+		margin-left: 0;
+	}
+
+	.rtl .captcha-panel dd.captcha {
+		margin-right: 0;
+	}
 }
 
 @media (max-width: 550px) {
@@ -124,6 +141,18 @@
 
 	ul.topiclist.forums dd.lastpost {
 		display: none;
+	}
+
+	/* RTL */
+
+	/* .topiclist lists
+	---------------------------------------- */
+	.rtl ul.topiclist.forums dt {
+		margin-left: 0;
+	}
+
+	.rtl ul.topiclist.forums dt .list-inner {
+		margin-left: 0;
 	}
 }
 
@@ -199,7 +228,7 @@
 
 	.site-description h1,
 	.site-description p {
-		line-height: 1.2em;
+		line-height: 24px;
 		text-align: inherit;
 		text-overflow: ellipsis;
 		float: none;
@@ -227,8 +256,8 @@
 	/* Forums and topicslists
 	---------------------------------------------------------------- */
 	li.header dt {
-		font-size: 1.2em;
-		line-height: 1em;
+		font-size: 12px;
+		line-height: 12px;
 		text-align: center;
 		text-transform: none;
 		padding-bottom: 4px;
@@ -292,7 +321,6 @@
 		position: relative;
 		left: 0;
 		display: inline;
-		width: auto;
 	}
 
 	li.row .responsive-show strong {
@@ -386,12 +414,13 @@
 	fieldset dd,
 	fieldset.fields1 dd,
 	fieldset.fields2 dd {
-		margin-left: 20px;
+		margin-left: 0;
 	}
 
 	textarea,
 	dd textarea,
 	.message-box textarea {
+		-webkit-box-sizing: border-box;
 		box-sizing: border-box;
 		width: 100%;
 	}
@@ -560,12 +589,12 @@
 	/* Misc stuff
 	---------------------------------------------------------------- */
 	h2 {
-		margin-top: 0.5em;
+		margin-top: 12px;
 	}
 
 	p {
 		overflow: hidden;
-		margin-bottom: 0.5em;
+		margin-bottom: 8px;
 	}
 
 	p.rightside {
@@ -599,6 +628,105 @@
 
 	.attach-comment dfn {
 		width: 100%;
+	}
+
+	/* RTL */
+
+	/* .topiclist lists
+	---------------------------------------- */
+	.rtl ul.topiclist li.header dt,
+	.rtl ul.topiclist li.header dt .list-inner {
+		margin-left: 0 !important;
+		padding-left: 0;
+	}
+
+	.rtl ul.topiclist dt,
+	.rtl ul.topiclist dt .list-inner,
+	.rtl ul.topiclist.missing-column dt,
+	.rtl ul.topiclist.missing-column dt .list-inner,
+	.rtl ul.topiclist.two-long-columns dt,
+	.rtl ul.topiclist.two-long-columns dt .list-inner,
+	.rtl ul.topiclist.two-columns dt,
+	.rtl ul.topiclist.two-columns dt .list-inner {
+		margin-left: 0;
+	}
+
+	.rtl ul.topiclist dt .list-inner.with-mark {
+		padding-left: 34px;
+	}
+
+	/* Forums and topics lists
+	---------------------------------------- */
+	.rtl ul.topiclist.forums dt {
+		margin-left: -250px;
+	}
+
+	.rtl ul.topiclist.forums dt .list-inner {
+		margin-left: 250px;
+	}
+
+	.rtl ul.topiclist dd.mark {
+		text-align: right;
+		right: auto;
+		left: 5px;
+	}
+
+	.rtl table.responsive.show-header thead,
+	.rtl table.responsive.show-header th:first-child {
+		text-align: right !important;
+	}
+
+	.rtl table.responsive td {
+		text-align: right !important;
+	}
+
+	/* User profile
+	---------------------------------------- */
+	.rtl .column1,
+	.rtl .column2,
+	.rtl .left-box.profile-details {
+		float: none;
+	}
+
+	/* Post
+	---------------------------------------- */
+	.rtl .postprofile,
+	.rtl .postbody,
+	.rtl .search .postbody {
+		float: none;
+	}
+
+	.rtl .post .postprofile {
+		border-width: 0 0 1px;
+	}
+
+	.rtl .postprofile dt,
+	.rtl .postprofile dd.profile-rank,
+	.rtl .search .postprofile dd {
+		margin: 0;
+	}
+
+	.rtl .postprofile .avatar {
+		margin-right: 0;
+		margin-left: 5px;
+	}
+
+	.rtl .has-profile .post-buttons {
+		left: 20px;
+	}
+
+	/* Forms
+	---------------------------------------- */
+	.rtl fieldset dt,
+	.rtl fieldset.fields1 dt,
+	.rtl fieldset.fields2 dt {
+		float: none;
+	}
+
+	.rtl fieldset dd,
+	.rtl fieldset.fields1 dd,
+	.rtl fieldset.fields2 dd {
+		margin-right: 20px;
 	}
 }
 
@@ -636,7 +764,71 @@
 	}
 }
 
+/* Responsive *CP navigation
+---------------------------------------- */
+@media (max-width: 900px) {
+	.nojs .tabs a span,
+	.nojs .minitabs a span {
+		letter-spacing: -0.03em;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		max-width: 40px;
+	}
+
+	.cp-menu,
+	.navigation,
+	.cp-main {
+		float: none;
+		width: auto;
+		margin: 0;
+	}
+
+	.navigation {
+		max-width: 320px;
+		margin: 0 auto;
+		padding: 0;
+	}
+
+	.navigation a {
+		background-image: none;
+	}
+
+	.navigation li:first-child a {
+		border-top-left-radius: 5px;
+		border-top-right-radius: 5px;
+	}
+
+	.navigation li:last-child a {
+		border-bottom-right-radius: 5px;
+		border-bottom-left-radius: 5px;
+	}
+
+	.rtl .cp-menu,
+	.rtl .navigation,
+	.rtl .cp-main {
+		float: none;
+	}
+
+	.navigation a,
+	.rtl .navigation a {
+		background: #b2c2cf;
+	}
+}
+
+@media (max-width: 992px) {
+	.row .pagination {
+		text-align: left;
+		float: left;
+		margin-top: 4px;
+		margin-bottom: 4px;
+	}
+}
+
+@media (max-width: 1220px) {
+	.wrap {
+		margin: 0 12px;
+	}
+}
+
 /* stylelint-enable selector-max-compound-selectors */
 /* stylelint-enable selector-no-qualifying-type */
-/* stylelint-enable declaration-property-unit-whitelist */
-/* stylelint-enable declaration-property-unit-blacklist */

@@ -5,7 +5,7 @@
 /* Global module setup
 ---------------------------------------- */
 
-/* Renamed version of .fa class for agnostic useage of icon fonts.
+/* Renamed version of .fa class for agnostic usage of icon fonts.
  * Just change the name of the font after the 14/1 to the name of
  * the font you wish to use.
  */
@@ -18,11 +18,11 @@ blockquote cite:before,
 	font-weight: normal;
 	font-style: normal;
 	font-variant: normal;
-	-webkit-font-smoothing: antialiased;
 	line-height: 1;
 	display: inline-block;
 	/* stylelint-disable order/declaration-block-properties-specified-order */
 	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
 	/* stylelint-enable order/declaration-block-properties-specified-order */
 	text-rendering: auto; /* optimizelegibility throws things off #1094 */
 }
@@ -86,7 +86,6 @@ blockquote cite:before,
 }
 
 .alert_close .icon:before {
-	line-height: 0.9;
 	border-radius: 50%;
 	display: block;
 	width: 11px;
@@ -103,4 +102,3 @@ blockquote cite:before,
 .rtl .uncited:before {
 	content: "\f10e"; /* Font Awesome quote-right */
 }
-

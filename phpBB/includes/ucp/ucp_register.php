@@ -166,7 +166,7 @@ class ucp_register
 					->format($user->lang['DATE_FORMAT'], true);
 				unset($now);
 
-				$template->assign_vars(array(
+				$template_vars = array(
 					'S_LANG_OPTIONS'	=> (count($lang_row) > 1) ? language_select($user_lang) : '',
 					'L_COPPA_NO'		=> sprintf($user->lang['UCP_COPPA_BEFORE'], $coppa_birthday),
 					'L_COPPA_YES'		=> sprintf($user->lang['UCP_COPPA_ON_AFTER'], $coppa_birthday),
@@ -180,11 +180,11 @@ class ucp_register
 
 					'COOKIE_NAME'		=> $config['cookie_name'],
 					'COOKIE_PATH'		=> $config['cookie_path'],
-				));
+				);
 			}
 			else
 			{
-				$template->assign_vars(array(
+				$template_vars = array(
 					'S_LANG_OPTIONS'	=> (count($lang_row) > 1) ? language_select($user_lang) : '',
 					'L_TERMS_OF_USE'	=> sprintf($user->lang['TERMS_OF_USE_CONTENT'], $config['sitename'], generate_board_url()),
 
@@ -195,10 +195,31 @@ class ucp_register
 
 					'COOKIE_NAME'		=> $config['cookie_name'],
 					'COOKIE_PATH'		=> $config['cookie_path'],
-					)
 				);
 			}
+
+			$tpl_name = 'ucp_agreement';
+
+			/**
+			* Allows to modify the agreements.
+			*
+			* @event core.ucp_register_agreement_modify_template_data
+			* @var	string	tpl_name			Template file
+			* @var	array	template_vars		Array with data about to be assigned to the template
+			* @var	array	s_hidden_fields		Array with hidden form elements
+			* @var	array	lang_row			Array with available languages, read only
+			* @since 3.2.2-RC1
+			*/
+			$vars = array('tpl_name', 'template_vars', 's_hidden_fields', 'lang_row');
+			extract($phpbb_dispatcher->trigger_event('core.ucp_register_agreement_modify_template_data', compact($vars)));
+
 			unset($lang_row);
+
+			$template_vars = array_merge($template_vars, array(
+				'S_HIDDEN_FIELDS' => build_hidden_fields($s_hidden_fields),
+			));
+
+			$template->assign_vars($template_vars);
 
 			/**
 			* Allows to modify the agreements.
@@ -207,10 +228,11 @@ class ucp_register
 			*
 			* @event core.ucp_register_agreement
 			* @since 3.1.6-RC1
+			* @deprecated 3.2.2-RC1 Replaced by core.ucp_register_agreement_modify_template_data and to be removed in 3.3.0-RC1
 			*/
 			$phpbb_dispatcher->dispatch('core.ucp_register_agreement');
 
-			$this->tpl_name = 'ucp_agreement';
+			$this->tpl_name = $tpl_name;
 			return;
 		}
 
@@ -505,7 +527,6 @@ class ucp_register
 		{
 			$s_hidden_fields = array_merge($s_hidden_fields, $captcha->get_hidden_fields());
 		}
-		$s_hidden_fields = build_hidden_fields($s_hidden_fields);
 
 		// Visual Confirmation - Show images
 		if ($config['enable_confirm'])
@@ -531,8 +552,7 @@ class ucp_register
 		// Assign template vars for timezone select
 		phpbb_timezone_select($template, $user, $data['tz'], true);
 
-		$template->assign_vars(array(
-			'ERROR'				=> (count($error)) ? implode('<br />', $error) : '',
+		$template_vars = array(
 			'USERNAME'			=> $data['username'],
 			'PASSWORD'			=> $data['new_password'],
 			'PASSWORD_CONFIRM'	=> $data['password_confirm'],
@@ -547,12 +567,40 @@ class ucp_register
 			'S_CONFIRM_REFRESH'	=> ($config['enable_confirm'] && $config['confirm_refresh']) ? true : false,
 			'S_REGISTRATION'	=> true,
 			'S_COPPA'			=> $coppa,
-			'S_HIDDEN_FIELDS'	=> $s_hidden_fields,
 			'S_UCP_ACTION'		=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=register'),
 
 			'COOKIE_NAME'		=> $config['cookie_name'],
 			'COOKIE_PATH'		=> $config['cookie_path'],
+		);
+
+		$tpl_name = 'ucp_register';
+
+		/**
+		* Modify template data on the registration page
+		*
+		* @event core.ucp_register_modify_template_data
+		* @var	array	template_vars		Array with template data
+		* @var	array	data				Array with user data, read only
+		* @var	array	error				Array with errors
+		* @var	array	s_hidden_fields		Array with hidden field elements
+		* @var	string	tpl_name			Template name
+		* @since 3.2.2-RC1
+		*/
+		$vars = array(
+			'template_vars',
+			'data',
+			'error',
+			's_hidden_fields',
+			'tpl_name',
+		);
+		extract($phpbb_dispatcher->trigger_event('core.ucp_register_modify_template_data', compact($vars)));
+
+		$template_vars = array_merge($template_vars, array(
+			'ERROR'				=> (count($error)) ? implode('<br />', $error) : '',
+			'S_HIDDEN_FIELDS'	=> build_hidden_fields($s_hidden_fields),
 		));
+
+		$template->assign_vars($template_vars);
 
 		//
 		$user->profile_fields = array();
@@ -561,8 +609,7 @@ class ucp_register
 		$cp->generate_profile_fields('register', $user->get_iso_lang_id());
 
 		//
-		$this->tpl_name = 'ucp_register';
-		$this->page_title = 'UCP_REGISTRATION';
+		$this->tpl_name = $tpl_name;
 	}
 
 	/**

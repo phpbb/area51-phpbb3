@@ -260,6 +260,7 @@ class permissions
 
 		// Forum Permissions
 		'f_list'		=> array('lang' => 'ACL_F_LIST', 'cat' => 'actions'),
+		'f_list_topics' => array('lang' => 'ACL_F_LIST_TOPICS', 'cat' => 'actions'),
 		'f_read'		=> array('lang' => 'ACL_F_READ', 'cat' => 'actions'),
 		'f_search'		=> array('lang' => 'ACL_F_SEARCH', 'cat' => 'actions'),
 		'f_subscribe'	=> array('lang' => 'ACL_F_SUBSCRIBE', 'cat' => 'actions'),
@@ -348,6 +349,7 @@ class permissions
 		'a_roles'		=> array('lang' => 'ACL_A_ROLES', 'cat' => 'permissions'),
 		'a_switchperm'	=> array('lang' => 'ACL_A_SWITCHPERM', 'cat' => 'permissions'),
 
+		'a_storage'		=> array('lang' => 'ACL_A_STORAGE', 'cat' => 'misc'),
 		'a_styles'		=> array('lang' => 'ACL_A_STYLES', 'cat' => 'misc'),
 		'a_extensions'	=> array('lang' => 'ACL_A_EXTENSIONS', 'cat' => 'misc'),
 		'a_viewlogs'	=> array('lang' => 'ACL_A_VIEWLOGS', 'cat' => 'misc'),

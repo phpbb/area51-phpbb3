@@ -3,7 +3,6 @@
 /* -------------------------------------------------------------- */
 /* stylelint-disable selector-max-compound-selectors */
 /* stylelint-disable selector-no-qualifying-type */
-/* stylelint-disable declaration-property-unit-whitelist */
 
 /**
 * common.css
@@ -196,8 +195,9 @@
 	text-align: right;
 }
 
+/* Not used anywhere maybe deprecated? */
 .rtl table.table1 thead .autocol {
-	padding-right: 1em;
+	padding-right: 10px;
 	padding-left: 0;
 }
 
@@ -252,18 +252,12 @@
 	padding-left: 0;
 }
 
-*:first-child + html dl.details dd {
-	float: none;
-	margin-right: 30%;
-}
-
-* html dl.details dd {
-	float: none;
-	margin-right: 30%;
-}
-
 /* Pagination
 ---------------------------------------- */
+.rtl .page-number {
+	float: left;
+}
+
 .rtl .pagination {
 	text-align: left;
 	float: left;
@@ -290,9 +284,14 @@
 	direction: ltr;
 }
 
-.pagination li.page-jump {
+.rtl .pagination li.page-jump {
 	margin-right: 0;
 	margin-left: 5px;
+}
+
+.rtl .topic-poster {
+	float: right;
+	padding-left: 6px;
 }
 
 /* Action Bar styles
@@ -339,7 +338,7 @@
 	unicode-bidi: embed;
 }
 
-li.breadcrumbs span:first-child > a {
+.rtl li.breadcrumbs span:first-child > a {
 	padding-left: 0;
 }
 
@@ -483,6 +482,10 @@ li.breadcrumbs span:first-child > a {
 
 /* Post body styles
 ---------------------------------------- */
+.rtl .date {
+	float: left;
+}
+
 .rtl .postbody,
 .rtl .postbody h3 {
 	float: right;
@@ -513,7 +516,7 @@ li.breadcrumbs span:first-child > a {
 ---------------------------------------- */
 .rtl .content ul,
 .rtl .content ol {
-	margin-right: 3em;
+	margin-right: 40px;
 	margin-left: 0;
 }
 
@@ -535,16 +538,16 @@ li.breadcrumbs span:first-child > a {
 
 /* Quote block */
 .rtl blockquote {
-	margin: 0.5em 25px 0 1px;
+	margin: 5px 25px 0 1px;
 }
 
+/* Nested quotes */
 .rtl blockquote blockquote {
-	/* Nested quotes */
-	margin: 0.5em 15px 0 1px;
+	margin: 5px 15px 0 1px;
 }
 
+/* Username/source of quoter */
 .rtl blockquote cite {
-	/* Username/source of quoter */
 	margin-left: 0;
 }
 
@@ -697,7 +700,7 @@ li.breadcrumbs span:first-child > a {
 }
 
 .rtl .cp-main .panel ol {
-	margin-right: 2em;
+	margin-right: 22px;
 	margin-left: 0;
 }
 
@@ -706,7 +709,7 @@ li.breadcrumbs span:first-child > a {
 	margin-left: 0;
 }
 
-.tabs-container h2 {
+.rtl .tabs-container h2 {
 	float: right;
 }
 
@@ -761,17 +764,6 @@ li.breadcrumbs span:first-child > a {
 	text-align: right;
 }
 
-/* Responsive *CP navigation
----------------------------------------- */
-
-@media only screen and (max-width: 900px), only screen and (max-device-width: 900px) {
-	.rtl .cp-menu,
-	.rtl .navigation,
-	.rtl .cp-main {
-		float: none;
-	}
-}
-
 /* UCP navigation menu
 ---------------------------------------- */
 
@@ -822,17 +814,6 @@ li.breadcrumbs span:first-child > a {
 	float: right;
 }
 
-/* Responsive *CP navigation
----------------------------------------- */
-
-@media only screen and (max-width: 900px), only screen and (max-device-width: 900px) {
-	.rtl .cp-menu,
-	.rtl .navigation,
-	.rtl .cp-main {
-		float: none;
-	}
-}
-
 /**
 * forms.css
 */
@@ -842,7 +823,7 @@ li.breadcrumbs span:first-child > a {
 
 .rtl option {
 	padding-right: 0;
-	padding-left: 1em;
+	padding-left: 11px;
 }
 
 .rtl label {
@@ -871,7 +852,7 @@ li.breadcrumbs span:first-child > a {
 .rtl fieldset.fields1 dd {
 	border-right-width: 0;
 	border-left-width: 1px;
-	margin-right: 15em;
+	margin-right: 165px;
 	margin-left: 0;
 }
 
@@ -884,7 +865,7 @@ li.breadcrumbs span:first-child > a {
 .rtl fieldset.fields2 dd {
 	border-right-width: 0;
 	border-left-width: 1px;
-	margin-right: 16em;
+	margin-right: 176px;
 	margin-left: 0;
 }
 
@@ -924,7 +905,7 @@ li.breadcrumbs span:first-child > a {
 .rtl fieldset.display-actions {
 	text-align: left;
 	padding-right: 0;
-	padding-left: 1em;
+	padding-left: 11px;
 }
 
 .rtl fieldset.display-actions label {
@@ -966,7 +947,7 @@ li.breadcrumbs span:first-child > a {
 }
 
 .rtl .button-search,
-.button-search-end {
+.rtl .button-search-end {
 	float: right;
 }
 
@@ -1006,144 +987,4 @@ li.breadcrumbs span:first-child > a {
 	float: left;
 }
 
-/**
-* responsive.css
-*/
-
-@media only screen and (max-width: 700px), only screen and (max-device-width: 700px) {
-	/* .topiclist lists
-	---------------------------------------- */
-	.rtl ul.topiclist li.header dt,
-	.rtl ul.topiclist li.header dt .list-inner {
-		margin-left: 0 !important;
-		padding-left: 0;
-	}
-
-	.rtl ul.topiclist dt,
-	.rtl ul.topiclist dt .list-inner,
-	.rtl ul.topiclist.missing-column dt,
-	.rtl ul.topiclist.missing-column dt .list-inner,
-	.rtl ul.topiclist.two-long-columns dt,
-	.rtl ul.topiclist.two-long-columns dt .list-inner,
-	.rtl ul.topiclist.two-columns dt,
-	.rtl ul.topiclist.two-columns dt .list-inner {
-		margin-left: 0;
-	}
-
-	.rtl ul.topiclist dt .list-inner.with-mark {
-		padding-left: 34px;
-	}
-
-	/* Forums and topics lists
-	---------------------------------------- */
-	.rtl ul.topiclist.forums dt {
-		margin-left: -250px;
-	}
-
-	.rtl ul.topiclist.forums dt .list-inner {
-		margin-left: 250px;
-	}
-
-	.rtl ul.topiclist dd.mark {
-		text-align: right;
-		right: auto;
-		left: 5px;
-	}
-
-	.rtl table.responsive.show-header thead,
-	.rtl table.responsive.show-header th:first-child {
-		text-align: right !important;
-	}
-
-	.rtl table.responsive td {
-		text-align: right !important;
-	}
-
-	/* User profile
-	---------------------------------------- */
-	.rtl .column1,
-	.rtl .column2,
-	.rtl .left-box.profile-details {
-		float: none;
-	}
-
-	/* Post
-	---------------------------------------- */
-	.rtl .postprofile,
-	.rtl .postbody,
-	.rtl .search .postbody {
-		float: none;
-	}
-
-	.rtl .post .postprofile {
-		border-width: 0 0 1px;
-	}
-
-	.rtl .postprofile dt,
-	.rtl .postprofile dd.profile-rank,
-	.rtl .search .postprofile dd {
-		margin: 0;
-	}
-
-	.rtl .postprofile .avatar {
-		margin-right: 0;
-		margin-left: 5px;
-	}
-
-	.rtl .has-profile .post-buttons {
-		left: 20px;
-	}
-
-	/* Forms
-	---------------------------------------- */
-	.rtl fieldset dt,
-	.rtl fieldset.fields1 dt,
-	.rtl fieldset.fields2 dt {
-		float: none;
-	}
-
-	.rtl fieldset dd,
-	.rtl fieldset.fields1 dd,
-	.rtl fieldset.fields2 dd {
-		margin-right: 20px;
-	}
-}
-
-@media only screen and (max-width: 550px), only screen and (max-device-width: 550px) {
-	/* .topiclist lists
-	---------------------------------------- */
-	.rtl ul.topiclist.forums dt {
-		margin-left: 0;
-	}
-
-	.rtl ul.topiclist.forums dt .list-inner {
-		margin-left: 0;
-	}
-}
-
-@media only screen and (max-width: 500px), only screen and (max-device-width: 500px) {
-	.rtl dl.details dt,
-	.rtl dl.details dd {
-		text-align: right;
-		float: none;
-	}
-
-	.rtl dl.details dd {
-		margin-right: 20px;
-		margin-left: 0;
-	}
-
-	.captcha-panel dd.captcha {
-		margin-right: 0;
-	}
-
-	.rtl p.responsive-center {
-		text-align: center;
-		float: none;
-		margin-bottom: 5px;
-	}
-}
-
-/* stylelint-enable selector-max-compound-selectors */
 /* stylelint-enable selector-no-qualifying-type */
-/* stylelint-enable declaration-property-unit-whitelist */

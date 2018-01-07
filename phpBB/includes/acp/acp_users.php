@@ -813,16 +813,22 @@ class acp_users
 						break;
 
 						default:
+							$u_action = $this->u_action;
+
 							/**
 							* Run custom quicktool code
 							*
 							* @event core.acp_users_overview_run_quicktool
-							* @var	array	user_row	Current user data
 							* @var	string	action		Quick tool that should be run
+							* @var	array	user_row	Current user data
+							* @var	string	u_action	The u_action link
 							* @since 3.1.0-a1
+							* @changed 3.2.2-RC1 Added u_action
 							*/
-							$vars = array('action', 'user_row');
+							$vars = array('action', 'user_row', 'u_action');
 							extract($phpbb_dispatcher->trigger_event('core.acp_users_overview_run_quicktool', compact($vars)));
+
+							unset($u_action);
 						break;
 					}
 
@@ -1485,12 +1491,14 @@ class acp_users
 					* Validate profile data in ACP before submitting to the database
 					*
 					* @event core.acp_users_profile_validate
-					* @var	bool	submit		Flag indicating if submit button has been pressed
 					* @var	array	data		Array with user profile data
+					* @var	int		user_id		The user id
+					* @var	array	user_row	Array with the full user data
 					* @var	array	error		Array with the form errors
 					* @since 3.1.4-RC1
+					* @changed 3.1.12-RC1		Removed submit, added user_id, user_row
 					*/
-					$vars = array('submit', 'data', 'error');
+					$vars = array('data', 'user_id', 'user_row', 'error');
 					extract($phpbb_dispatcher->trigger_event('core.acp_users_profile_validate', compact($vars)));
 
 					if (!count($error))
@@ -2489,7 +2497,7 @@ class acp_users
 							'U_DELETE'			=> $this->u_action . "&amp;action=delete&amp;u=$user_id&amp;g=" . $data['group_id'],
 							'U_APPROVE'			=> ($group_type == 'pending') ? $this->u_action . "&amp;action=approve&amp;u=$user_id&amp;g=" . $data['group_id'] : '',
 
-							'GROUP_NAME'		=> ($group_type == 'special') ? $user->lang['G_' . $data['group_name']] : $data['group_name'],
+							'GROUP_NAME'		=> $group_helper->get_name($data['group_name']),
 							'L_DEMOTE_PROMOTE'	=> ($data['group_leader']) ? $user->lang['GROUP_DEMOTE'] : $user->lang['GROUP_PROMOTE'],
 
 							'S_IS_MEMBER'		=> ($group_type != 'pending') ? true : false,
@@ -2576,6 +2584,22 @@ class acp_users
 
 			break;
 
+			default:
+
+				/**
+				* Additional modes provided by extensions
+				*
+				* @event core.acp_users_mode_add
+				* @var	string	mode			New mode
+				* @var	int		user_id			User id of the user to manage
+				* @var	array	user_row		Array with user data
+				* @var	array	error			Array with errors data
+				* @since 3.2.2-RC1
+				*/
+				$vars = array('mode', 'user_id', 'user_row', 'error');
+				extract($phpbb_dispatcher->trigger_event('core.acp_users_mode_add', compact($vars)));
+
+			break;
 		}
 
 		// Assign general variables

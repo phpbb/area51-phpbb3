@@ -2,11 +2,9 @@
 	$Plupload
 /* -------------------------------------------------------------- */
 
-/* stylelint-disable declaration-property-unit-whitelist */
-
 .attach-panel-multi {
 	display: none;
-	margin-bottom: 1em;
+	margin-bottom: 10px;
 }
 
 .file-list td {
@@ -40,7 +38,6 @@
 }
 
 .attach-controls {
-	display: inline-block;
 	float: right;
 }
 
@@ -92,5 +89,3 @@
 	vertical-align: bottom;
 	max-width: 65%;
 }
-
-/* stylelint-enable declaration-property-unit-whitelist */

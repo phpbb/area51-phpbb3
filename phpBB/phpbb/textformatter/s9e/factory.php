@@ -78,7 +78,7 @@ class factory implements \phpbb\textformatter\cache_interface
 		'b'     => '[B]{TEXT}[/B]',
 		'code'  => '[CODE lang={IDENTIFIER;optional}]{TEXT}[/CODE]',
 		'color' => '[COLOR={COLOR}]{TEXT}[/COLOR]',
-		'email' => '[EMAIL={EMAIL;useContent} subject={TEXT;optional;postFilter=rawurlencode} body={TEXT;optional;postFilter=rawurlencode}]{TEXT}[/EMAIL]',
+		'email' => '[EMAIL={EMAIL;useContent} subject={TEXT1;optional;postFilter=rawurlencode} body={TEXT2;optional;postFilter=rawurlencode}]{TEXT}[/EMAIL]',
 		'flash' => '[FLASH={NUMBER1},{NUMBER2} width={NUMBER1;postFilter=#flashwidth} height={NUMBER2;postFilter=#flashheight} url={URL;useContent} /]',
 		'i'     => '[I]{TEXT}[/I]',
 		'img'   => '[IMG src={IMAGEURL;useContent}]',
@@ -266,12 +266,13 @@ class factory implements \phpbb\textformatter\cache_interface
 			->addParameterByName('logger')
 			->addParameterByName('max_img_height')
 			->addParameterByName('max_img_width')
-			->markAsSafeAsURL();
+			->markAsSafeAsURL()
+			->setJS('UrlFilter.filter');
 
 		// Add default BBCodes
 		foreach ($this->get_default_bbcodes($configurator) as $bbcode)
 		{
-			$configurator->BBCodes->addCustom($bbcode['usage'], $bbcode['template']);
+			$configurator->BBCodes->addCustom($bbcode['usage'], new UnsafeTemplate($bbcode['template']));
 		}
 		if (isset($configurator->tags['QUOTE']))
 		{
@@ -355,8 +356,6 @@ class factory implements \phpbb\textformatter\cache_interface
 		$configurator->registeredVars['max_img_width'] = 0;
 
 		// Load the Emoji plugin and modify its tag's template to obey viewsmilies
-		$configurator->Emoji->omitImageSize();
-		$configurator->Emoji->useSVG();
 		$tag = $configurator->Emoji->getTag();
 		$tag->template = '<xsl:choose><xsl:when test="$S_VIEWSMILIES">' . str_replace('class="emoji"', 'class="emoji smilies"', $tag->template) . '</xsl:when><xsl:otherwise><xsl:value-of select="."/></xsl:otherwise></xsl:choose>';
 
