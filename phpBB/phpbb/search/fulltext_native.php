@@ -1433,6 +1433,38 @@ class fulltext_native extends \phpbb\search\base
 			$words['del']['post'] = array();
 			$words['del']['title'] = array();
 		}
+
+		/**
+		* Event to modify method arguments and words before the native search index is updated
+		*
+		* @event core.search_native_index_before
+		* @var string	mode				Contains the post mode: edit, post, reply, quote
+		* @var int		post_id				The id of the post which is modified/created
+		* @var string	message				New or updated post content
+		* @var string	subject				New or updated post subject
+		* @var int		poster_id			Post author's user id
+		* @var int		forum_id			The id of the forum in which the post is located
+		* @var array	words				Grouped lists of words added to or remove from the index
+		* @var array	split_text			Array of words from the message
+		* @var array	split_title			Array of words from the title
+		* @var array	cur_words			Array of words currently in the index for comparing to new words
+		* 									when mode is edit. Empty for other modes.
+		* @since 3.2.3-RC1
+		*/
+		$vars = array(
+			'mode',
+			'post_id',
+			'message',
+			'subject',
+			'poster_id',
+			'forum_id',
+			'words',
+			'split_text',
+			'split_title',
+			'cur_words',
+		);
+		extract($this->phpbb_dispatcher->trigger_event('core.search_native_index_before', compact($vars)));
+
 		unset($split_text);
 		unset($split_title);
 
@@ -1664,19 +1696,42 @@ class fulltext_native extends \phpbb\search\base
 	*/
 	public function delete_index($acp_module, $u_action)
 	{
+		$sql_queries = [];
+
 		switch ($this->db->get_sql_layer())
 		{
 			case 'sqlite3':
-				$this->db->sql_query('DELETE FROM ' . SEARCH_WORDLIST_TABLE);
-				$this->db->sql_query('DELETE FROM ' . SEARCH_WORDMATCH_TABLE);
-				$this->db->sql_query('DELETE FROM ' . SEARCH_RESULTS_TABLE);
+				$sql_queries[] = 'DELETE FROM ' . SEARCH_WORDLIST_TABLE;
+				$sql_queries[] = 'DELETE FROM ' . SEARCH_WORDMATCH_TABLE;
+				$sql_queries[] = 'DELETE FROM ' . SEARCH_RESULTS_TABLE;
 			break;
 
 			default:
-				$this->db->sql_query('TRUNCATE TABLE ' . SEARCH_WORDLIST_TABLE);
-				$this->db->sql_query('TRUNCATE TABLE ' . SEARCH_WORDMATCH_TABLE);
-				$this->db->sql_query('TRUNCATE TABLE ' . SEARCH_RESULTS_TABLE);
+				$sql_queries[] = 'TRUNCATE TABLE ' . SEARCH_WORDLIST_TABLE;
+				$sql_queries[] = 'TRUNCATE TABLE ' . SEARCH_WORDMATCH_TABLE;
+				$sql_queries[] = 'TRUNCATE TABLE ' . SEARCH_RESULTS_TABLE;
 			break;
+		}
+
+		$stats = $this->stats;
+
+		/**
+		* Event to modify SQL queries before the native search index is deleted
+		*
+		* @event core.search_native_delete_index_before
+		* @var array	sql_queries			Array with queries for deleting the search index
+		* @var array	stats				Array with statistics of the current index (read only)
+		* @since 3.2.3-RC1
+		*/
+		$vars = array(
+			'sql_queries',
+			'stats',
+		);
+		extract($this->phpbb_dispatcher->trigger_event('core.search_native_delete_index_before', compact($vars)));
+
+		foreach ($sql_queries as $sql_query)
+		{
+			$this->db->sql_query($sql_query);
 		}
 	}
 

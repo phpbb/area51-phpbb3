@@ -132,8 +132,8 @@ $phpbb_content_visibility = $phpbb_container->get('content.visibility');
 $pagination = $phpbb_container->get('pagination');
 
 $template->assign_block_vars('navlinks', array(
-	'FORUM_NAME'	=> $user->lang('SEARCH'),
-	'U_VIEW_FORUM'	=> append_sid("{$phpbb_root_path}search.$phpEx"),
+	'BREADCRUMB_NAME'	=> $user->lang('SEARCH'),
+	'U_BREADCRUMB'		=> append_sid("{$phpbb_root_path}search.$phpEx"),
 ));
 
 /**
@@ -518,6 +518,11 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 				$l_search_title = $user->lang['SEARCH_SELF'];
 			break;
 		}
+
+		$template->assign_block_vars('navlinks', array(
+			'BREADCRUMB_NAME'	=> $l_search_title,
+			'U_BREADCRUMB'		=> append_sid("{$phpbb_root_path}search.$phpEx", "search_id=$search_id"),
+		));
 	}
 
 	/**

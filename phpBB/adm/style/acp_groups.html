@@ -98,7 +98,7 @@
 			<input name="group_colour" type="text" id="group_colour" value="{GROUP_COLOUR}" size="6" maxlength="6" />
 			<!-- IF GROUP_COLOUR -->&nbsp;<span style="background-color: #{GROUP_COLOUR}">&nbsp; &nbsp;</span><!-- ENDIF -->&nbsp;&nbsp;<span>
 			[ <a href="#" id="color_palette_toggle">{L_COLOUR_SWATCH}</a> ]</span>
-			<div id="color_palette_placeholder" style="display: none;" data-orientation="h" data-height="12" data-width="15" data-target="#group_colour"></div>
+			<div id="color_palette_placeholder" style="display: none;" data-color-palette="h" data-height="12" data-width="15" data-target="#group_colour"></div>
 		</dd>
 	</dl>
 	<dl>
@@ -316,7 +316,7 @@
 	<tbody>
 		<!-- ELSE -->
 		<tr>
-			<td><strong>{groups.GROUP_NAME}</strong></td>
+			<td><strong<!-- IF groups.GROUP_COLOR --> style="color: #{groups.GROUP_COLOR}"<!-- ENDIF -->>{groups.GROUP_NAME}</strong></td>
 			<td style="text-align: center;">{groups.TOTAL_MEMBERS}</td>
 			<td style="text-align: center;">{groups.PENDING_MEMBERS}</td>
 			<td style="text-align: center;"><a href="{groups.U_EDIT}">{L_SETTINGS}</a></td>

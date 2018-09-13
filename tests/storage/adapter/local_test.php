@@ -17,26 +17,20 @@
 
 	protected $path;
 
+	protected $filesystem;
+
 	public function setUp()
 	{
 		parent::setUp();
 
-		$filesystem = new \phpbb\filesystem\filesystem();
+		$this->filesystem = new \phpbb\filesystem\filesystem();
 		$phpbb_root_path = getcwd() . DIRECTORY_SEPARATOR;
 
-		$this->adapter = new \phpbb\storage\adapter\local($filesystem, new \FastImageSize\FastImageSize(), new \phpbb\mimetype\guesser(array(new \phpbb\mimetype\extension_guesser)), $phpbb_root_path);
-		$this->adapter->configure(['path' => 'test_path']);
+		$this->adapter = new \phpbb\storage\adapter\local($this->filesystem, new \FastImageSize\FastImageSize(), new \phpbb\mimetype\guesser(array(new \phpbb\mimetype\extension_guesser)), $phpbb_root_path);
+		$this->adapter->configure(['path' => 'test_path', 'subfolders' => false]);
 
 		$this->path = $phpbb_root_path . 'test_path/';
 		mkdir($this->path);
-	}
-
-	public function data_test_exists()
-	{
-		yield [$this->path . '../README.md', true];
-		yield [$this->path . 'nonexistent_file.php', false];
-		yield [$this->path . '../phpBB/phpbb', true];
-		yield [$this->path . 'nonexistent/folder', false];
 	}
 
 	public function tearDown()
@@ -60,36 +54,29 @@
 		unlink($this->path . 'file.txt');
 	}
 
-	/**
-	 * @dataProvider data_test_exists
-	 */
-	public function test_exists($path, $expected)
+	public function test_exists()
 	{
-		$this->assertSame($expected, $this->adapter->exists($path));
+		touch($this->path . 'file.txt');
+		$this->assertTrue($this->adapter->exists('file.txt'));
+		$this->assertFalse($this->adapter->exists('noexist.txt'));
+		unlink($this->path . 'file.txt');
 	}
 
 	public function test_delete_file()
 	{
-		file_put_contents($this->path . 'file.txt', '');
+		touch($this->path . 'file.txt');
 		$this->assertTrue(file_exists($this->path . 'file.txt'));
 		$this->adapter->delete('file.txt');
 		$this->assertFalse(file_exists($this->path . 'file.txt'));
 	}
 
-	public function test_delete_folder()
-	{
-		mkdir($this->path . 'path/to/dir', 0777, true);
-		$this->assertTrue(file_exists($this->path . 'path/to/dir'));
-		$this->adapter->delete('path');
-		$this->assertFalse(file_exists($this->path . 'path/to/dir'));
-	}
-
 	public function test_rename()
 	{
-		file_put_contents($this->path . 'file.txt', '');
+		touch($this->path . 'file.txt');
 		$this->adapter->rename('file.txt', 'file2.txt');
 		$this->assertFalse(file_exists($this->path . 'file.txt'));
 		$this->assertTrue(file_exists($this->path . 'file2.txt'));
+		$this->assertFalse(file_exists($this->path . 'file.txt'));
 		unlink($this->path . 'file2.txt');
 	}
 
@@ -98,14 +85,14 @@
 		file_put_contents($this->path . 'file.txt', 'abc');
 		$this->adapter->copy('file.txt', 'file2.txt');
 		$this->assertEquals(file_get_contents($this->path . 'file.txt'), 'abc');
-		$this->assertEquals(file_get_contents($this->path . 'file.txt'), 'abc');
+		$this->assertEquals(file_get_contents($this->path . 'file2.txt'), 'abc');
 		unlink($this->path . 'file.txt');
 		unlink($this->path . 'file2.txt');
 	}
 
 	public function test_read_stream()
 	{
-		file_put_contents($this->path . 'file.txt', '');
+		touch($this->path . 'file.txt');
 		$stream = $this->adapter->read_stream('file.txt');
 		$this->assertTrue(is_resource($stream));
 		fclose($stream);
@@ -122,4 +109,5 @@
 		unlink($this->path . 'file.txt');
 		unlink($this->path . 'file2.txt');
 	}
+
  }

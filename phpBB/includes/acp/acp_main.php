@@ -502,8 +502,8 @@ class acp_main
 
 		$upload_dir_size = get_formatted_filesize($config['upload_dir_size']);
 
-		// Couldn't open Avatar dir.
-		$avatar_dir_size = $user->lang['NOT_AVAILABLE'];
+		$storage_avatar = $phpbb_container->get('storage.avatar');
+		$avatar_dir_size = get_formatted_filesize($storage_avatar->get_size());
 
 		if ($posts_per_day > $total_posts)
 		{
@@ -567,6 +567,7 @@ class acp_main
 			'U_INACTIVE_USERS'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=inactive&amp;mode=list'),
 			'U_VERSIONCHECK'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=update&amp;mode=version_check'),
 			'U_VERSIONCHECK_FORCE'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'versioncheck_force=1'),
+			'U_ATTACH_ORPHAN'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=acp_attachments&mode=orphan'),
 
 			'S_VERSIONCHECK'	=> ($auth->acl_get('a_board')) ? true : false,
 			'S_ACTION_OPTIONS'	=> ($auth->acl_get('a_board')) ? true : false,

@@ -95,7 +95,12 @@ class phpbb_test_case_helpers
 			break;
 		}
 		$this->expectedTriggerError = true;
-		$this->test_case->setExpectedException($exceptionName, (string) $message, $errno);
+		$this->test_case->expectException($exceptionName);
+		$this->test_case->expectExceptionCode($errno);
+		if ($message)
+		{
+			$this->test_case->expectExceptionMessage((string) $message);
+		}
 	}
 
 	public function makedirs($path)
@@ -495,8 +500,11 @@ class phpbb_test_case_helpers
 			$request = new phpbb_mock_request;
 		}
 
+		// Get a log interface
+		$log = ($container->has('log')) ? $container->get('log') : $this->test_case->getMockBuilder('phpbb\\log\\log_interface')->getMock();
+
 		// Create and register the text_formatter.s9e.factory service
-		$factory = new \phpbb\textformatter\s9e\factory($dal, $cache, $dispatcher, $config, new \phpbb\textformatter\s9e\link_helper, $cache_dir, $cache_key_parser, $cache_key_renderer);
+		$factory = new \phpbb\textformatter\s9e\factory($dal, $cache, $dispatcher, $config, new \phpbb\textformatter\s9e\link_helper, $log, $cache_dir, $cache_key_parser, $cache_key_renderer);
 		$container->set('text_formatter.s9e.factory', $factory);
 
 		// Create a user if none was provided, and add the common lang strings

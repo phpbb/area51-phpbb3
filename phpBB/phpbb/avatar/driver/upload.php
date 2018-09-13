@@ -92,6 +92,7 @@ class upload extends \phpbb\avatar\driver\driver
 		$template->assign_vars(array(
 			'S_UPLOAD_AVATAR_URL' => ($this->config['allow_avatar_remote_upload']) ? true : false,
 			'AVATAR_UPLOAD_SIZE' => $this->config['avatar_filesize'],
+			'AVATAR_ALLOWED_EXTENSIONS' => implode(',', preg_replace('/^/', '.', $this->allowed_extensions)),
 		));
 
 		return true;
@@ -196,14 +197,17 @@ class upload extends \phpbb\avatar\driver\driver
 		*
 		* @event core.avatar_driver_upload_move_file_before
 		* @var	array	filedata			Array containing uploaded file data
+		* @var	\phpbb\files\filespec file	Instance of filespec class
 		* @var	string	prefix				Prefix for the avatar filename
 		* @var	array	row					Array with avatar row data
 		* @var	array	error				Array of errors, if filled in by this event file will not be moved
 		* @since 3.1.6-RC1
 		* @changed 3.1.9-RC1 Added filedata
+		* @changed 3.2.3-RC1 Added file
 		*/
 		$vars = array(
 			'filedata',
+			'file',
 			'prefix',
 			'row',
 			'error',

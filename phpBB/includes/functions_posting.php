@@ -605,12 +605,6 @@ function create_thumbnail($source, $destination, $mimetype)
 				imagecopyresampled($new_image, $image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
 			}
 
-			// If we are in safe mode create the destination file prior to using the gd functions to circumvent a PHP bug
-			if (@ini_get('safe_mode') || @strtolower(ini_get('safe_mode')) == 'on')
-			{
-				@touch($destination);
-			}
-
 			switch ($type['format'])
 			{
 				case IMG_GIF:
@@ -699,10 +693,11 @@ function posting_gen_attachment_entry($attachment_data, &$filename_data, $show_a
 		// We display the posted attachments within the desired order.
 		($config['display_order']) ? krsort($attachment_data) : ksort($attachment_data);
 
+		$attachrow_template_vars = [];
+
 		foreach ($attachment_data as $count => $attach_row)
 		{
 			$hidden = '';
-			$attachrow_template_vars = array();
 			$attach_row['real_filename'] = utf8_basename($attach_row['real_filename']);
 
 			foreach ($attach_row as $key => $value)
@@ -1441,6 +1436,8 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 {
 	global $db, $auth, $user, $config, $phpEx, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher, $phpbb_log, $request;
 
+	$attachment_storage = $phpbb_container->get('storage.attachment');
+
 	$poll = $poll_ary;
 	$data = $data_ary;
 	/**
@@ -2029,7 +2026,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 			else
 			{
 				// insert attachment into db
-				if (!@file_exists($phpbb_root_path . $config['upload_path'] . '/' . utf8_basename($orphan_rows[$attach_row['attach_id']]['physical_filename'])))
+				if (!$attachment_storage->exists(utf8_basename($orphan_rows[$attach_row['attach_id']]['physical_filename'])))
 				{
 					continue;
 				}

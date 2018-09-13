@@ -54,23 +54,29 @@ function phpbb_load_extensions_autoloaders($phpbb_root_path)
 /**
 * Generates an alphanumeric random string of given length
 *
+* @param int $num_chars Length of random string, defaults to 8.
+* This number should be less or equal than 64.
+*
 * @return string
 */
 function gen_rand_string($num_chars = 8)
 {
 	// [a, z] + [0, 9] = 36
-	return substr(strtoupper(base_convert(unique_id(), 16, 36)), 0, $num_chars);
+	return substr(strtoupper(base_convert(bin2hex(random_bytes($num_chars + 1)), 16, 36)), 0, $num_chars);
 }
 
 /**
 * Generates a user-friendly alphanumeric random string of given length
 * We remove 0 and O so users cannot confuse those in passwords etc.
 *
+* @param int $num_chars Length of random string, defaults to 8.
+* This number should be less or equal than 64.
+*
 * @return string
 */
 function gen_rand_string_friendly($num_chars = 8)
 {
-	$rand_str = unique_id();
+	$rand_str = bin2hex(random_bytes($num_chars + 1));
 
 	// Remove Z and Y from the base_convert(), replace 0 with Z and O with Y
 	// [a, z] + [0, 9] - {z, y} = [a, z] + [0, 9] - {0, o} = 34
@@ -2451,7 +2457,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 
 	$s_hidden_fields = build_hidden_fields($s_hidden_fields);
 
-	$template->assign_vars(array(
+	$login_box_template_data = array(
 		'LOGIN_ERROR'		=> $err,
 		'LOGIN_EXPLAIN'		=> $l_explain,
 
@@ -2459,6 +2465,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		'U_RESEND_ACTIVATION'	=> ($config['require_activation'] == USER_ACTIVATION_SELF && $config['email_enable']) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=resend_act') : '',
 		'U_TERMS_USE'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=terms'),
 		'U_PRIVACY'				=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy'),
+		'UA_PRIVACY'			=> addslashes(append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy')),
 
 		'S_DISPLAY_FULL_LOGIN'	=> ($s_display) ? true : false,
 		'S_HIDDEN_FIELDS' 		=> $s_hidden_fields,
@@ -2468,7 +2475,29 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 
 		'USERNAME_CREDENTIAL'	=> 'username',
 		'PASSWORD_CREDENTIAL'	=> ($admin) ? 'password_' . $credential : 'password',
-	));
+	);
+
+	/**
+	 * Event to add/modify login box template data
+	 *
+	 * @event core.login_box_modify_template_data
+	 * @var	int		admin							Flag whether user is admin
+	 * @var	string	username						User name
+	 * @var	int		autologin						Flag whether autologin is enabled
+	 * @var string	redirect						Redirect URL
+	 * @var	array	login_box_template_data			Array with the login box template data
+	 * @since 3.2.3-RC2
+	 */
+	$vars = array(
+		'admin',
+		'username',
+		'autologin',
+		'redirect',
+		'login_box_template_data',
+	);
+	extract($phpbb_dispatcher->trigger_event('core.login_box_modify_template_data', compact($vars)));
+
+	$template->assign_vars($login_box_template_data);
 
 	page_header($user->lang['LOGIN']);
 
@@ -4386,9 +4415,10 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'U_SEARCH_ACTIVE_TOPICS'=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=active_topics'),
 		'U_DELETE_COOKIES'		=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=delete_cookies'),
 		'U_CONTACT_US'			=> ($config['contact_admin_form_enable'] && $config['email_enable']) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contactadmin') : '',
-		'U_TEAM'				=> ($user->data['user_id'] != ANONYMOUS && !$auth->acl_get('u_viewprofile')) ? '' : append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=team'),
+		'U_TEAM'				=> (!$auth->acl_get('u_viewprofile')) ? '' : append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=team'),
 		'U_TERMS_USE'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=terms'),
 		'U_PRIVACY'				=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy'),
+		'UA_PRIVACY'			=> addslashes(append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy')),
 		'U_RESTORE_PERMISSIONS'	=> ($user->data['user_perm_from'] && $auth->acl_get('a_switchperm')) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=restore_perm') : '',
 		'U_FEED'				=> $controller_helper->route('phpbb_feed_index'),
 
@@ -4438,7 +4468,6 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'T_AVATAR_GALLERY_PATH'	=> "{$web_path}{$config['avatar_gallery_path']}/",
 		'T_ICONS_PATH'			=> "{$web_path}{$config['icons_path']}/",
 		'T_RANKS_PATH'			=> "{$web_path}{$config['ranks_path']}/",
-		'T_UPLOAD_PATH'			=> "{$web_path}{$config['upload_path']}/",
 		'T_STYLESHEET_LINK'		=> "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/theme/stylesheet.css?assets_version=' . $config['assets_version'],
 		'T_STYLESHEET_LANG_LINK'=> "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/theme/' . $user->lang_name . '/stylesheet.css?assets_version=' . $config['assets_version'],
 		'T_FONT_AWESOME_LINK'	=> !empty($config['allow_cdn']) && !empty($config['load_font_awesome_url']) ? $config['load_font_awesome_url'] : "{$web_path}assets/css/font-awesome.min.css?assets_version=" . $config['assets_version'],
@@ -4455,7 +4484,6 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'T_AVATAR_GALLERY'		=> $config['avatar_gallery_path'],
 		'T_ICONS'				=> $config['icons_path'],
 		'T_RANKS'				=> $config['ranks_path'],
-		'T_UPLOAD'				=> $config['upload_path'],
 
 		'SITE_LOGO_IMG'			=> $user->img('site_logo'),
 	));
@@ -4530,10 +4558,12 @@ function phpbb_check_and_display_sql_report(\phpbb\request\request_interface $re
 */
 function phpbb_generate_debug_output(\phpbb\db\driver\driver_interface $db, \phpbb\config\config $config, \phpbb\auth\auth $auth, \phpbb\user $user, \phpbb\event\dispatcher_interface $phpbb_dispatcher)
 {
+	global $phpbb_container;
+
 	$debug_info = array();
 
 	// Output page creation time
-	if (defined('PHPBB_DISPLAY_LOAD_TIME'))
+	if ($phpbb_container->getParameter('debug.load_time'))
 	{
 		if (isset($GLOBALS['starttime']))
 		{
@@ -4561,7 +4591,7 @@ function phpbb_generate_debug_output(\phpbb\db\driver\driver_interface $db, \php
 			$debug_info[] = 'Load: ' . $user->load;
 		}
 
-		if ($auth->acl_get('a_'))
+		if ($auth->acl_get('a_') && $phpbb_container->getParameter('debug.sql_explain'))
 		{
 			$debug_info[] = '<a href="' . build_url() . '&amp;explain=1">SQL Explain</a>';
 		}

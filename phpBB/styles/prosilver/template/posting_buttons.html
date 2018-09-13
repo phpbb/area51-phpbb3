@@ -1,6 +1,5 @@
 
-<script type="text/javascript">
-// <![CDATA[
+<script>
 	var form_name = 'postform';
 	var text_name = <!-- IF $SIG_EDIT -->'signature'<!-- ELSE -->'message'<!-- ENDIF -->;
 	var load_draft = false;
@@ -46,8 +45,6 @@
 			document.getElementById('bbpalette').value = '{LA_FONT_COLOR}';
 		}
 	}
-
-// ]]>
 </script>
 <!-- INCLUDEJS {T_ASSETS_PATH}/javascript/editor.js -->
 
@@ -55,7 +52,7 @@
 <div id="colour_palette" style="display: none;">
 	<dl style="clear: left;">
 		<dt><label>{L_FONT_COLOR}{L_COLON}</label></dt>
-		<dd id="color_palette_placeholder" class="color_palette_placeholder" data-orientation="h" data-height="12" data-width="15" data-bbcode="true"></dd>
+		<dd id="color_palette_placeholder" class="color_palette_placeholder" data-color-palette="h" data-height="12" data-width="15" data-bbcode="true"></dd>
 	</dl>
 </div>
 

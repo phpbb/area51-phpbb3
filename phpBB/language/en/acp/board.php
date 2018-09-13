@@ -348,7 +348,7 @@ $lang = array_merge($lang, array(
 
 // Cookie Settings
 $lang = array_merge($lang, array(
-	'ACP_COOKIE_SETTINGS_EXPLAIN'		=> 'These details define the data used to send cookies to your users browsers. In most cases the default values for the cookie settings should be sufficient. If you do need to change any do so with care, incorrect settings can prevent users logging in. If you have problems with users staying logging in to your board, visit the <b><a href="https://www.phpbb.com/support/go/cookie-settings/">phpBB.com Knowledge Base - Fixing incorrect cookie settings</a></b>.',
+	'ACP_COOKIE_SETTINGS_EXPLAIN'		=> 'These details define the data used to send cookies to your users browsers. In most cases the default values for the cookie settings should be sufficient. If you do need to change any do so with care, incorrect settings can prevent users logging in. If you have problems with users staying logging in to your board, visit the <strong><a href="https://www.phpbb.com/support/go/cookie-settings">phpBB.com Knowledge Base - Fixing incorrect cookie settings</a></strong>.',
 
 	'COOKIE_DOMAIN'				=> 'Cookie domain',
 	'COOKIE_DOMAIN_EXPLAIN'		=> 'In most cases the cookie domain is optional. Leave it blank if you are unsure.<br><br> In the case where you have a board integrated with other software or have multiple domains, then to determine the cookie domain you need to do the following. If you have something like <i>example.com</i> and <i>forums.example.com</i>, or perhaps <i>forums.example.com</i> and <i>blog.example.com</i>. Remove the subdomains until you find the common domain, <i>example.com</i>. Now add a dot in front of the common domain and you would enter .example.com (note the dot at the beginning).',
@@ -404,6 +404,8 @@ $lang = array_merge($lang, array(
 	'READ_NOTIFICATION_EXPIRE_DAYS_EXPLAIN' => 'Number of days that will elapse before a read notification will automatically be deleted. Set this value to 0 to make notifications permanent.',
 	'RECOMPILE_STYLES'				=> 'Recompile stale style components',
 	'RECOMPILE_STYLES_EXPLAIN'		=> 'Check for updated style components on filesystem and recompile.',
+	'YES_ACCURATE_PM_BUTTON'			=> 'Enable permission specific PM button in topic pages',
+	'YES_ACCURATE_PM_BUTTON_EXPLAIN'	=> 'If this setting is enabled, only post profiles of users who are permitted to read private messages will have a private message button.',
 	'YES_ANON_READ_MARKING'			=> 'Enable topic marking for guests',
 	'YES_ANON_READ_MARKING_EXPLAIN'	=> 'Stores read/unread status information for guests. If disabled, posts are always marked read for guests.',
 	'YES_BIRTHDAYS'					=> 'Enable birthday listing',
@@ -435,7 +437,7 @@ $lang = array_merge($lang, array(
 	'AUTH_PROVIDER_OAUTH_TITLE'					=> 'OAuth',
 	'AUTH_PROVIDER_OAUTH_SECRET'				=> 'Secret',
 
-	'APACHE_SETUP_BEFORE_USE'	=> 'You have to setup apache authentication before you switch phpBB to this authentication method. Keep in mind that the username you use for apache authentication has to be the same as your phpBB username. Apache authentication can only be used with mod_php (not with a CGI version) and safe_mode disabled.',
+	'APACHE_SETUP_BEFORE_USE'	=> 'You have to setup apache authentication before you switch phpBB to this authentication method. Keep in mind that the username you use for apache authentication has to be the same as your phpBB username. Apache authentication can only be used with mod_php (not with a CGI version).',
 
 	'LDAP'							=> 'LDAP',
 	'LDAP_DN'						=> 'LDAP base <var>dn</var>',
@@ -585,7 +587,7 @@ $lang = array_merge($lang, array(
 	'SMTP_POP_BEFORE_SMTP'			=> 'POP-BEFORE-SMTP',
 	'SMTP_PORT'						=> 'SMTP server port',
 	'SMTP_PORT_EXPLAIN'				=> 'Only change this if you know your SMTP server is on a different port.',
-	'SMTP_SERVER'					=> 'SMTP server address',
+	'SMTP_SERVER'					=> 'SMTP server address and protocol',
 	'SMTP_SERVER_EXPLAIN'			=> 'Note that you have to provide the protocol that your server uses. If you are using SSL, this has to be "ssl://your.mailserver.com"',
 	'SMTP_SETTINGS'					=> 'SMTP settings',
 	'SMTP_USERNAME'					=> 'SMTP username',

@@ -43,6 +43,11 @@ $lang = array_merge($lang, array(
 	'STORAGE_TITLE_EXPLAIN'			=> 'Change storage providers for the file storage types of phpBB. Choose local or remote providers to store files added to or created by phpBB.',
 	'STORAGE_SELECT'				=> 'Select storage',
 	'STORAGE_SELECT_DESC'			=> 'Select a storage from the list.',
+	'STORAGE_NAME'					=> 'Storage name',
+	'STORAGE_NUM_FILES'				=> 'Number of files',
+	'STORAGE_SIZE'					=> 'Size',
+	'STORAGE_FREE'					=> 'Available space',
+	'STORAGE_UNKNOWN'				=> 'Unknown',
 
 	// Storage names
 	'STORAGE_ATTACHMENT_TITLE'		=> 'Attachments storage',
@@ -50,8 +55,10 @@ $lang = array_merge($lang, array(
 	'STORAGE_BACKUP_TITLE'			=> 'Backup storage',
 
 	// Local adapter
-	'STORAGE_ADAPTER_LOCAL_NAME'			=> 'Local',
-	'STORAGE_ADAPTER_LOCAL_OPTION_PATH'		=> 'Path',
+	'STORAGE_ADAPTER_LOCAL_NAME'						=> 'Local',
+	'STORAGE_ADAPTER_LOCAL_OPTION_PATH'					=> 'Path',
+	'STORAGE_ADAPTER_LOCAL_OPTION_SUBFOLDERS'			=> 'Organize in subfolders',
+	'STORAGE_ADAPTER_LOCAL_OPTION_SUBFOLDERS_EXPLAIN'	=> 'Some web servers may have problems storing large number of files in a single directory. Enable this option to distribute files in different directories.',
 
 	// Form validation
 	'STORAGE_UPDATE_SUCCESSFUL' 				=>	'All storage types were successfully updated.',

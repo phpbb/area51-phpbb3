@@ -1327,6 +1327,7 @@ phpbb.toggleDropdown = function() {
 			$this.css({
 				marginLeft: 0,
 				left: 0,
+				marginRight: 0,
 				maxWidth: (windowWidth - 4) + 'px'
 			});
 
@@ -1480,7 +1481,7 @@ phpbb.colorPalette = function(dir, width, height) {
 * @param {jQuery} el jQuery object for the palette container.
 */
 phpbb.registerPalette = function(el) {
-	var	orientation	= el.attr('data-orientation'),
+	var	orientation	= el.attr('data-color-palette'),
 		height		= el.attr('data-height'),
 		width		= el.attr('data-width'),
 		target		= el.attr('data-target'),
@@ -1650,7 +1651,7 @@ $(function() {
 
 	phpbb.registerPageDropdowns();
 
-	$('#color_palette_placeholder').each(function() {
+	$('[data-color-palette]').each(function() {
 		phpbb.registerPalette($(this));
 	});
 

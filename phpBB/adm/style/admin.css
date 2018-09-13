@@ -750,9 +750,18 @@ td {
 }
 
 .table1 {
-	clear: both;
+	display: inline-block;
 	border-spacing: 1px;
 	border-collapse: separate;
+}
+
+.lside {
+	display: inline-block;
+	width: 40%;
+}
+
+.tabled {
+	width: 25%;
 }
 
 dt#color_palette_placeholder table {
@@ -867,6 +876,7 @@ table.zebra-table tbody tr:nth-child(odd) {
 }
 
 .row2 {
+	word-break: break-all;
 	background-color: #dcebfe;
 }
 
@@ -2710,6 +2720,10 @@ fieldset.permissions .permissions-switch {
 	margin: 0;
 }
 
+.rtl .dropdown li {
+	text-align: right;
+}
+
 .wrap .dropdown li,
 .dropdown.wrap li {
 	white-space: normal;
@@ -2724,6 +2738,10 @@ fieldset.permissions .permissions-switch {
 	top: 3.2em;
 	left: auto;
 	width: 250px;
+}
+
+.rtl .roles-options > .dropdown {
+	right: auto;
 }
 
 .roles-options {
@@ -2742,6 +2760,10 @@ fieldset.permissions .permissions-switch {
 	display: none;
 	width: 250px;
 	padding: 4px;
+}
+
+.rtl .roles-options > span {
+	background: url("../images/arrow_down.gif") no-repeat 7px 0.7em;
 }
 
 .roles-options li {
