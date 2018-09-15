@@ -1,6 +1,12 @@
 /* Special CSS for Area51
 ---------------------------------------- */
+.rank-img img {
+	height: 36px;
+}
 
+.profile-avatar {
+	text-align: center;
+}
 
 /* Inline Code
 ----------------------------------------*/
