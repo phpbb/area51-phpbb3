@@ -615,9 +615,10 @@ class phpbb_functional_test_case extends phpbb_test_case
 	* Creates a new user with limited permissions
 	*
 	* @param string $username Also doubles up as the user's password
+	* @param string $email User email (defaults to nobody@example.com)
 	* @return int ID of created user
 	*/
-	protected function create_user($username)
+	protected function create_user($username, $email = 'nobody@example.com')
 	{
 		// Required by unique_id
 		global $config;
@@ -669,7 +670,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$user_row = array(
 			'username' => $username,
 			'group_id' => 2,
-			'user_email' => 'nobody@example.com',
+			'user_email' => $email,
 			'user_type' => 0,
 			'user_lang' => 'en',
 			'user_timezone' => 'UTC',
@@ -1240,10 +1241,6 @@ class phpbb_functional_test_case extends phpbb_test_case
 				$form_data[$field['name']] = $field['value'];
 			}
 		}
-
-		// Bypass time restriction that said that if the lastclick time (i.e. time when the form was opened)
-		// is not at least 2 seconds before submission, cancel the form
-		$form_data['lastclick'] = 0;
 
 		// I use a request because the form submission method does not allow you to send data that is not
 		// contained in one of the actual form fields that the browser sees (i.e. it ignores "hidden" inputs)

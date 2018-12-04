@@ -484,6 +484,32 @@ class ucp_register
 						);
 					}
 
+					/**
+					* Modify messenger data before welcome mail is sent
+					*
+					* @event core.ucp_register_welcome_email_before
+					* @var	array		user_row	Array with user registration data
+					* @var	array		cp_data		Array with custom profile fields data
+					* @var	array		data		Array with current ucp registration data
+					* @var	string		message		Message to be displayed to the user after registration
+					* @var	string		server_url	Server URL
+					* @var	int			user_id		New user ID
+					* @var	string		user_actkey	User activation key
+					* @var	messenger	messenger	phpBB Messenger
+					* @since 3.2.4-RC1
+					*/
+					$vars = array(
+						'user_row',
+						'cp_data',
+						'data',
+						'message',
+						'server_url',
+						'user_id',
+						'user_actkey',
+						'messenger',
+					);
+					extract($phpbb_dispatcher->trigger_event('core.ucp_register_welcome_email_before', compact($vars)));
+
 					$messenger->send(NOTIFY_EMAIL);
 				}
 
@@ -510,6 +536,30 @@ class ucp_register
 						$message = $message . '<br /><br />' . $user->lang[$result];
 					}
 				}
+
+				/**
+				* Perform additional actions after user registration
+				*
+				* @event core.ucp_register_register_after
+				* @var	array		user_row	Array with user registration data
+				* @var	array		cp_data		Array with custom profile fields data
+				* @var	array		data		Array with current ucp registration data
+				* @var	string		message		Message to be displayed to the user after registration
+				* @var	string		server_url	Server URL
+				* @var	int			user_id		New user ID
+				* @var	string		user_actkey	User activation key
+				* @since 3.2.4-RC1
+				*/
+				$vars = array(
+					'user_row',
+					'cp_data',
+					'data',
+					'message',
+					'server_url',
+					'user_id',
+					'user_actkey',
+				);
+				extract($phpbb_dispatcher->trigger_event('core.ucp_register_register_after', compact($vars)));
 
 				$message = $message . '<br /><br />' . sprintf($user->lang['RETURN_INDEX'], '<a href="' . append_sid("{$phpbb_root_path}index.$phpEx") . '">', '</a>');
 				trigger_error($message);
@@ -550,6 +600,31 @@ class ucp_register
 			case USER_ACTIVATION_ADMIN:
 				$l_reg_cond = $user->lang['UCP_ADMIN_ACTIVATE'];
 			break;
+		}
+
+		/* @var $provider_collection \phpbb\auth\provider_collection */
+		$provider_collection = $phpbb_container->get('auth.provider_collection');
+		$auth_provider = $provider_collection->get_provider();
+
+		$auth_provider_data = $auth_provider->get_login_data();
+		if ($auth_provider_data)
+		{
+			if (isset($auth_provider_data['VARS']))
+			{
+				$template->assign_vars($auth_provider_data['VARS']);
+			}
+
+			if (isset($auth_provider_data['BLOCK_VAR_NAME']))
+			{
+				foreach ($auth_provider_data['BLOCK_VARS'] as $block_vars)
+				{
+					$template->assign_block_vars($auth_provider_data['BLOCK_VAR_NAME'], $block_vars);
+				}
+			}
+
+			$template->assign_vars(array(
+				'PROVIDER_TEMPLATE_FILE' => $auth_provider_data['TEMPLATE_FILE'],
+			));
 		}
 
 		// Assign template vars for timezone select

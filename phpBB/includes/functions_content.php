@@ -627,7 +627,7 @@ function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text 
 			}
 			else
 			{
-				$bbcode->bbcode($bitfield);
+				$bbcode->bbcode_set_bitfield($bitfield);
 			}
 
 			$bbcode->bbcode_second_pass($text, $uid);
@@ -1088,7 +1088,7 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 	global $extensions, $config, $phpbb_root_path, $phpEx;
 	global $phpbb_container;
 
-	$attachment_storage = $phpbb_container->get('storage.attachment');
+	$storage_attachment = $phpbb_container->get('storage.attachment');
 
 	//
 	$compiled_attachments = array();
@@ -1654,7 +1654,7 @@ class bitfield
 {
 	var $data;
 
-	function bitfield($bitfield = '')
+	function __construct($bitfield = '')
 	{
 		$this->data = base64_decode($bitfield);
 	}
@@ -1738,5 +1738,49 @@ class bitfield
 	function merge($bitfield)
 	{
 		$this->data = $this->data | $bitfield->get_blob();
+	}
+}
+
+/**
+ * Formats the quote according to the given BBCode status setting
+ *
+ * @param bool 						$bbcode_status The status of the BBCode setting
+ * @param array 					$quote_attributes The attributes of the quoted post
+ * @param phpbb\textformatter\utils $text_formatter_utils Text formatter utilities
+ * @param parse_message 			$message_parser Message parser class
+ * @param string 					$message_link Link of the original quoted post
+ */
+function phpbb_format_quote($bbcode_status, $quote_attributes, $text_formatter_utils, $message_parser, $message_link = '')
+{
+	if ($bbcode_status)
+	{
+		$quote_text = $text_formatter_utils->generate_quote(
+			censor_text($message_parser->message),
+			$quote_attributes
+		);
+
+		$message_parser->message = $quote_text . "\n\n";
+	}
+	else
+	{
+		$offset = 0;
+		$quote_string = "&gt; ";
+		$message = censor_text(trim($message_parser->message));
+		// see if we are nesting. It's easily tricked but should work for one level of nesting
+		if (strpos($message, "&gt;") !== false)
+		{
+			$offset = 10;
+		}
+		$message = utf8_wordwrap($message, 75 + $offset, "\n");
+
+		$message = $quote_string . $message;
+		$message = str_replace("\n", "\n" . $quote_string, $message);
+
+		$message_parser->message = $quote_attributes['author'] . " " . $user->lang['WROTE'] . ":\n" . $message . "\n";
+	}
+
+	if ($message_link)
+	{
+		$message_parser->message = $message_link . $message_parser->message;
 	}
 }
