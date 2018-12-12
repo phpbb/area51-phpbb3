@@ -1,7 +1,13 @@
 /* Special CSS for Area51
 ---------------------------------------- */
 .rank-img img {
-	width: 160px;
+	width: 100%;
+}
+
+@media (min-width: 701px) {
+	.rank-img img {
+		width: 160px;
+	}
 }
 
 .profile-avatar {
