@@ -1,12 +1,12 @@
 /* Special CSS for Area51
 ---------------------------------------- */
 .rank-img img {
-	width: 100%;
+	width: 160px;
 }
 
 @media (min-width: 701px) {
 	.rank-img img {
-		width: 160px;
+		width: 95%;
 	}
 }
 
