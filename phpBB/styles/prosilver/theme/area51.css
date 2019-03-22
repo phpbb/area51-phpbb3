@@ -4,12 +4,6 @@
 	width: 160px;
 }
 
-@media (min-width: 701px) {
-	.rank-img img {
-		width: 95%;
-	}
-}
-
 .profile-avatar {
 	text-align: center;
 }
