@@ -16,6 +16,7 @@ To be able to run an installation from the repo (and not from a pre-built packag
 	php ../composer.phar install
 
 
+
 ## CONTRIBUTE
 
 1. [Create an account on phpBB.com](http://www.phpbb.com/community/ucp.php?mode=register)
