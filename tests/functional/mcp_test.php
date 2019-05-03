@@ -67,6 +67,8 @@ class phpbb_functional_mcp_test extends phpbb_functional_test_case
 
 	public function test_delete_logs()
 	{
+		$this->markTestSkipped('Deleting logs not supported on area51');
+
 		$this->login();
 		$crawler = self::request('GET', "mcp.php?i=mcp_logs&mode=front&sid={$this->sid}");
 		$this->assertGreaterThanOrEqual(1, $crawler->filter('input[type=checkbox]')->count());

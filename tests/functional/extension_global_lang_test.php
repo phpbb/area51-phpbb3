@@ -61,6 +61,8 @@ class phpbb_functional_extension_global_lang_test extends phpbb_functional_test_
 
 	public function test_load_extension_lang_globally()
 	{
+		$this->markTestSkipped('Skiplink not supported by area51');
+
 		$this->phpbb_extension_manager->enable('foo/bar');
 
 		// The board index, which should contain an overwritten translation
