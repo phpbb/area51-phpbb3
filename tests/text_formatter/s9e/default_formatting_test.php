@@ -254,6 +254,10 @@ class phpbb_textformatter_s9e_default_formatting_test extends phpbb_test_case
 				'<a href="http://example.org/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="postlink">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</a>'
 			),
 			array(
+				'[url=http://example.org/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]http://example.org/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx[/url]',
+				'<a href="http://example.org/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="postlink">http://example.org/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</a>'
+			),
+			array(
 				'[quote="[url=http://example.org]xxx[/url]"]...[/quote]',
 				'<blockquote><div><cite><a href="http://example.org" class="postlink">xxx</a> wrote:</cite>...</div></blockquote>'
 			),
@@ -298,7 +302,7 @@ class phpbb_textformatter_s9e_default_formatting_test extends phpbb_test_case
 			),
 			array(
 				"Emoji: \xF0\x9F\x98\x80",
-				'Emoji: <img alt="' . "\xF0\x9F\x98\x80" . '" class="emoji smilies" draggable="false" src="//cdn.jsdelivr.net/emojione/assets/3.1/png/64/1f600.png">'
+				'Emoji: <img alt="' . "\xF0\x9F\x98\x80" . '" class="emoji smilies" draggable="false" src="//twemoji.maxcdn.com/2/svg/1f600.svg">'
 			),
 			array(
 				"Emoji: \xF0\x9F\x98\x80",

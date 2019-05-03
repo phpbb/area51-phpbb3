@@ -30,7 +30,7 @@ abstract class phpbb_console_user_base extends phpbb_database_test_case
 		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/config.xml');
 	}
 
-	public function setUp()
+	public function setUp(): void
 	{
 		global $auth, $db, $cache, $config, $user, $phpbb_dispatcher, $phpbb_container, $phpbb_root_path, $phpEx;
 
@@ -97,6 +97,8 @@ abstract class phpbb_console_user_base extends phpbb_database_test_case
 		$phpbb_container->setParameter('tables.auth_provider_oauth_token_storage', 'phpbb_oauth_tokens');
 		$phpbb_container->setParameter('tables.auth_provider_oauth_states', 'phpbb_oauth_states');
 		$phpbb_container->setParameter('tables.auth_provider_oauth_account_assoc', 'phpbb_oauth_accounts');
+
+		$phpbb_container->setParameter('tables.user_notifications', 'phpbb_user_notifications');
 
 		parent::setUp();
 	}

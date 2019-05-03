@@ -11,7 +11,9 @@
 *
 */
 
-class phpbb_test_case extends PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class phpbb_test_case extends TestCase
 {
 	protected $test_case_helpers;
 
@@ -19,10 +21,10 @@ class phpbb_test_case extends PHPUnit_Framework_TestCase
 	{
 		parent::__construct($name, $data, $dataName);
 		$this->backupStaticAttributesBlacklist += array(
-			'PHP_CodeCoverage' => array('instance'),
-			'PHP_CodeCoverage_Filter' => array('instance'),
-			'PHP_CodeCoverage_Util' => array('ignoredLines', 'templateMethods'),
-			'PHP_Timer' => array('startTimes',),
+			'SebastianBergmann\CodeCoverage\CodeCoverage' => array('instance'),
+			'SebastianBergmann\CodeCoverage\Filter' => array('instance'),
+			'SebastianBergmann\CodeCoverage\Util' => array('ignoredLines', 'templateMethods'),
+			'SebastianBergmann\Timer\Timer' => array('startTimes',),
 			'PHP_Token_Stream' => array('customTokens'),
 			'PHP_Token_Stream_CachingFactory' => array('cache'),
 
