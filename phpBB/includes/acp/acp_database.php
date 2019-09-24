@@ -62,7 +62,6 @@ class acp_database
 						$type	= $request->variable('type', '');
 						$table	= array_intersect($this->db_tools->sql_list_tables(), $request->variable('table', array('')));
 						$format	= $request->variable('method', '');
-						$where	= $request->variable('where', '');
 
 						if (!count($table))
 						{
@@ -74,12 +73,9 @@ class acp_database
 							trigger_error($user->lang['FORM_INVALID'] . adm_back_link($this->u_action), E_USER_WARNING);
 						}
 
-						$store = $structure = $schema_data = false;
-
-						if ($where == 'store')
-						{
-							$store = true;
-						}
+						$store = true;
+						$structure = false;
+						$schema_data = false;
 
 						if ($type == 'full' || $type == 'structure')
 						{
@@ -314,7 +310,7 @@ class acp_database
 								trigger_error($user->lang['RESTORE_DOWNLOAD_FAIL'] . adm_back_link($this->u_action));
 							}
 
-							switch ($backup_info['extensions'])
+							switch ($backup_info['extension'])
 							{
 								case 'sql':
 									$fp = fopen($temp_file_name, 'rb');

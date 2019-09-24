@@ -33,7 +33,7 @@
 <!-- IF L_EXPLAIN --><p>{L_EXPLAIN}</p><!-- ENDIF -->
 
 <fieldset class="quick">
-	<span class="small"><a href="https://www.phpbb.com/go/customise/styles/3.2" target="_blank">{L_BROWSE_STYLES_DATABASE}</a></span>
+	<span class="small"><a href="https://www.phpbb.com/go/customise/styles/3.3" target="_blank">{L_BROWSE_STYLES_DATABASE}</a></span>
 </fieldset>
 
 <form id="acp_styles" method="post" action="{U_ACTION}">
@@ -146,7 +146,9 @@
 		{styles_list.EXTRA}
 		<td class="{$ROW_CLASS} mark" width="20">
 			<!-- IF styles_list.STYLE_ID -->
-				<input class="checkbox" type="checkbox" name="ids[]" value="{styles_list.STYLE_ID}" />
+				{% if styles_list.STYLE_NAME !== 'prosilver' %}
+					<input class="checkbox" type="checkbox" name="ids[]" value="{styles_list.STYLE_ID}" />
+				{% endif %}
 			<!-- ELSE -->
 				<!-- IF styles_list.COMMENT != '' -->
 					&nbsp;

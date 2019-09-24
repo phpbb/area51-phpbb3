@@ -11,6 +11,7 @@
 *
 */
 
+use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\Exception\WebDriverCurlException;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -74,12 +75,14 @@ class phpbb_ui_test_case extends phpbb_test_case
 		}
 
 		try {
-			$capabilities = DesiredCapabilities::firefox();
+			$capabilities = DesiredCapabilities::chrome();
+			$chromeOptions = (new ChromeOptions)->addArguments(['headless', 'disable-gpu']);
+			$capabilities->setCapability(ChromeOptions::CAPABILITY, $chromeOptions);
 			self::$webDriver = RemoteWebDriver::create(
 				self::$host . ':' . self::$port,
 				$capabilities,
-				60 * 1000, // 60 seconds connection timeout
-				60 * 1000 // 60 seconds request timeout
+				30 * 1000, // 30 seconds connection timeout
+				30 * 1000 // 30 seconds request timeout
 			);
 		} catch (WebDriverCurlException $e) {
 			self::markTestSkipped('PhantomJS webserver is not running.');
