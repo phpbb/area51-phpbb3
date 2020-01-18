@@ -1481,7 +1481,6 @@ function tracking_unserialize($string, $max_depth = 3)
 
 /**
 * Append session id to url.
-* This function supports hooks.
 *
 * @param string $url The url the session id needs to be appended to (can have params)
 * @param mixed $params String or array of additional url parameters
@@ -1502,7 +1501,7 @@ function tracking_unserialize($string, $max_depth = 3)
 */
 function append_sid($url, $params = false, $is_amp = true, $session_id = false, $is_route = false)
 {
-	global $_SID, $_EXTRA_URL, $phpbb_hook, $phpbb_path_helper;
+	global $_SID, $_EXTRA_URL, $phpbb_path_helper;
 	global $phpbb_dispatcher;
 
 	if ($params === '' || (is_array($params) && empty($params)))
@@ -1547,18 +1546,6 @@ function append_sid($url, $params = false, $is_amp = true, $session_id = false, 
 	if ($append_sid_overwrite)
 	{
 		return $append_sid_overwrite;
-	}
-
-	// The following hook remains for backwards compatibility, though use of
-	// the event above is preferred.
-	// Developers using the hook function need to globalise the $_SID and $_EXTRA_URL on their own and also handle it appropriately.
-	// They could mimic most of what is within this function
-	if (!empty($phpbb_hook) && $phpbb_hook->call_hook(__FUNCTION__, $url, $params, $is_amp, $session_id))
-	{
-		if ($phpbb_hook->hook_return(__FUNCTION__))
-		{
-			return $phpbb_hook->hook_return_result(__FUNCTION__);
-		}
 	}
 
 	$params_is_array = is_array($params);
@@ -2264,6 +2251,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 
 	$err = '';
 	$form_name = 'login';
+	$username = $autologin = false;
 
 	// Make sure user->setup() has been called
 	if (!$user->is_setup())
@@ -4111,18 +4099,6 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 	// Add form token for login box, in case page is presenting a login form.
 	add_form_key('login', '_LOGIN');
 
-	/**
-	 * Workaround for missing template variable in pre phpBB 3.2.6 styles.
-	 * @deprecated 3.2.7 (To be removed: 3.3.0-a1)
-	 */
-	$form_token_login = $template->retrieve_var('S_FORM_TOKEN_LOGIN');
-	if (!empty($form_token_login))
-	{
-		$s_login_redirect .= $form_token_login;
-		// Remove S_FORM_TOKEN_LOGIN as it's already appended to S_LOGIN_REDIRECT
-		$template->assign_var('S_FORM_TOKEN_LOGIN', '');
-	}
-
 	// The following assigns all _common_ variables that may be used at any point in a template.
 	$template->assign_vars(array(
 		'SITENAME'						=> $config['sitename'],
@@ -4528,45 +4504,39 @@ function garbage_collection()
 
 /**
 * Handler for exit calls in phpBB.
-* This function supports hooks.
 *
 * Note: This function is called after the template has been outputted.
+ *
+ * @return void
 */
 function exit_handler()
 {
-	global $phpbb_hook;
+	global $phpbb_dispatcher;
 
-	if (!empty($phpbb_hook) && $phpbb_hook->call_hook(__FUNCTION__))
+	$exit_handler_override = false;
+
+	/**
+	 * This event can either supplement or override the exit_handler() function
+	 *
+	 * To override this function, the event must set $exit_handler_override to
+	 * true to force it to exit directly after calling this event.
+	 *
+	 * @event core.exit_handler
+	 * @var	bool	exit_handler_override		Flag to signify exit is handled elsewhere
+	 * @since 4.0.0-a1
+	 */
+	$vars = ['exit_handler_override'];
+	extract($phpbb_dispatcher->trigger_event('core.exit_handler', compact($vars)));
+
+	if ($exit_handler_override)
 	{
-		if ($phpbb_hook->hook_return(__FUNCTION__))
-		{
-			return $phpbb_hook->hook_return_result(__FUNCTION__);
-		}
+		return;
 	}
 
 	// As a pre-caution... some setups display a blank page if the flush() is not there.
 	(ob_get_level() > 0) ? @ob_flush() : @flush();
 
 	exit;
-}
-
-/**
-* Handler for init calls in phpBB. This function is called in \phpbb\user::setup();
-* This function supports hooks.
-*/
-function phpbb_user_session_handler()
-{
-	global $phpbb_hook;
-
-	if (!empty($phpbb_hook) && $phpbb_hook->call_hook(__FUNCTION__))
-	{
-		if ($phpbb_hook->hook_return(__FUNCTION__))
-		{
-			return $phpbb_hook->hook_return_result(__FUNCTION__);
-		}
-	}
-
-	return;
 }
 
 /**

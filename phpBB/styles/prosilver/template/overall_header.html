@@ -115,10 +115,11 @@
 		<!-- EVENT overall_header_headerbar_before -->
 			<div class="inner">
 
-			<div id="site-description" class="site-description" style="margin-left:20px;">
-				<!- - <a id="logo" class="logo" href="{U_INDEX}" title="{L_INDEX}">{SITE_LOGO_IMG}</a> - ->
-				<h1><a href="{U_INDEX}" style="color:#fff;text-decoration:none;" title="{L_INDEX}">{SITENAME}</a></h1>
-
+			<div id="site-description" class="site-description">
+		<a id="logo" class="logo" href="{% if U_SITE_HOME %}{{ U_SITE_HOME }}{% else %}{{ U_INDEX }}{% endif %}" title="{% if U_SITE_HOME %}{{ L_SITE_HOME }}{% else %}{{ L_INDEX }}{% endif %}">
+					<span class="site_logo"></span>
+				</a>
+				<h1>{SITENAME}</h1>
 				<p>{SITE_DESCRIPTION}</p>
 				<p class="skiplink"><a href="#start_here">{L_SKIP}</a></p>
 			</div>
