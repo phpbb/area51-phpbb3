@@ -30,4 +30,5 @@ node_modules
 /tests/vendor
 /vagrant/phpbb-install-config.yml
 .vagrant
+.idea
 *.DS_Store*

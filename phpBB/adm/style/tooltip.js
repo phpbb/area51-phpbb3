@@ -1,3 +1,5 @@
+/* global phpbb */
+
 /*
 javascript for Bubble Tooltips by Alessandro Fulciniti
 - http://pro.html.it - http://web-graphics.com
@@ -218,23 +220,6 @@ $(function() {
 
 	// Prepare dropdown
 	phpbb.prepareRolesDropdown();
-
-	// Reset role drop-down on modifying permissions in advanced tab
-	$('div.permissions-switch > a').on('click', function () {
-		$.each($('input[type=radio][name^="setting["]'), function () {
-			var $this = $(this);
-			$this.on('click', function () {
-				var $rolesOptions = $this.closest('fieldset.permissions').find('.roles-options'),
-					rolesSelect = $rolesOptions.find('select > option')[0];
-
-				// Set selected setting
-				$rolesOptions.children('span')
-					.text(rolesSelect.text);
-				$rolesOptions.children('input[type=hidden]')
-					.val(rolesSelect.value);
-			});
-		});
-	});
 });
 
 })(jQuery); // Avoid conflicts with other libraries

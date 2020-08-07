@@ -222,17 +222,6 @@ class ucp_register
 
 			$template->assign_vars($template_vars);
 
-			/**
-			* Allows to modify the agreements.
-			*
-			* To assign data to the template, use $template->assign_vars()
-			*
-			* @event core.ucp_register_agreement
-			* @since 3.1.6-RC1
-			* @deprecated 3.2.2-RC1 Replaced by core.ucp_register_agreement_modify_template_data and to be removed in 3.3.0-RC1
-			*/
-			$phpbb_dispatcher->dispatch('core.ucp_register_agreement');
-
 			$this->tpl_name = $tpl_name;
 			return;
 		}
@@ -411,11 +400,13 @@ class ucp_register
 				* @event core.ucp_register_user_row_after
 				* @var	bool	submit		Do we display the form only
 				*							or did the user press submit
+				* @var	array	data		Array with current ucp registration data
 				* @var	array	cp_data		Array with custom profile fields data
-				* @var	array	user_row	Array with current ucp registration data
+				* @var	array	user_row	Array with user data that will be inserted
 				* @since 3.1.4-RC1
+				* @changed 3.2.10-RC1 Added data array
 				*/
-				$vars = array('submit', 'cp_data', 'user_row');
+				$vars = array('submit', 'data', 'cp_data', 'user_row');
 				extract($phpbb_dispatcher->trigger_event('core.ucp_register_user_row_after', compact($vars)));
 
 				// Register user...
