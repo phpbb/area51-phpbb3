@@ -34,7 +34,7 @@ class listener implements EventSubscriberInterface
 	{
 		if (!empty($object[$key]))
 		{
-			if (preg_match_all('#<img [^>]*src="(http://[^"]+)"[^>]*>#', $object[$key], $matches))
+			if (preg_match_all('#<img [^>]*src="(http://[^"]+)"[^>]*>#', $object[$key]['html'], $matches))
 			{
 				foreach ($matches[1] as $url)
 				{
