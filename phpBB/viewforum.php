@@ -20,8 +20,6 @@ $phpEx = substr(strrchr(__FILE__, '.'), 1);
 include($phpbb_root_path . 'common.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 
-\QafooLabs\Profiler::setTransactionName("viewforum.php: default");
-
 // Start session
 $user->session_begin();
 $auth->acl($user->data);

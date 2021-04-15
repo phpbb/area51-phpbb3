@@ -21,8 +21,6 @@ require($phpbb_root_path . 'common.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_module.' . $phpEx);
 
-\QafooLabs\Profiler::setTransactionName("ucp.php: default");
-
 // Basic parameter data
 $id 	= $request->variable('i', '');
 $mode	= $request->variable('mode', '');

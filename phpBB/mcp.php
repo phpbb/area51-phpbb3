@@ -22,8 +22,6 @@ include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_mcp.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_module.' . $phpEx);
 
-\QafooLabs\Profiler::setTransactionName("mcp.php: default");
-
 // Start session management
 $user->session_begin();
 $auth->acl($user->data);

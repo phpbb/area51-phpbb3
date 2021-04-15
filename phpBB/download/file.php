@@ -35,8 +35,6 @@ if (isset($_GET['avatar']))
 {
 	require($phpbb_root_path . 'includes/startup.' . $phpEx);
 
-    \QafooLabs\Profiler::setTransactionName("download/file.php: avatar");
-
 	require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
 	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
 	$phpbb_class_loader->register();

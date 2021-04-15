@@ -25,8 +25,6 @@ require($phpbb_root_path . 'includes/functions_acp.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_module.' . $phpEx);
 
-\QafooLabs\Profiler::setTransactionName("adm/index.php: default");
-
 // Start session management
 $user->session_begin();
 $auth->acl($user->data);

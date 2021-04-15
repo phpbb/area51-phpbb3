@@ -22,8 +22,6 @@ include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
 include($phpbb_root_path . 'includes/bbcode.' . $phpEx);
 include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 
-\QafooLabs\Profiler::setTransactionName("viewtopic.php: default");
-
 // Start session management
 $user->session_begin();
 $auth->acl($user->data);
