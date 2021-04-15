@@ -31,7 +31,7 @@ class filesystem implements filesystem_interface
 	/**
 	 * Stores current working directory
 	 *
-	 * @var string|bool		current working directory or false if it cannot be recovered
+	 * @var string|bool|null		current working directory or false if it cannot be recovered
 	 */
 	protected $working_directory;
 
@@ -575,13 +575,10 @@ class filesystem implements filesystem_interface
 			}
 			else
 			{
-				$handle = @fopen($file, 'c');
+				$handle = new \SplFileInfo($file);
 
-				if (is_resource($handle))
-				{
-					fclose($handle);
-					return true;
-				}
+				// Returns TRUE if writable, FALSE otherwise
+				return $handle->isWritable();
 			}
 		}
 		else
@@ -603,7 +600,7 @@ class filesystem implements filesystem_interface
 	 *
 	 * @deprecated 3.3.0-a1 (To be removed: 4.0.0)
 	 *
-	 * @param string	$path
+	 * @param ?string	$path
 	 * @return bool|string
 	 */
 	protected function phpbb_own_realpath($path)

@@ -11,9 +11,9 @@
 *
 */
 
-require_once dirname(__FILE__) . '/../../phpBB/includes/functions.php';
-require_once dirname(__FILE__) . '/../../phpBB/includes/functions_content.php';
-require_once dirname(__FILE__) . '/../../phpBB/includes/utf/utf_tools.php';
+require_once __DIR__ . '/../../phpBB/includes/functions.php';
+require_once __DIR__ . '/../../phpBB/includes/functions_content.php';
+require_once __DIR__ . '/../../phpBB/includes/utf/utf_tools.php';
 
 class phpbb_profilefield_type_url_test extends phpbb_test_case
 {
@@ -23,19 +23,15 @@ class phpbb_profilefield_type_url_test extends phpbb_test_case
 	/**
 	* Sets up basic test objects
 	*
-	* @access public
-	* @return null
+	* @access protected
 	*/
-	public function setUp(): void
+	protected function setUp(): void
 	{
-		global $config, $request, $user, $cache, $phpbb_root_path, $phpEx;
+		global $config, $request, $user, $cache;
 
 		$config = new \phpbb\config\config([]);
 		$cache = new phpbb_mock_cache;
-		$user = $this->createMock('\phpbb\user', array(), array(
-			new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx)),
-			'\phpbb\datetime'
-		));
+		$user = $this->createMock('\phpbb\user');
 		$user->expects($this->any())
 			->method('lang')
 			->will($this->returnCallback(array($this, 'return_callback_implode')));
@@ -56,6 +52,10 @@ class phpbb_profilefield_type_url_test extends phpbb_test_case
 			'lang_id'	 	 => 1,
 			'lang_name'      => 'field',
 			'field_required' => false,
+			'field_show_novalue'	=> null,
+			'field_novalue'    	=> null,
+			'field_minlen'		=> null,
+			'field_maxlen'		=> null,
 		);
 	}
 

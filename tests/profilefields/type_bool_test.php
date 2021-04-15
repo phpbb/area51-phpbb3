@@ -23,10 +23,8 @@ class phpbb_profilefield_type_bool_test extends phpbb_test_case
 	* @access public
 	* @return void
 	*/
-	public function setUp(): void
+	protected function setUp(): void
 	{
-		global $phpbb_root_path, $phpEx;
-
 		$db = $this->createMock('phpbb\\db\\driver\\driver');
 
 		$user = $this->createMock('\phpbb\user');
@@ -67,8 +65,10 @@ class phpbb_profilefield_type_bool_test extends phpbb_test_case
 			'lang_id'	 	   => 1,
 			'lang_name'        => 'field',
 			'field_required'   => false,
-			'field_default_value' => 1,
-			'field_length' => 1,
+			'field_default_value'	=> 1,
+			'field_length'			=> 1,
+			'field_show_novalue'	=> null,
+			'field_novalue'			=> null,
 		);
 
 		$this->options = array(

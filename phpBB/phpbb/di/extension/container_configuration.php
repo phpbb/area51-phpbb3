@@ -22,12 +22,12 @@ class container_configuration implements ConfigurationInterface
 	/**
 	 * Generates the configuration tree builder.
 	 *
-	 * @return \Symfony\Component\Config\Definition\Builder\TreeBuilder The tree builder
+	 * @return TreeBuilder The tree builder
 	 */
 	public function getConfigTreeBuilder()
 	{
-		$treeBuilder = new TreeBuilder();
-		$rootNode = $treeBuilder->root('core');
+		$treeBuilder = new TreeBuilder('core');
+		$rootNode = $treeBuilder->getRootNode();
 		$rootNode
 			->children()
 				->booleanNode('require_dev_dependencies')->defaultValue(false)->end()
@@ -40,6 +40,8 @@ class container_configuration implements ConfigurationInterface
 						->booleanNode('sql_explain')->defaultValue(false)->end()
 						->booleanNode('memory')->defaultValue(false)->end()
 						->booleanNode('show_errors')->defaultValue(false)->end()
+						->booleanNode('url_generator')->defaultValue(false)->end()
+						->booleanNode('url_matcher')->defaultValue(false)->end()
 					->end()
 				->end()
 				->arrayNode('twig')

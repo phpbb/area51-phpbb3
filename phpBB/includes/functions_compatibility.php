@@ -194,12 +194,12 @@ function get_remote_file($host, $directory, $filename, &$errstr, &$errno, $port 
 /**
  * Add log entry
  *
- * @param	string	$mode				The mode defines which log_type is used and from which log the entry is retrieved
- * @param	int		$forum_id			Mode 'mod' ONLY: forum id of the related item, NOT INCLUDED otherwise
- * @param	int		$topic_id			Mode 'mod' ONLY: topic id of the related item, NOT INCLUDED otherwise
- * @param	int		$reportee_id		Mode 'user' ONLY: user id of the reportee, NOT INCLUDED otherwise
- * @param	string	$log_operation		Name of the operation
- * @param	array	$additional_data	More arguments can be added, depending on the log_type
+ * string	$mode				The mode defines which log_type is used and from which log the entry is retrieved
+ * int		$forum_id			Mode 'mod' ONLY: forum id of the related item, NOT INCLUDED otherwise
+ * int		$topic_id			Mode 'mod' ONLY: topic id of the related item, NOT INCLUDED otherwise
+ * int		$reportee_id		Mode 'user' ONLY: user id of the reportee, NOT INCLUDED otherwise
+ * string	$log_operation		Name of the operation
+ * array	$additional_data	More arguments can be added, depending on the log_type
  *
  * @return	int|bool		Returns the log_id, if the entry was added to the database, false otherwise.
  *
@@ -316,7 +316,8 @@ function set_config_count($config_name, $increment, $is_dynamic = false, \phpbb\
  *										Default is false, causing all bytes outside the ASCII range (0-127) to be replaced with question marks
  * @param	bool			$cookie		This param is mapped to \phpbb\request\request_interface::COOKIE as the last param for
  * 										\phpbb\request\request_interface::variable for backwards compatability reasons.
- * @param	\phpbb\request\request_interface|null|false	If an instance of \phpbb\request\request_interface is given the instance is stored in
+ * @param	\phpbb\request\request_interface|null|false	$request
+ * 										If an instance of \phpbb\request\request_interface is given the instance is stored in
  *										a static variable and used for all further calls where this parameters is null. Until
  *										the function is called with an instance it automatically creates a new \phpbb\request\request
  *										instance on every call. By passing false this per-call instantiation can be restored
@@ -455,8 +456,8 @@ function phpbb_realpath($path)
  * Determine which plural form we should use.
  * For some languages this is not as simple as for English.
  *
- * @param $rule		int			ID of the plural rule we want to use, see https://area51.phpbb.com/docs/dev/32x/language/plurals.html
- * @param $number	int|float	The number we want to get the plural case for. Float numbers are floored.
+ * @param	int			$rule	ID of the plural rule we want to use, see https://area51.phpbb.com/docs/dev/3.3.x/language/plurals.html
+ * @param	int|float	$number	The number we want to get the plural case for. Float numbers are floored.
  * @return	int		The plural-case we need to use for the number plural-rule combination
  *
  * @deprecated 3.2.0-dev (To be removed: 4.0.0)
@@ -725,7 +726,7 @@ function phpbb_http_login($param)
 	{
 		if ($request->is_set($k, \phpbb\request\request_interface::SERVER))
 		{
-			$username = htmlspecialchars_decode($request->server($k));
+			$username = htmlspecialchars_decode($request->server($k), ENT_COMPAT);
 			break;
 		}
 	}
@@ -735,7 +736,7 @@ function phpbb_http_login($param)
 	{
 		if ($request->is_set($k, \phpbb\request\request_interface::SERVER))
 		{
-			$password = htmlspecialchars_decode($request->server($k));
+			$password = htmlspecialchars_decode($request->server($k), ENT_COMPAT);
 			break;
 		}
 	}
@@ -846,4 +847,100 @@ function phpbb_delete_user_pms($user_id)
 	}
 
 	return phpbb_delete_users_pms(array($user_id));
+}
+
+/**
+* Casts a numeric string $input to an appropriate numeric type (i.e. integer or float)
+*
+* @param string $input		A numeric string.
+*
+* @return int|float			Integer $input if $input fits integer,
+*							float $input otherwise.
+*
+* @deprecated 3.2.10 (To be removed 4.0.0)
+*/
+function phpbb_to_numeric($input)
+{
+	return ($input > PHP_INT_MAX) ? (float) $input : (int) $input;
+}
+
+/**
+* Check and display the SQL report if requested.
+*
+* @param \phpbb\request\request_interface		$request	Request object
+* @param \phpbb\auth\auth						$auth		Auth object
+* @param \phpbb\db\driver\driver_interface		$db			Database connection
+*
+* @deprecated 3.3.1 (To be removed: 4.0.0-a1); use controller helper's display_sql_report()
+*/
+function phpbb_check_and_display_sql_report(\phpbb\request\request_interface $request, \phpbb\auth\auth $auth, \phpbb\db\driver\driver_interface $db)
+{
+	global $phpbb_container;
+
+	/** @var \phpbb\controller\helper $controller_helper */
+	$controller_helper = $phpbb_container->get('controller.helper');
+
+	$controller_helper->display_sql_report();
+}
+
+/**
+ * Parse cfg file
+ * @param string $filename
+ * @param bool|array $lines
+ * @return array
+ *
+ * @deprecated 4.0.0-a1 (To be removed: 5.0.0)
+ */
+function parse_cfg_file($filename, $lines = false)
+{
+	$parsed_items = array();
+
+	if ($lines === false)
+	{
+		$lines = file($filename);
+	}
+
+	foreach ($lines as $line)
+	{
+		$line = trim($line);
+
+		if (!$line || $line[0] == '#' || ($delim_pos = strpos($line, '=')) === false)
+		{
+			continue;
+		}
+
+		// Determine first occurrence, since in values the equal sign is allowed
+		$key = htmlspecialchars(strtolower(trim(substr($line, 0, $delim_pos))), ENT_COMPAT);
+		$value = trim(substr($line, $delim_pos + 1));
+
+		if (in_array($value, array('off', 'false', '0')))
+		{
+			$value = false;
+		}
+		else if (in_array($value, array('on', 'true', '1')))
+		{
+			$value = true;
+		}
+		else if (!trim($value))
+		{
+			$value = '';
+		}
+		else if (($value[0] == "'" && $value[strlen($value) - 1] == "'") || ($value[0] == '"' && $value[strlen($value) - 1] == '"'))
+		{
+			$value = htmlspecialchars(substr($value, 1, strlen($value)-2), ENT_COMPAT);
+		}
+		else
+		{
+			$value = htmlspecialchars($value, ENT_COMPAT);
+		}
+
+		$parsed_items[$key] = $value;
+	}
+
+	if (isset($parsed_items['parent']) && isset($parsed_items['name']) && $parsed_items['parent'] == $parsed_items['name'])
+	{
+		unset($parsed_items['parent']);
+	}
+
+	return $parsed_items;
 }

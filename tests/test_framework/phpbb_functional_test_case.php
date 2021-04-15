@@ -17,10 +17,10 @@ require_once __DIR__ . '/mock/phpbb_mock_null_installer_task.php';
 class phpbb_functional_test_case extends phpbb_test_case
 {
 	/** @var \Goutte\Client */
-	static protected $client;
-	static protected $cookieJar;
-	static protected $root_url;
-	static protected $install_success = false;
+	protected static $client;
+	protected static $cookieJar;
+	protected static $root_url;
+	protected static $install_success = false;
 
 	protected $cache = null;
 	protected $db = null;
@@ -38,11 +38,11 @@ class phpbb_functional_test_case extends phpbb_test_case
 	*/
 	protected $lang = array();
 
-	static protected $config = array();
-	static protected $already_installed = false;
-	static protected $last_post_timestamp = 0;
+	protected static $config = array();
+	protected static $already_installed = false;
+	protected static $last_post_timestamp = 0;
 
-	static public function setUpBeforeClass()
+	static public function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
 
@@ -70,12 +70,12 @@ class phpbb_functional_test_case extends phpbb_test_case
 	/**
 	* @return array List of extensions that should be set up
 	*/
-	static protected function setup_extensions()
+	protected static function setup_extensions()
 	{
 		return array();
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -183,13 +183,14 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 	}
 
-	public function __construct($name = NULL, array $data = array(), $dataName = '')
+	public function __construct($name = NULL, array $data = [], $dataName = '')
 	{
 		parent::__construct($name, $data, $dataName);
 
-		$this->backupStaticAttributesBlacklist += array(
-			'phpbb_functional_test_case' => array('config', 'already_installed'),
-		);
+		$backupStaticAttributesBlacklist = [
+			'phpbb_functional_test_case' => ['config', 'already_installed'],
+		];
+		$this->excludeBackupStaticAttributes($backupStaticAttributesBlacklist);
 	}
 
 	protected function get_db()
@@ -261,7 +262,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 			$db,
 			$config,
 			self::$config['table_prefix'] . 'ext',
-			dirname(__FILE__) . '/',
+			__DIR__ . '/',
 			$phpEx,
 			new \phpbb\cache\service($this->get_cache_driver(), $config, $this->db, $phpbb_root_path, $phpEx)
 		);
@@ -269,7 +270,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		return $extension_manager;
 	}
 
-	static protected function install_board()
+	protected static function install_board()
 	{
 		global $phpbb_root_path, $phpEx;
 
@@ -515,7 +516,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$this->delete_ext_data($extension);
 	}
 
-	static private function recreate_database($config)
+	private static function recreate_database($config)
 	{
 		$db_conn_mgr = new phpbb_database_test_connection_manager($config);
 		$db_conn_mgr->recreate_db();
@@ -524,9 +525,9 @@ class phpbb_functional_test_case extends phpbb_test_case
 	/**
 	* Creates a new style
 	*
-	* @param string $style_id Style ID
+	* @param int $style_id Style ID
 	* @param string $style_path Style directory
-	* @param string $parent_style_id Parent style id. Default = 1
+	* @param int $parent_style_id Parent style id. Default = 1
 	* @param string $parent_style_path Parent style directory. Default = 'prosilver'
 	*/
 	protected function add_style($style_id, $style_path, $parent_style_id = 1, $parent_style_path = 'prosilver')
@@ -600,7 +601,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 	/**
 	* Remove temporary style created by add_style()
 	*
-	* @param string $style_id Style ID
+	* @param int $style_id Style ID
 	* @param string $style_path Style directory
 	*/
 	protected function delete_style($style_id, $style_path)
@@ -720,10 +721,14 @@ class phpbb_functional_test_case extends phpbb_test_case
 
 		$db = $this->get_db();
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
+
 		$user = $this->createMock('\phpbb\user', array(), array(
 			new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx)),
 			'\phpbb\datetime'
 		));
+		$user->data['user_id'] = 2; // admin
+		$user->ip = '';
+
 		$auth = $this->createMock('\phpbb\auth\auth');
 
 		$phpbb_log = new \phpbb\log\log($db, $user, $auth, $phpbb_dispatcher, $phpbb_root_path, 'adm/', $phpEx, LOG_TABLE);
@@ -757,10 +762,14 @@ class phpbb_functional_test_case extends phpbb_test_case
 
 		$db = $this->get_db();
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
+
 		$user = $this->createMock('\phpbb\user', array(), array(
 			new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx)),
 			'\phpbb\datetime'
 		));
+		$user->data['user_id'] = 2; // admin
+		$user->ip = '';
+
 		$auth = $this->createMock('\phpbb\auth\auth');
 
 		$phpbb_log = new \phpbb\log\log($db, $user, $auth, $phpbb_dispatcher, $phpbb_root_path, 'adm/', $phpEx, LOG_TABLE);
@@ -788,21 +797,25 @@ class phpbb_functional_test_case extends phpbb_test_case
 		return group_user_add($group_id, false, $usernames, $group_name, $default, $leader);
 	}
 
-	protected function login($username = 'admin')
+	protected function login($username = 'admin', $autologin = false)
 	{
 		$this->add_lang('ucp');
 
 		$crawler = self::request('GET', 'ucp.php');
-		$this->assertContains($this->lang('LOGIN_EXPLAIN_UCP'), $crawler->filter('html')->text());
+		$this->assertStringContainsString($this->lang('LOGIN_EXPLAIN_UCP'), $crawler->filter('html')->text());
 
 		$form = $crawler->selectButton($this->lang('LOGIN'))->form();
+		if ($autologin)
+		{
+			$form['autologin']->tick();
+		}
 		$crawler = self::submit($form, array('username' => $username, 'password' => $username . $username));
-		$this->assertNotContains($this->lang('LOGIN'), $crawler->filter('.navbar')->text());
+		$this->assertStringNotContainsString($this->lang('LOGIN'), $crawler->filter('.navbar')->text());
 
 		$cookies = self::$cookieJar->all();
 
 		// The session id is stored in a cookie that ends with _sid - we assume there is only one such cookie
-		foreach ($cookies as $cookie);
+		foreach ($cookies as $cookie)
 		{
 			if (substr($cookie->getName(), -4) == '_sid')
 			{
@@ -816,7 +829,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$this->add_lang('ucp');
 
 		$crawler = self::request('GET', 'ucp.php?sid=' . $this->sid . '&mode=logout');
-		$this->assertContains($this->lang('REGISTER'), $crawler->filter('.navbar')->text());
+		$this->assertStringContainsString($this->lang('REGISTER'), $crawler->filter('.navbar')->text());
 		unset($this->sid);
 
 	}
@@ -837,7 +850,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		}
 
 		$crawler = self::request('GET', 'adm/index.php?sid=' . $this->sid);
-		$this->assertContains($this->lang('LOGIN_ADMIN_CONFIRM'), $crawler->filter('html')->text());
+		$this->assertStringContainsString($this->lang('LOGIN_ADMIN_CONFIRM'), $crawler->filter('html')->text());
 
 		$form = $crawler->selectButton($this->lang('LOGIN'))->form();
 
@@ -846,12 +859,12 @@ class phpbb_functional_test_case extends phpbb_test_case
 			if (strpos($field, 'password_') === 0)
 			{
 				$crawler = self::submit($form, array('username' => $username, $field => $username . $username));
-				$this->assertContains($this->lang('ADMIN_PANEL'), $crawler->filter('h1')->text());
+				$this->assertStringContainsString($this->lang('ADMIN_PANEL'), $crawler->filter('h1')->text());
 
 				$cookies = self::$cookieJar->all();
 
 				// The session id is stored in a cookie that ends with _sid - we assume there is only one such cookie
-				foreach ($cookies as $cookie);
+				foreach ($cookies as $cookie)
 				{
 					if (substr($cookie->getName(), -4) == '_sid')
 					{
@@ -936,7 +949,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 	 */
 	public function assertContainsLang($needle, $haystack, $message = '')
 	{
-		$this->assertContains(html_entity_decode($this->lang($needle), ENT_QUOTES), $haystack, $message);
+		$this->assertStringContainsString(html_entity_decode($this->lang($needle), ENT_QUOTES), $haystack, $message);
 	}
 
 	/**
@@ -948,7 +961,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 	*/
 	public function assertNotContainsLang($needle, $haystack, $message = '')
 	{
-		$this->assertNotContains(html_entity_decode($this->lang($needle), ENT_QUOTES), $haystack, $message);
+		$this->assertStringNotContainsString(html_entity_decode($this->lang($needle), ENT_QUOTES), $haystack, $message);
 	}
 
 	/*
@@ -963,7 +976,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		// Any output before the doc type means there was an error
 		$content = self::get_content();
-		self::assertNotContains('[phpBB Debug]', $content);
+		self::assertStringNotContainsString('[phpBB Debug]', $content);
 		self::assertStringStartsWith('<!DOCTYPE', trim($content), 'Output found before DOCTYPE specification.');
 
 		if ($status_code !== false)
@@ -984,7 +997,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		// Any output before the xml opening means there was an error
 		$content = self::get_content();
-		self::assertNotContains('[phpBB Debug]', $content);
+		self::assertStringNotContainsString('[phpBB Debug]', $content);
 		self::assertStringStartsWith('<?xml', trim($content), 'Output found before XML specification.');
 
 		if ($status_code !== false)
@@ -1004,12 +1017,12 @@ class phpbb_functional_test_case extends phpbb_test_case
 	*/
 	static public function assert_response_status_code($status_code = 200)
 	{
-		if ($status_code != self::$client->getResponse()->getStatus() &&
-			preg_match('/^5[0-9]{2}/', self::$client->getResponse()->getStatus()))
+		if ($status_code != self::$client->getResponse()->getStatusCode() &&
+			preg_match('/^5[0-9]{2}/', self::$client->getResponse()->getStatusCode()))
 		{
 			self::fail("Encountered unexpected server error:\n" . self::$client->getResponse()->getContent());
 		}
-		self::assertEquals($status_code, self::$client->getResponse()->getStatus(), 'HTTP status code does not match');
+		self::assertEquals($status_code, self::$client->getResponse()->getStatusCode(), 'HTTP status code does not match');
 	}
 
 	public function assert_filter($crawler, $expr, $msg = null)
@@ -1165,7 +1178,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 			}
 			else
 			{
-				$this->assertContains($expected, $crawler->filter('html')->text());
+				$this->assertStringContainsString($expected, $crawler->filter('html')->text());
 			}
 			return null;
 		}
@@ -1208,7 +1221,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 
 		$crawler = self::submit_message($posting_url, 'POST_NEW_PM', $form_data);
 
-		$this->assertContains($this->lang('MESSAGE_STORED'), $crawler->filter('html')->text());
+		$this->assertStringContainsString($this->lang('MESSAGE_STORED'), $crawler->filter('html')->text());
 		$url = $crawler->selectLink($this->lang('VIEW_PRIVATE_MESSAGE', '', ''))->link()->getUri();
 
 		return $this->get_parameter_from_link($url, 'p');
@@ -1232,7 +1245,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		self::$last_post_timestamp = time();
 
 		$crawler = self::request('GET', $posting_url);
-		$this->assertContains($this->lang($posting_contains), $crawler->filter('html')->text());
+		$this->assertStringContainsString($this->lang($posting_contains), $crawler->filter('html')->text());
 
 		if (!empty($form_data['upload_files']))
 		{

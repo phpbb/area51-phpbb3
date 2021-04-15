@@ -11,13 +11,13 @@
 *
 */
 
-require_once dirname(__FILE__) . '/base.php';
+require_once __DIR__ . '/base.php';
 
 /**
 * @group functional
 */
 class phpbb_functional_search_postgres_test extends phpbb_functional_search_base
 {
-	protected $search_backend = '\phpbb\search\fulltext_postgres';
+	protected $search_backend = 'phpbb\search\backend\fulltext_postgres';
 
 }

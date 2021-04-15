@@ -11,7 +11,7 @@
 *
 */
 
-require_once dirname(__FILE__) . '/common_groups_test_case.php';
+require_once __DIR__ . '/common_groups_test_case.php';
 
 /**
 * @group functional
@@ -51,7 +51,7 @@ class phpbb_functional_ucp_groups_test extends phpbb_functional_common_groups_te
 		$form = $this->get_group_manage_form();
 		$teampage_settings = $this->get_teampage_settings();
 		$crawler = self::submit($form);
-		$this->assertContains($this->lang('GROUP_UPDATED'), $crawler->text());
+		$this->assertStringContainsString($this->lang('GROUP_UPDATED'), $crawler->text());
 		$this->assertEquals($teampage_settings, $this->get_teampage_settings());
 	}
 

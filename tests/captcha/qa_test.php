@@ -20,10 +20,10 @@ class phpbb_captcha_qa_test extends \phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/../fixtures/empty.xml');
+		return $this->createXMLDataSet(__DIR__ . '/../fixtures/empty.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $db, $request, $phpbb_container;
 

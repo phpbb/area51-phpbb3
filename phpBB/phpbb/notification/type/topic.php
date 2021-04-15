@@ -50,7 +50,7 @@ class topic extends \phpbb\notification\type\base
 	* @var bool|array False if the service should use it's default data
 	* 					Array of data (including keys 'id', 'lang', and 'group')
 	*/
-	static public $notification_option = array(
+	public static $notification_option = array(
 		'lang'	=> 'NOTIFICATION_TYPE_TOPIC',
 		'group'	=> 'NOTIFICATION_GROUP_POSTING',
 	);
@@ -85,7 +85,7 @@ class topic extends \phpbb\notification\type\base
 	* @param array $post The data from the post
 	* @return int The topic id
 	*/
-	static public function get_item_id($post)
+	public static function get_item_id($post)
 	{
 		return (int) $post['topic_id'];
 	}
@@ -96,7 +96,7 @@ class topic extends \phpbb\notification\type\base
 	* @param array $post The data from the post
 	* @return int The forum id
 	*/
-	static public function get_item_parent_id($post)
+	public static function get_item_parent_id($post)
 	{
 		return (int) $post['forum_id'];
 	}
@@ -217,9 +217,9 @@ class topic extends \phpbb\notification\type\base
 		}
 
 		return array(
-			'AUTHOR_NAME'				=> htmlspecialchars_decode($username),
-			'FORUM_NAME'				=> htmlspecialchars_decode($this->get_data('forum_name')),
-			'TOPIC_TITLE'				=> htmlspecialchars_decode(censor_text($this->get_data('topic_title'))),
+			'AUTHOR_NAME'				=> htmlspecialchars_decode($username, ENT_COMPAT),
+			'FORUM_NAME'				=> htmlspecialchars_decode($this->get_data('forum_name'), ENT_COMPAT),
+			'TOPIC_TITLE'				=> htmlspecialchars_decode(censor_text($this->get_data('topic_title')), ENT_COMPAT),
 
 			'U_TOPIC'					=> "{$board_url}/viewtopic.{$this->php_ext}?f={$this->item_parent_id}&t={$this->item_id}",
 			'U_VIEW_TOPIC'				=> "{$board_url}/viewtopic.{$this->php_ext}?f={$this->item_parent_id}&t={$this->item_id}",

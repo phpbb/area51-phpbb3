@@ -484,7 +484,7 @@ class acp_main
 		* @event core.acp_main_notice
 		* @since 3.1.0-RC3
 		*/
-		$phpbb_dispatcher->dispatch('core.acp_main_notice');
+		$phpbb_dispatcher->trigger_event('core.acp_main_notice');
 
 		// Get forum statistics
 		$total_posts = $config['num_posts'];
@@ -646,11 +646,24 @@ class acp_main
 		}
 
 		// Warn if no search index is created
-		if ($config['num_posts'] && class_exists($config['search_type']))
+		if ($config['num_posts'])
 		{
-			$error = false;
-			$search_type = $config['search_type'];
-			$search = new $search_type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
+			try
+			{
+				$search_backend_factory = $phpbb_container->get('search.backend_factory');
+				$search = $search_backend_factory->get_active();
+			}
+			catch (RuntimeException $e)
+			{
+				if (strpos($e->getMessage(), 'No service found') === 0)
+				{
+					trigger_error('NO_SUCH_SEARCH_MODULE');
+				}
+				else
+				{
+					throw $e;
+				}
+			}
 
 			if (!$search->index_created())
 			{
@@ -661,32 +674,33 @@ class acp_main
 			}
 		}
 
-		if (!defined('PHPBB_DISABLE_CONFIG_CHECK') && file_exists($phpbb_root_path . 'config.' . $phpEx) && $phpbb_filesystem->is_writable($phpbb_root_path . 'config.' . $phpEx))
+		if (!defined('PHPBB_DISABLE_CONFIG_CHECK'))
 		{
 			// World-Writable? (000x)
 			$template->assign_var('S_WRITABLE_CONFIG', (bool) (@fileperms($phpbb_root_path . 'config.' . $phpEx) & 0x0002));
 		}
 
-		$this->php_ini = $phpbb_container->get('php_ini');
-		$func_overload = $this->php_ini->getNumeric('mbstring.func_overload');
-		$encoding_translation = $this->php_ini->getString('mbstring.encoding_translation');
-		$http_input = $this->php_ini->getString('mbstring.http_input');
-		$http_output = $this->php_ini->getString('mbstring.http_output');
+		$this->php_ini			= $phpbb_container->get('php_ini');
+		$func_overload			= $this->php_ini->getNumeric('mbstring.func_overload');
+		$encoding_translation	= $this->php_ini->getString('mbstring.encoding_translation');
+		$http_input				= $this->php_ini->getString('mbstring.http_input');
+		$http_output			= $this->php_ini->getString('mbstring.http_output');
+		$default_charset		= $this->php_ini->getString('default_charset');
+
 		if (extension_loaded('mbstring'))
 		{
-			$template->assign_vars(array(
+			/**
+			 * “mbstring.http_input” and “mbstring.http_output” are deprecated as of PHP 5.6.0
+			 * @link https://www.php.net/manual/mbstring.configuration.php#ini.mbstring.http-input
+			 */
+			$template->assign_vars([
 				'S_MBSTRING_LOADED'						=> true,
 				'S_MBSTRING_FUNC_OVERLOAD_FAIL'			=> $func_overload && ($func_overload & (MB_OVERLOAD_MAIL | MB_OVERLOAD_STRING)),
 				'S_MBSTRING_ENCODING_TRANSLATION_FAIL'	=> $encoding_translation && ($encoding_translation != 0),
-				'S_MBSTRING_HTTP_INPUT_FAIL'			=> $http_input && !in_array($http_input, array('pass', '')),
-				'S_MBSTRING_HTTP_OUTPUT_FAIL'			=> $http_output && !in_array($http_output, array('pass', '')),
-			));
-		}
-
-		// Fill dbms version if not yet filled
-		if (empty($config['dbms_version']))
-		{
-			$config->set('dbms_version', $db->sql_server_info(true));
+				'S_MBSTRING_HTTP_INPUT_FAIL'			=> !empty($http_input),
+				'S_MBSTRING_HTTP_OUTPUT_FAIL'			=> !empty($http_output),
+				'S_DEFAULT_CHARSET_FAIL'				=> $default_charset !== null && strtolower($default_charset) !== 'utf-8',
+			]);
 		}
 
 		$this->tpl_name = 'acp_main';

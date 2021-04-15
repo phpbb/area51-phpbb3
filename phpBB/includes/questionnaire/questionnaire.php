@@ -38,7 +38,7 @@ class phpbb_questionnaire_data_collector
 	/**
 	* Constructor.
 	*
-	* @param	string
+	* @param	string $install_id
 	*/
 	function __construct($install_id)
 	{
@@ -150,11 +150,11 @@ class phpbb_questionnaire_system_data_provider
 
 		// Start discovering the IPV4 server address, if available
 		// Try apache, IIS, fall back to 0.0.0.0
-		$server_address = htmlspecialchars_decode($request->server('SERVER_ADDR', $request->server('LOCAL_ADDR', '0.0.0.0')));
+		$server_address = htmlspecialchars_decode($request->server('SERVER_ADDR', $request->server('LOCAL_ADDR', '0.0.0.0')), ENT_COMPAT);
 
 		return array(
 			'os'	=> PHP_OS,
-			'httpd'	=> htmlspecialchars_decode($request->server('SERVER_SOFTWARE')),
+			'httpd'	=> htmlspecialchars_decode($request->server('SERVER_SOFTWARE'), ENT_COMPAT),
 			// we don't want the real IP address (for privacy policy reasons) but only
 			// a network address to see whether your installation is running on a private or public network.
 			'private_ip'	=> $this->is_private_ip($server_address),
@@ -258,7 +258,7 @@ class phpbb_questionnaire_phpbb_data_provider
 		extract($phpbb_config_php_file->get_all());
 		unset($dbhost, $dbport, $dbname, $dbuser, $dbpasswd); // Just a precaution
 
-		$dbms = $phpbb_config_php_file->convert_30_dbms_to_31($dbms);
+		$dbms = \phpbb\config_php_file::convert_30_dbms_to_31($dbms);
 
 		// Only send certain config vars
 		$config_vars = array(
@@ -326,7 +326,6 @@ class phpbb_questionnaire_phpbb_data_provider
 			'cookie_secure' => true,
 			'coppa_enable' => true,
 			'database_gc' => true,
-			'dbms_version' => true,
 			'default_dateformat' => true,
 			'default_lang' => true,
 			'display_last_edited' => true,

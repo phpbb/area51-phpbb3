@@ -493,7 +493,7 @@ class convertor
 			$error[] = $this->language->lang('INST_ERR_DB_CONNECT');
 		}
 
-		$src_dbms = $this->config_php_file->convert_30_dbms_to_31($src_dbms);
+		$src_dbms = \phpbb\config_php_file::convert_30_dbms_to_31($src_dbms);
 
 		// Check table prefix
 		if (empty($error))
@@ -506,7 +506,7 @@ class convertor
 			{
 				/** @var \phpbb\db\driver\driver_interface $src_db */
 				$src_db = new $src_dbms();
-				$src_db->sql_connect($src_dbhost, $src_dbuser, htmlspecialchars_decode($src_dbpasswd), $src_dbname, $src_dbport, false, true);
+				$src_db->sql_connect($src_dbhost, $src_dbuser, htmlspecialchars_decode($src_dbpasswd, ENT_COMPAT), $src_dbname, $src_dbport, false, true);
 				$same_db = false;
 			}
 			else

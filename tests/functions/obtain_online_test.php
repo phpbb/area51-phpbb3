@@ -13,9 +13,11 @@
 
 class phpbb_functions_obtain_online_test extends phpbb_database_test_case
 {
+	protected $db;
+
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__).'/fixtures/obtain_online.xml');
+		return $this->createXMLDataSet(__DIR__.'/fixtures/obtain_online.xml');
 	}
 
 	protected function setUp(): void

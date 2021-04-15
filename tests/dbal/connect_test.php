@@ -15,12 +15,12 @@ class phpbb_dbal_connect_test extends phpbb_database_test_case
 {
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/../fixtures/empty.xml');
+		return $this->createXMLDataSet(__DIR__ . '/../fixtures/empty.xml');
 	}
 
 	public function test_failing_connect()
 	{
-		global $phpbb_root_path, $phpEx, $phpbb_filesystem;
+		global $phpbb_filesystem;
 
 		$phpbb_filesystem = new phpbb\filesystem\filesystem();
 

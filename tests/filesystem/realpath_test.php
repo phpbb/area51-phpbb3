@@ -13,12 +13,12 @@
 
 class phpbb_filesystem_realpath_test extends phpbb_test_case
 {
-	static protected $filesystem_own_realpath;
+	protected static $filesystem_own_realpath;
 
 	/** @var \phpbb\filesystem\filesystem_interface */
 	protected $filesystem;
 
-	static public function setUpBeforeClass()
+	static public function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
 
@@ -27,7 +27,7 @@ class phpbb_filesystem_realpath_test extends phpbb_test_case
 		self::$filesystem_own_realpath->setAccessible(true);
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -42,6 +42,7 @@ class phpbb_filesystem_realpath_test extends phpbb_test_case
 			array(__DIR__ . '/../filesystem/../filesystem', __DIR__),
 			array(__DIR__ . '/././', __DIR__),
 			array(__DIR__ . '/non_existent', false),
+			array(null, getcwd()),
 
 			array(__FILE__, __FILE__),
 			array(__FILE__ . '../', false),

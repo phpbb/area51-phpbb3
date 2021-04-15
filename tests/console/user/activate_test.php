@@ -15,13 +15,13 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use phpbb\console\command\user\activate;
 
-require_once dirname(__FILE__) . '/base.php';
+require_once __DIR__ . '/base.php';
 
 class phpbb_console_user_activate_test extends phpbb_console_user_base
 {
 	protected $notifications;
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -35,7 +35,6 @@ class phpbb_console_user_activate_test extends phpbb_console_user_base
 		$application = new Application();
 		$application->add(new activate(
 			$this->user,
-			$this->db,
 			$this->config,
 			$this->language,
 			$this->log,
@@ -81,6 +80,6 @@ class phpbb_console_user_activate_test extends phpbb_console_user_base
 			'--deactivate'	=> $deactivate,
 		));
 
-		$this->assertContains($expected, $command_tester->getDisplay());
+		$this->assertStringContainsString($expected, $command_tester->getDisplay());
 	}
 }

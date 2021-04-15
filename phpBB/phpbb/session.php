@@ -20,17 +20,18 @@ use phpbb\filesystem\helper as filesystem_helper;
 */
 class session
 {
-	var $cookie_data = array();
-	var $page = array();
-	var $data = array();
-	var $browser = '';
-	var $forwarded_for = '';
-	var $host = '';
-	var $session_id = '';
-	var $ip = '';
-	var $load = 0;
-	var $time_now = 0;
-	var $update_session_page = true;
+	public $cookie_data = array();
+	public $page = array();
+	public $data = array();
+	public $browser = '';
+	public $referer = '';
+	public $forwarded_for = '';
+	public $host = '';
+	public $session_id = '';
+	public $ip = '';
+	public $load = 0;
+	public $time_now = 0;
+	public $update_session_page = true;
 
 	/**
 	 * Extract current session page
@@ -51,7 +52,7 @@ class session
 		// If we are unable to get the script name we use REQUEST_URI as a failover and note it within the page array for easier support...
 		if (!$script_name)
 		{
-			$script_name = htmlspecialchars_decode($request->server('REQUEST_URI'));
+			$script_name = htmlspecialchars_decode($request->server('REQUEST_URI'), ENT_COMPAT);
 			$script_name = (($pos = strpos($script_name, '?')) !== false) ? substr($script_name, 0, $pos) : $script_name;
 			$page_array['failover'] = 1;
 		}
@@ -67,7 +68,7 @@ class session
 		$find = array('"', "'", '<', '>', '&quot;', '&lt;', '&gt;');
 		$replace = array('%22', '%27', '%3C', '%3E', '%22', '%3C', '%3E');
 
-		foreach ($args as $key => $argument)
+		foreach ($args as $argument)
 		{
 			if (strpos($argument, 'sid=') === 0)
 			{
@@ -85,7 +86,7 @@ class session
 
 		// basenamed page name (for example: index.php)
 		$page_name = (substr($script_name, -1, 1) == '/') ? '' : basename($script_name);
-		$page_name = urlencode(htmlspecialchars($page_name));
+		$page_name = urlencode(htmlspecialchars($page_name, ENT_COMPAT));
 
 		$symfony_request_path = filesystem_helper::clean_path($symfony_request->getPathInfo());
 		if ($symfony_request_path !== '/')
@@ -150,8 +151,8 @@ class session
 			'page_dir'			=> $page_dir,
 
 			'query_string'		=> $query_string,
-			'script_path'		=> str_replace(' ', '%20', htmlspecialchars($script_path)),
-			'root_script_path'	=> str_replace(' ', '%20', htmlspecialchars($root_script_path)),
+			'script_path'		=> str_replace(' ', '%20', htmlspecialchars($script_path, ENT_COMPAT)),
+			'root_script_path'	=> str_replace(' ', '%20', htmlspecialchars($root_script_path, ENT_COMPAT)),
 
 			'page'				=> $page,
 			'forum'				=> $forum_id,
@@ -168,7 +169,7 @@ class session
 		global $config, $request;
 
 		// Get hostname
-		$host = htmlspecialchars_decode($request->header('Host', $request->server('SERVER_NAME')));
+		$host = htmlspecialchars_decode($request->header('Host', $request->server('SERVER_NAME')), ENT_COMPAT);
 
 		// Should be a string and lowered
 		$host = (string) strtolower($host);
@@ -291,7 +292,7 @@ class session
 
 		// Why no forwarded_for et al? Well, too easily spoofed. With the results of my recent requests
 		// it's pretty clear that in the majority of cases you'll at least be left with a proxy/cache ip.
-		$ip = htmlspecialchars_decode($request->server('REMOTE_ADDR'));
+		$ip = htmlspecialchars_decode($request->server('REMOTE_ADDR'), ENT_COMPAT);
 		$ip = preg_replace('# {2,}#', ' ', str_replace(',', ' ', $ip));
 
 		/**
@@ -457,8 +458,8 @@ class session
 								$s_ip,
 								$u_browser,
 								$s_browser,
-								htmlspecialchars($u_forwarded_for),
-								htmlspecialchars($s_forwarded_for)
+								htmlspecialchars($u_forwarded_for, ENT_COMPAT),
+								htmlspecialchars($s_forwarded_for, ENT_COMPAT)
 							));
 						}
 						else
@@ -1053,7 +1054,7 @@ class session
 		* @event core.session_gc_after
 		* @since 3.1.6-RC1
 		*/
-		$phpbb_dispatcher->dispatch('core.session_gc_after');
+		$phpbb_dispatcher->trigger_event('core.session_gc_after');
 
 		return;
 	}
@@ -1328,8 +1329,6 @@ class session
 
 	/**
 	 * Check the current session for bans
-	 *
-	 * @return true if session user is banned.
 	 */
 	protected function check_ban_for_current_session($config)
 	{
@@ -1459,13 +1458,13 @@ class session
 	*/
 	function set_login_key($user_id = false, $key = false, $user_ip = false)
 	{
-		global $db;
+		global $db, $phpbb_dispatcher;
 
 		$user_id = ($user_id === false) ? $this->data['user_id'] : $user_id;
 		$user_ip = ($user_ip === false) ? $this->ip : $user_ip;
 		$key = ($key === false) ? (($this->cookie_data['k']) ? $this->cookie_data['k'] : false) : $key;
 
-		$key_id = unique_id(hexdec(substr($this->session_id, 0, 8)));
+		$key_id = unique_id();
 
 		$sql_ary = array(
 			'key_id'		=> (string) md5($key_id),
@@ -1491,6 +1490,29 @@ class session
 		{
 			$sql = 'INSERT INTO ' . SESSIONS_KEYS_TABLE . ' ' . $db->sql_build_array('INSERT', $sql_ary);
 		}
+
+		/**
+		 * Event to adjust autologin keys process
+		 *
+		 * @event core.set_login_key
+		 * @var	string|false	key			Current autologin key if exists, false otherwise
+		 * @var	string			key_id		New autologin key
+		 * @var	string			sql			SQL query to update/insert autologin key
+		 * @var	array			sql_ary		Aray with autologin key data
+		 * @var	int				user_id		Current user's ID
+		 * @var	string			user_ip		Current user's IP address
+		 * @since 3.3.2-RC1
+		 */
+		$vars = [
+			'key',
+			'key_id',
+			'sql',
+			'sql_ary',
+			'user_id',
+			'user_ip',
+		];
+		extract($phpbb_dispatcher->trigger_event('core.set_login_key', compact($vars)));
+
 		$db->sql_query($sql);
 
 		$this->cookie_data['k'] = $key_id;
@@ -1563,7 +1585,7 @@ class session
 			return true;
 		}
 
-		$host = htmlspecialchars($this->host);
+		$host = htmlspecialchars($this->host, ENT_COMPAT);
 		$ref = substr($this->referer, strpos($this->referer, '://') + 3);
 
 		if (!(stripos($ref, $host) === 0) && (!$config['force_server_vars'] || !(stripos($ref, $config['server_name']) === 0)))
@@ -1639,7 +1661,7 @@ class session
 		}
 
 		// Do not update the session page for ajax requests, so the view online still works as intended
-		$page_changed = $this->update_session_page && $this->data['session_page'] != $this->page['page'] && !$request->is_ajax();
+		$page_changed = $this->update_session_page && (!isset($this->data['session_page']) || $this->data['session_page'] != $this->page['page']) && !$request->is_ajax();
 
 		// Only update session DB a minute or so after last update or if page changes
 		if ($this->time_now - (isset($this->data['session_time']) ? $this->data['session_time'] : 0) > 60 || $page_changed)

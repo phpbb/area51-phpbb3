@@ -320,7 +320,7 @@ function bump_topic_allowed($forum_id, $topic_bumped, $last_post_time, $topic_po
 * Generates a text with approx. the specified length which contains the specified words and their context
 *
 * @param	string	$text	The full text from which context shall be extracted
-* @param	string	$words	An array of words which should be contained in the result, has to be a valid part of a PCRE pattern (escape with preg_quote!)
+* @param	array	$words	An array of words which should be contained in the result, has to be a valid part of a PCRE pattern (escape with preg_quote!)
 * @param	int		$length	The desired length of the resulting text, however the result might be shorter or longer than this value
 *
 * @return	string			Context of the specified words separated by "..."
@@ -532,7 +532,7 @@ function strip_bbcode(&$text, $uid = '')
 
 	if (preg_match('#^<[rt][ >]#', $text))
 	{
-		$text = $phpbb_container->get('text_formatter.utils')->clean_formatting($text);
+		$text = utf8_htmlspecialchars($phpbb_container->get('text_formatter.utils')->clean_formatting($text));
 	}
 	else
 	{
@@ -803,8 +803,8 @@ function make_clickable_callback($type, $whitespace, $url, $relative_url, $class
 	$orig_url		= $url;
 	$orig_relative	= $relative_url;
 	$append			= '';
-	$url			= htmlspecialchars_decode($url);
-	$relative_url	= htmlspecialchars_decode($relative_url);
+	$url			= htmlspecialchars_decode($url, ENT_COMPAT);
+	$relative_url	= htmlspecialchars_decode($relative_url, ENT_COMPAT);
 
 	// make sure no HTML entities were matched
 	$chars = array('<', '>', '"');
@@ -845,7 +845,6 @@ function make_clickable_callback($type, $whitespace, $url, $relative_url, $class
 			$relative_url	= substr($relative_url, 0, $split);
 		}
 	}
-
 	// if the last character of the url is a punctuation mark, exclude it from the url
 	$last_char = ($relative_url) ? $relative_url[strlen($relative_url) - 1] : $url[strlen($url) - 1];
 
@@ -911,9 +910,9 @@ function make_clickable_callback($type, $whitespace, $url, $relative_url, $class
 		break;
 	}
 
-	$url	= htmlspecialchars($url);
-	$text	= htmlspecialchars($text);
-	$append	= htmlspecialchars($append);
+	$url	= htmlspecialchars($url, ENT_COMPAT);
+	$text	= htmlspecialchars($text, ENT_COMPAT);
+	$append	= htmlspecialchars($append, ENT_COMPAT);
 
 	$html	= "$whitespace<!-- $tag --><a$class href=\"$url\">$text</a><!-- $tag -->$append";
 
@@ -921,13 +920,17 @@ function make_clickable_callback($type, $whitespace, $url, $relative_url, $class
 }
 
 /**
-* make_clickable function
-*
-* Replace magic urls of form http://xxx.xxx., www.xxx. and xxx@xxx.xxx.
-* Cuts down displayed size of link if over 50 chars, turns absolute links
-* into relative versions when the server/script path matches the link
-*/
-function make_clickable($text, $server_url = false, $class = 'postlink')
+ * Replaces magic urls of form http://xxx.xxx., www.xxx. and xxx@xxx.xxx.
+ * Cuts down displayed size of link if over 50 chars, turns absolute links
+ * into relative versions when the server/script path matches the link
+ *
+ * @param string		$text		Message text to parse URL/email entries
+ * @param bool|string	$server_url	The server URL. If false, the board URL will be used
+ * @param string		$class		CSS class selector to add to the parsed URL entries
+ *
+ * @return string	A text with parsed URL/email entries
+ */
+function make_clickable($text, $server_url = false, string $class = 'postlink')
 {
 	if ($server_url === false)
 	{
@@ -948,39 +951,70 @@ function make_clickable($text, $server_url = false, $class = 'postlink')
 			$magic_url_match_args = array();
 		}
 
-		// relative urls for this board
-		$magic_url_match_args[$server_url][] = array(
-			'#(^|[\n\t (>.])(' . preg_quote($server_url, '#') . ')/(' . get_preg_expression('relative_url_inline') . ')#iu',
-			MAGIC_URL_LOCAL,
-			$local_class,
-		);
+		// Check if the match for this $server_url and $class already exists
+		$element_exists = false;
+		if (isset($magic_url_match_args[$server_url]))
+		{
+			array_walk_recursive($magic_url_match_args[$server_url], function($value) use (&$element_exists, $static_class)
+				{
+					if ($value == $static_class)
+					{
+						$element_exists = true;
+						return;
+					}
+				}
+			);
+		}
 
-		// matches a xxxx://aaaaa.bbb.cccc. ...
-		$magic_url_match_args[$server_url][] = array(
-			'#(^|[\n\t (>.])(' . get_preg_expression('url_inline') . ')#iu',
-			MAGIC_URL_FULL,
-			$class,
-		);
+		// Only add new $server_url and $class matches if not exist
+		if (!$element_exists)
+		{
+			// relative urls for this board
+			$magic_url_match_args[$server_url][] = [
+				'#(^|[\n\t (>.])(' . preg_quote($server_url, '#') . ')/(' . get_preg_expression('relative_url_inline') . ')#iu',
+				MAGIC_URL_LOCAL,
+				$local_class,
+				$static_class,
+			];
 
-		// matches a "www.xxxx.yyyy[/zzzz]" kinda lazy URL thing
-		$magic_url_match_args[$server_url][] = array(
-			'#(^|[\n\t (>])(' . get_preg_expression('www_url_inline') . ')#iu',
-			MAGIC_URL_WWW,
-			$class,
-		);
+			// matches a xxxx://aaaaa.bbb.cccc. ...
+			$magic_url_match_args[$server_url][] = [
+				'#(^|[\n\t (>.])(' . get_preg_expression('url_inline') . ')#iu',
+				MAGIC_URL_FULL,
+				$class,
+				$static_class,
+			];
 
-		// matches an email@domain type address at the start of a line, or after a space or after what might be a BBCode.
-		$magic_url_match_args[$server_url][] = array(
-			'/(^|[\n\t (>])(' . get_preg_expression('email') . ')/iu',
-			MAGIC_URL_EMAIL,
-			'',
-		);
+			// matches a "www.xxxx.yyyy[/zzzz]" kinda lazy URL thing
+			$magic_url_match_args[$server_url][] = [
+				'#(^|[\n\t (>])(' . get_preg_expression('www_url_inline') . ')#iu',
+				MAGIC_URL_WWW,
+				$class,
+				$static_class,
+			];
+		}
+
+		if (!isset($magic_url_match_args[$server_url]['email']))
+		{
+			// matches an email@domain type address at the start of a line, or after a space or after what might be a BBCode.
+			$magic_url_match_args[$server_url]['email'] = [
+				'/(^|[\n\t (>])(' . get_preg_expression('email') . ')/iu',
+				MAGIC_URL_EMAIL,
+				'',
+			];
+		}
 	}
 
 	foreach ($magic_url_match_args[$server_url] as $magic_args)
 	{
 		if (preg_match($magic_args[0], $text, $matches))
 		{
+			// Only apply $class from the corresponding function call argument (excepting emails which never has a class)
+			if ($magic_args[1] != MAGIC_URL_EMAIL && $magic_args[3] != $static_class)
+			{
+				continue;
+			}
+
 			$text = preg_replace_callback($magic_args[0], function($matches) use ($magic_args)
 			{
 				$relative_url = isset($matches[3]) ? $matches[3] : '';
@@ -1344,7 +1378,7 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 	preg_match_all('#<!\-\- ia([0-9]+) \-\->(.*?)<!\-\- ia\1 \-\->#', $message, $matches, PREG_PATTERN_ORDER);
 
 	$replace = array();
-	foreach ($matches[0] as $num => $capture)
+	foreach (array_keys($matches[0]) as $num)
 	{
 		$index = $matches[1][$num];
 
@@ -1423,7 +1457,7 @@ function truncate_string($string, $max_length = 60, $max_store_length = 255, $al
 		$string = substr($string, 4);
 	}
 
-	$_chars = utf8_str_split(htmlspecialchars_decode($string));
+	$_chars = utf8_str_split(htmlspecialchars_decode($string, ENT_COMPAT));
 	$chars = array_map('utf8_htmlspecialchars', $_chars);
 
 	// Now check the length ;)
@@ -1438,7 +1472,7 @@ function truncate_string($string, $max_length = 60, $max_store_length = 255, $al
 	if (utf8_strlen($string) > $max_store_length)
 	{
 		// let's split again, we do not want half-baked strings where entities are split
-		$_chars = utf8_str_split(htmlspecialchars_decode($string));
+		$_chars = utf8_str_split(htmlspecialchars_decode($string, ENT_COMPAT));
 		$chars = array_map('utf8_htmlspecialchars', $_chars);
 
 		do

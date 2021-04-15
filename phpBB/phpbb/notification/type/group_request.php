@@ -26,7 +26,7 @@ class group_request extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	static public $notification_option = array(
+	public static $notification_option = array(
 		'lang'	=> 'NOTIFICATION_TYPE_GROUP_REQUEST',
 	);
 
@@ -58,7 +58,7 @@ class group_request extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	static public function get_item_id($group)
+	public static function get_item_id($group)
 	{
 		return (int) $group['user_id'];
 	}
@@ -66,7 +66,7 @@ class group_request extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	static public function get_item_parent_id($group)
+	public static function get_item_parent_id($group)
 	{
 		// Group id is the parent
 		return (int) $group['group_id'];
@@ -133,8 +133,8 @@ class group_request extends \phpbb\notification\type\base
 		$user_data = $this->user_loader->get_user($this->item_id);
 
 		return array(
-			'GROUP_NAME'		   		=> htmlspecialchars_decode($this->get_data('group_name')),
-			'REQUEST_USERNAME' 	   		=> htmlspecialchars_decode($user_data['username']),
+			'GROUP_NAME'		   		=> htmlspecialchars_decode($this->get_data('group_name'), ENT_COMPAT),
+			'REQUEST_USERNAME' 	   		=> htmlspecialchars_decode($user_data['username'], ENT_COMPAT),
 
 			'U_PENDING'			  		=> generate_board_url() . "/ucp.{$this->php_ext}?i=groups&mode=manage&action=list&g={$this->item_parent_id}",
 			'U_GROUP'					=> generate_board_url() . "/memberlist.{$this->php_ext}?mode=group&g={$this->item_parent_id}",

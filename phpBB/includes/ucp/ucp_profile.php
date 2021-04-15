@@ -186,7 +186,7 @@ class ucp_profile
 							$messenger->anti_abuse_headers($config, $user);
 
 							$messenger->assign_vars(array(
-								'USERNAME'		=> htmlspecialchars_decode($data['username']),
+								'USERNAME'		=> htmlspecialchars_decode($data['username'], ENT_COMPAT),
 								'U_ACTIVATE'	=> "$server_url/ucp.$phpEx?mode=activate&u={$user->data['user_id']}&k=$user_actkey")
 							);
 
@@ -757,11 +757,14 @@ class ucp_profile
 					$error = $phpbb_avatar_manager->localize_errors($user, $error);
 				}
 
-				$avatar = phpbb_get_user_avatar($user->data, 'USER_AVATAR', true);
+				/** @var \phpbb\avatar\helper $avatar_helper */
+				$avatar_helper = $phpbb_container->get('avatar.helper');
+
+				$avatar = $avatar_helper->get_user_avatar($user->data, 'USER_AVATAR', true);
+				$template->assign_vars($avatar_helper->get_template_vars($avatar));
 
 				$template->assign_vars(array(
-					'ERROR'			=> (count($error)) ? implode('<br />', $error) : '',
-					'AVATAR'		=> $avatar,
+					'ERROR'				=> !empty($error) ? implode('<br />', $error) : '',
 
 					'S_FORM_ENCTYPE'	=> ' enctype="multipart/form-data"',
 
@@ -810,23 +813,50 @@ class ucp_profile
 					$error = array_map(array($user, 'lang'), $error);
 				}
 
-				$sql = 'SELECT key_id, last_ip, last_login
-					FROM ' . SESSIONS_KEYS_TABLE . '
-					WHERE user_id = ' . (int) $user->data['user_id'] . '
-					ORDER BY last_login ASC';
+				$sql_ary = [
+					'SELECT'	=> 'sk.key_id, sk.last_ip, sk.last_login',
+					'FROM'		=> [SESSIONS_KEYS_TABLE	=> 'sk'],
+					'WHERE'		=> 'sk.user_id = ' . (int) $user->data['user_id'],
+					'ORDER_BY'	=> 'sk.last_login ASC',
+				];
 
-				$result = $db->sql_query($sql);
+				/**
+				 * Event allows changing SQL query for autologin keys
+				 *
+				 * @event core.ucp_profile_autologin_keys_sql
+				 * @var	array	sql_ary	Array with autologin keys SQL query
+				 * @since 3.3.2-RC1
+				 */
+				$vars = ['sql_ary'];
+				extract($phpbb_dispatcher->trigger_event('core.ucp_profile_autologin_keys_sql', compact($vars)));
 
-				while ($row = $db->sql_fetchrow($result))
+				$result = $db->sql_query($db->sql_build_query('SELECT', $sql_ary));
+				$sessions = (array) $db->sql_fetchrowset($result);
+				$db->sql_freeresult($result);
+
+				$template_vars = [];
+				foreach ($sessions as $row)
 				{
-					$template->assign_block_vars('sessions', array(
-						'KEY' => substr($row['key_id'], 0, 8),
+					$key = substr($row['key_id'], 0, 8);
+					$template_vars[$key] = [
+						'KEY' => $key,
 						'IP' => $row['last_ip'],
 						'LOGIN_TIME' => $user->format_date($row['last_login']),
-					));
+					];
 				}
 
-				$db->sql_freeresult($result);
+				/**
+				 * Event allows changing template variables
+				 *
+				 * @event core.ucp_profile_autologin_keys_template_vars
+				 * @var	array	sessions		Array with session keys data
+				 * @var	array	template_vars	Array with template variables
+				 * @since 3.3.2-RC1
+				 */
+				$vars = ['sessions', 'template_vars'];
+				extract($phpbb_dispatcher->trigger_event('core.ucp_profile_autologin_keys_template_vars', compact($vars)));
+
+				$template->assign_block_vars_array('sessions', $template_vars);
 
 			break;
 		}

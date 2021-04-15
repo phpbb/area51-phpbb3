@@ -20,8 +20,8 @@ if (!defined('IN_PHPBB'))
 }
 
 /**
-* @todo [smilies] check regular expressions for special char replacements (stored specialchared in db)
-*/
+  * @todo {smilies} check regular expressions for special char replacements (stored specialchared in db)
+  */
 class acp_icons
 {
 	var $u_action;
@@ -693,7 +693,7 @@ class acp_icons
 
 					foreach ($_paks as $pak)
 					{
-						$pak_options .= '<option value="' . $pak . '">' . htmlspecialchars($pak) . '</option>';
+						$pak_options .= '<option value="' . $pak . '">' . htmlspecialchars($pak, ENT_COMPAT) . '</option>';
 					}
 
 					$template->assign_vars(array(

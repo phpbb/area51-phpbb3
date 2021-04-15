@@ -11,7 +11,7 @@
 *
 */
 
-require_once dirname(__FILE__) . '/template_test_case.php';
+require_once __DIR__ . '/template_test_case.php';
 
 class phpbb_template_template_events_test extends phpbb_template_template_test_case
 {
@@ -134,9 +134,9 @@ Zeta test event in all',
 		$defaults = $this->config_defaults();
 		$config = new \phpbb\config\config(array_merge($defaults, $new_config));
 
-		$this->template_path = dirname(__FILE__) . "/datasets/$dataset/styles/silver/template";
+		$this->template_path = __DIR__ . "/datasets/$dataset/styles/silver/template";
 		$this->extension_manager = new phpbb_mock_filesystem_extension_manager(
-			dirname(__FILE__) . "/datasets/$dataset/"
+			__DIR__ . "/datasets/$dataset/"
 		);
 
 		$filesystem = new \phpbb\filesystem\filesystem();
@@ -149,7 +149,6 @@ Zeta test event in all',
 			$phpEx
 		);
 
-		$container = new phpbb_mock_container_builder();
 		$cache_path = $phpbb_root_path . 'cache/twig';
 		$context = new \phpbb\template\context();
 		$loader = new \phpbb\template\twig\loader('');
@@ -160,7 +159,7 @@ Zeta test event in all',
 			$cache_path,
 			$this->extension_manager,
 			$loader,
-			new \phpbb\event\dispatcher($container),
+			new \phpbb\event\dispatcher(),
 			array(
 				'cache'			=> false,
 				'debug'			=> false,

@@ -19,13 +19,13 @@ class phpbb_passwords_manager_test extends \phpbb_test_case
 
 	protected $default_pw = 'foobar';
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		// Prepare dependencies for manager and driver
 		$config =  new \phpbb\config\config(array());
 		$this->driver_helper = new \phpbb\passwords\driver\helper($config);
 		$request = new phpbb_mock_request(array(), array(), array(), array(), array('password' => 'töst'));
-		$phpbb_root_path = dirname(__FILE__) . '/../../phpBB/';
+		$phpbb_root_path = __DIR__ . '/../../phpBB/';
 		$php_ext = 'php';
 
 		$this->passwords_drivers = array(
@@ -301,13 +301,13 @@ class phpbb_passwords_manager_test extends \phpbb_test_case
 	{
 		if ($use_new_interface)
 		{
-			$test_driver = $this->createMock('\phpbb\passwords\driver\rehashable_driver_interface', array('needs_rehash', 'get_prefix', 'check', 'is_supported', 'is_legacy', 'hash', 'get_settings_only'));
+			$test_driver = $this->createMock('\phpbb\passwords\driver\rehashable_driver_interface');
 			$test_driver->method('needs_rehash')
 				->willReturn($needs_rehash);
 		}
 		else
 		{
-			$test_driver = $this->createMock('\phpbb\passwords\driver\driver_interface', array('get_prefix', 'check', 'is_supported', 'is_legacy', 'hash', 'get_settings_only'));
+			$test_driver = $this->createMock('\phpbb\passwords\driver\driver_interface');
 		}
 		$config = new \phpbb\config\config(array());
 

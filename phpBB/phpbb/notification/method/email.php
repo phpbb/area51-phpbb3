@@ -69,7 +69,7 @@ class email extends \phpbb\notification\method\messenger_base
 	* Is this method available for the user?
 	* This is checked on the notifications options
 	*
-	* @param type_interface $notification_type  An optional instance of a notification type. If provided, this
+	* @param type_interface|null $notification_type  An optional instance of a notification type. If provided, this
 	*											method additionally checks if the type provides an email template.
 	* @return bool
 	*/
@@ -108,7 +108,7 @@ class email extends \phpbb\notification\method\messenger_base
 	{
 		$insert_buffer = new \phpbb\db\sql_insert_buffer($this->db, $this->notification_emails_table);
 
-		/** @var \phpbb\notification\type\type_interface $notification */
+		/** @var type_interface $notification */
 		foreach ($this->queue as $notification)
 		{
 			$data = self::clean_data($notification->get_insert_array());
@@ -150,7 +150,7 @@ class email extends \phpbb\notification\method\messenger_base
 	 * @param array $data Notification data
 	 * @return array Cleaned notification data
 	 */
-	static public function clean_data(array $data)
+	public static function clean_data(array $data)
 	{
 		$row = [
 			'notification_type_id'	=> null,

@@ -11,7 +11,7 @@
 *
 */
 
-require_once(dirname(__FILE__) . '/../../phpBB/includes/functions_admin.php');
+require_once(__DIR__ . '/../../phpBB/includes/functions_admin.php');
 
 class phpbb_attachment_delete_test extends \phpbb_database_test_case
 {
@@ -35,10 +35,10 @@ class phpbb_attachment_delete_test extends \phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/resync.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/resync.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -97,7 +97,7 @@ class phpbb_attachment_delete_test extends \phpbb_database_test_case
 	 */
 	public function test_attachment_delete_success($remove_success, $exists_success, $expected, $throw_exception = false)
 	{
-		$this->storage = $this->createMock('\phpbb\storage\storage', array('delete', 'exists'));
+		$this->storage = $this->createMock('\phpbb\storage\storage');
 		if ($throw_exception)
 		{
 			$this->storage->expects($this->any())

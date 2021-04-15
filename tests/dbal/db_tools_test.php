@@ -22,7 +22,7 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__).'/fixtures/config.xml');
+		return $this->createXMLDataSet(__DIR__.'/fixtures/config.xml');
 	}
 
 	protected function setUp(): void
@@ -99,7 +99,7 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 		$this->tools->sql_table_drop('prefix_table_name');
 	}
 
-	static protected function get_default_values()
+	protected static function get_default_values()
 	{
 		return array(
 			'c_int_size' => 0,
@@ -182,10 +182,10 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 
 		// empty table
 		$sql = 'DELETE FROM prefix_table_name';
-		$result = $this->db->sql_query($sql);
+		$this->db->sql_query($sql);
 
 		$sql = 'INSERT INTO prefix_table_name ' . $this->db->sql_build_array('INSERT', $row_insert);
-		$result = $this->db->sql_query($sql);
+		$this->db->sql_query($sql);
 
 		$sql = "SELECT *
 			FROM prefix_table_name";
@@ -356,11 +356,8 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 			->will($this->returnValue(true));
 
 		// drop tables
-		$db_tools->expects($this->exactly(2))->method('sql_table_drop');
-		$db_tools->expects($this->at(1))->method('sql_table_drop')
-			->with($this->equalTo('dropped_table_1'));
-		$db_tools->expects($this->at(3))->method('sql_table_drop')
-			->with($this->equalTo('dropped_table_2'));
+		$db_tools->expects($this->exactly(2))->method('sql_table_drop')
+			->withConsecutive([$this->equalTo('dropped_table_1')], [$this->equalTo('dropped_table_2')]);
 
 		$db_tools->perform_schema_changes(array(
 			'drop_tables' => array(
@@ -384,11 +381,11 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 			->will($this->returnValue(true));
 
 		// drop columns
-		$db_tools->expects($this->exactly(2))->method('sql_column_remove');
-		$db_tools->expects($this->at(1))->method('sql_column_remove')
-			->with($this->equalTo('existing_table'), $this->equalTo('dropped_column_1'));
-		$db_tools->expects($this->at(3))->method('sql_column_remove')
-			->with($this->equalTo('existing_table'), $this->equalTo('dropped_column_2'));
+		$db_tools->expects($this->exactly(2))->method('sql_column_remove')
+			->withConsecutive(
+				[$this->equalTo('existing_table'), $this->equalTo('dropped_column_1')],
+				[$this->equalTo('existing_table'), $this->equalTo('dropped_column_2')]
+			);
 
 		$db_tools->perform_schema_changes(array(
 			'drop_columns' => array(
@@ -425,7 +422,7 @@ class phpbb_dbal_db_tools_test extends phpbb_database_test_case
 	public function test_create_int_default_null()
 	{
 		$this->assertFalse($this->tools->sql_column_exists('prefix_table_name', 'c_bug_13282'));
-		$this->assertTrue($this->tools->sql_column_add('prefix_table_name', 'c_bug_13282', array('TINT:2')));
+		$this->assertTrue($this->tools->sql_column_add('prefix_table_name', 'c_bug_13282', array('TINT:2', null)));
 		$this->assertTrue($this->tools->sql_column_exists('prefix_table_name', 'c_bug_13282'));
 	}
 

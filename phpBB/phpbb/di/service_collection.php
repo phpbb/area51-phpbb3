@@ -21,7 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class service_collection extends \ArrayObject
 {
 	/**
-	* @var \Symfony\Component\DependencyInjection\ContainerInterface
+	* @var ContainerInterface
 	*/
 	protected $container;
 
@@ -93,7 +93,7 @@ class service_collection extends \ArrayObject
 	 * Returns the service associated to a class
 	 *
 	 * @return mixed
-	 * @throw \RuntimeException if the
+	 * @throws \RuntimeException if the service isn't found
 	 */
 	public function get_by_class($class)
 	{

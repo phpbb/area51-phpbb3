@@ -36,7 +36,7 @@ class pm extends \phpbb\notification\type\base
 	* @var bool|array False if the service should use it's default data
 	* 					Array of data (including keys 'id', 'lang', and 'group')
 	*/
-	static public $notification_option = array(
+	public static $notification_option = array(
 		'lang'	=> 'NOTIFICATION_TYPE_PM',
 	);
 
@@ -69,7 +69,7 @@ class pm extends \phpbb\notification\type\base
 	*
 	* @param array $pm The data from the private message
 	*/
-	static public function get_item_id($pm)
+	public static function get_item_id($pm)
 	{
 		return (int) $pm['msg_id'];
 	}
@@ -79,7 +79,7 @@ class pm extends \phpbb\notification\type\base
 	*
 	* @param array $pm The data from the pm
 	*/
-	static public function get_item_parent_id($pm)
+	public static function get_item_parent_id($pm)
 	{
 		// No parent
 		return 0;
@@ -164,8 +164,8 @@ class pm extends \phpbb\notification\type\base
 		$user_data = $this->user_loader->get_user($this->get_data('from_user_id'));
 
 		return array(
-			'AUTHOR_NAME'				=> htmlspecialchars_decode($user_data['username']),
-			'SUBJECT'					=> htmlspecialchars_decode(censor_text($this->get_data('message_subject'))),
+			'AUTHOR_NAME'				=> htmlspecialchars_decode($user_data['username'], ENT_COMPAT),
+			'SUBJECT'					=> htmlspecialchars_decode(censor_text($this->get_data('message_subject')), ENT_COMPAT),
 
 			'U_VIEW_MESSAGE'			=> generate_board_url() . '/ucp.' . $this->php_ext . "?i=pm&mode=view&p={$this->item_id}",
 		);

@@ -13,11 +13,16 @@
 
 class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 {
+	/** @var \phpbb\auth\provider\apache */
 	protected $provider;
+
+	/** @var \phpbb\user */
 	protected $user;
+
+	/** @var \phpbb\request\request_interface */
 	protected $request;
 
-	protected function setup(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -35,7 +40,7 @@ class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__).'/fixtures/user.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/user.xml');
 	}
 
 	/**
@@ -67,14 +72,10 @@ class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 			->with('PHP_AUTH_USER',
 				\phpbb\request\request_interface::SERVER)
 			->will($this->returnValue(true));
-		$this->request->expects($this->at(1))
+		$this->request->expects($this->exactly(2))
 			->method('server')
-			->with('PHP_AUTH_USER')
-			->will($this->returnValue('foobar'));
-		$this->request->expects($this->at(2))
-			->method('server')
-			->with('PHP_AUTH_PW')
-			->will($this->returnValue('example'));
+			->withConsecutive(['PHP_AUTH_USER'], ['PHP_AUTH_PW'])
+			->will($this->onConsecutiveCalls($this->returnValue('foobar'), $this->returnValue('example')));
 
 		$expected = array(
 			'status'		=> LOGIN_SUCCESS,
@@ -99,14 +100,10 @@ class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 			->with('PHP_AUTH_USER',
 				\phpbb\request\request_interface::SERVER)
 			->will($this->returnValue(true));
-		$this->request->expects($this->at(1))
+		$this->request->expects($this->exactly(2))
 			->method('server')
-			->with('PHP_AUTH_USER')
-			->will($this->returnValue('foobar'));
-		$this->request->expects($this->at(2))
-			->method('server')
-			->with('PHP_AUTH_PW')
-			->will($this->returnValue('example'));
+			->withConsecutive(['PHP_AUTH_USER'], ['PHP_AUTH_PW'])
+			->will($this->onConsecutiveCalls($this->returnValue('foobar'), $this->returnValue('example')));
 
 		$expected = array(
 			'user_id' => 1,

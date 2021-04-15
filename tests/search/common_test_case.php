@@ -11,10 +11,12 @@
 *
 */
 
-require_once dirname(__FILE__) . '/../test_framework/phpbb_search_test_case.php';
+require_once __DIR__ . '/../test_framework/phpbb_search_test_case.php';
 
 abstract class phpbb_search_common_test_case extends phpbb_search_test_case
 {
+	protected $search;
+
 	public function keywords()
 	{
 		return array(

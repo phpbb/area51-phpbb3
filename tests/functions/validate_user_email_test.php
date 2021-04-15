@@ -11,9 +11,9 @@
 *
 */
 
-require_once dirname(__FILE__) . '/../../phpBB/includes/functions_user.php';
-require_once dirname(__FILE__) . '/../mock/user.php';
-require_once dirname(__FILE__) . '/validate_data_helper.php';
+require_once __DIR__ . '/../../phpBB/includes/functions_user.php';
+require_once __DIR__ . '/../mock/user.php';
+require_once __DIR__ . '/validate_data_helper.php';
 
 class phpbb_functions_validate_user_email_test extends phpbb_database_test_case
 {
@@ -23,7 +23,7 @@ class phpbb_functions_validate_user_email_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/validate_email.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/validate_email.xml');
 	}
 
 	protected function setUp(): void
@@ -38,6 +38,7 @@ class phpbb_functions_validate_user_email_test extends phpbb_database_test_case
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 		$language = new phpbb\language\language(new phpbb\language\language_file_loader($phpbb_root_path, $phpEx));
 		$this->user = new phpbb\user($language, '\phpbb\datetime');
+		$this->user->data['user_email'] = '';
 		$this->helper = new phpbb_functions_validate_data_helper($this);
 	}
 

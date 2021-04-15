@@ -11,8 +11,8 @@
 *
 */
 
-require_once dirname(__FILE__) . '/../session/testable_factory.php';
-require_once dirname(__FILE__) . '/../session/testable_facade.php';
+require_once __DIR__ . '/../session/testable_factory.php';
+require_once __DIR__ . '/../session/testable_facade.php';
 
 abstract class phpbb_session_test_case extends phpbb_database_test_case
 {
@@ -25,7 +25,7 @@ abstract class phpbb_session_test_case extends phpbb_database_test_case
 	/** @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
-	function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 

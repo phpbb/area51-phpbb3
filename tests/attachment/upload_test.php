@@ -11,7 +11,7 @@
 *
 */
 
-require_once(dirname(__FILE__) . '/../../phpBB/includes/functions_posting.php');
+require_once(__DIR__ . '/../../phpBB/includes/functions_posting.php');
 
 class phpbb_attachment_upload_test extends \phpbb_database_test_case
 {
@@ -45,9 +45,6 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 	/** @var \phpbb\user */
 	protected $user;
 
-	/** @var string phpBB root path */
-	protected $phpbb_root_path;
-
 	/** @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
@@ -69,12 +66,15 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 	/** @var \bantu\IniGetWrapper\IniGetWrapper */
 	protected $php_ini;
 
+	/** @var \phpbb\request\request */
+	protected $request;
+
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/resync.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/resync.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $config, $phpbb_root_path, $phpEx;
 
@@ -85,6 +85,7 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			'img_create_thumbnail'	=> true,
 		));
 		$config = $this->config;
+		$this->phpbb_root_path = $phpbb_root_path;
 		$this->db = $this->new_dbal();
 		$this->cache = new \phpbb\cache\service(new \phpbb\cache\driver\dummy(), $this->config, $this->db, $phpbb_root_path, $phpEx);
 		$this->request = $this->createMock('\phpbb\request\request');
@@ -93,8 +94,8 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 		$this->language = new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx));
 		$this->php_ini = new \bantu\IniGetWrapper\IniGetWrapper;
 		$guessers = array(
-			new \Symfony\Component\HttpFoundation\File\MimeType\FileinfoMimeTypeGuesser(),
-			new \Symfony\Component\HttpFoundation\File\MimeType\FileBinaryMimeTypeGuesser(),
+			new \Symfony\Component\Mime\FileinfoMimeTypeGuesser(),
+			new \Symfony\Component\Mime\FileBinaryMimeTypeGuesser(),
 			new \phpbb\mimetype\content_guesser(),
 			new \phpbb\mimetype\extension_guesser(),
 		);
@@ -115,15 +116,13 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			->method('get')
 			->willReturn(new \phpbb\files\filespec_storage(
 				$this->language,
-				$this->php_ini,
 				new \FastImageSize\FastImageSize(),
 				$this->mimetype_guesser
 			));
 
-		$this->container = new phpbb_mock_container_builder($phpbb_root_path, $phpEx);
+		$this->container = new phpbb_mock_container_builder();
 		$this->container->set('files.filespec_storage', new \phpbb\files\filespec_storage(
 			$this->language,
-			$this->php_ini,
 			new \FastImageSize\FastImageSize(),
 			new \phpbb\mimetype\guesser(array(
 				'mimetype.extension_guesser' => new \phpbb\mimetype\extension_guesser(),
@@ -142,10 +141,11 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			$this->request
 		));
 		$this->factory = new \phpbb\files\factory($this->container);
-		$this->files_upload = new \phpbb\files\upload($this->filesystem, $this->factory, $this->language, $this->php_ini, $this->request, $this->phpbb_root_path);
+		$this->files_upload = new \phpbb\files\upload($this->factory, $this->language, $this->php_ini, $this->request);
 		$this->phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 		$this->temp = new \phpbb\filesystem\temp($this->filesystem, '');
 		$this->user = new \phpbb\user($this->language, '\phpbb\datetime');
+		$this->user->data['user_id'] = ANONYMOUS;
 
 		$this->upload = new \phpbb\attachment\upload(
 			$this->auth,
@@ -153,7 +153,6 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			$this->config,
 			$this->files_upload,
 			$this->language,
-			$this->mimetype_guesser,
 			$this->phpbb_dispatcher,
 			$this->plupload,
 			$this->storage,
@@ -190,7 +189,14 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 				)
 			),
 			array('foobar', 1, true,
-				array(),
+				// Instead of setting to false or empty array, set default filedata array
+				// as otherwise it throws PHP undefined array key warnings
+				// in different file upload related services
+				array(
+					'realname'		=> null,
+					'type'			=> null,
+					'size'			=> null,
+				),
 				array(
 					'error' => array(
 						'NOT_UPLOADED',
@@ -246,7 +252,6 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			$this->config,
 			$this->files_upload,
 			$this->language,
-			$this->mimetype_guesser,
 			$this->phpbb_dispatcher,
 			$this->plupload,
 			$this->storage,
@@ -254,7 +259,16 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			$this->user
 		);
 
-		$filedata = $this->upload->upload('foobar', 1, true);
+		// Instead of setting to false or empty array, set default filedata array
+		// as otherwise it throws PHP undefined array key warnings
+		// in different file upload related services
+		$filedata = $this->upload->upload('foobar', 1, true, '', false,
+			[
+				'realname'		=> null,
+				'type'			=> null,
+				'size'			=> null,
+			]
+		);
 
 		$this->assertSame(array(
 			'error'		=> array(),
@@ -355,7 +369,6 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			))
 			->setConstructorArgs(array(
 				$this->language,
-				$this->php_ini,
 				new \FastImageSize\FastImageSize(),
 				$this->mimetype_guesser,
 				$this->plupload
@@ -411,7 +424,6 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 			$this->config,
 			$this->files_upload,
 			$this->language,
-			$this->mimetype_guesser,
 			$this->phpbb_dispatcher,
 			$plupload,
 			$this->storage,

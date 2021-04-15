@@ -30,7 +30,7 @@ class resolver implements ControllerResolverInterface
 
 	/**
 	* phpbb\template\template object
-	* @var \phpbb\template\template
+	* @var \phpbb\template\template|null
 	*/
 	protected $template;
 
@@ -51,7 +51,7 @@ class resolver implements ControllerResolverInterface
 	*
 	* @param ContainerInterface $container ContainerInterface object
 	* @param string $phpbb_root_path Relative path to phpBB root
-	* @param \phpbb\template\template $template
+	* @param \phpbb\template\template|null $template
 	*/
 	public function __construct(ContainerInterface $container, $phpbb_root_path, \phpbb\template\template $template = null)
 	{
@@ -64,7 +64,7 @@ class resolver implements ControllerResolverInterface
 	/**
 	* Load a controller callable
 	*
-	* @param \Symfony\Component\HttpFoundation\Request $request Symfony Request object
+	* @param Request $request Symfony Request object
 	* @return bool|Callable Callable or false
 	* @throws \phpbb\controller\exception
 	*/
@@ -119,7 +119,7 @@ class resolver implements ControllerResolverInterface
 	* and should match the parameters of the method you are using as your
 	* controller.
 	*
-	* @param \Symfony\Component\HttpFoundation\Request $request Symfony Request object
+	* @param Request $request Symfony Request object
 	* @param mixed $controller A callable (controller class, method)
 	* @return array An array of arguments to pass to the controller
 	* @throws \phpbb\controller\exception

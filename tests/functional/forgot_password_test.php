@@ -18,7 +18,6 @@ class phpbb_functional_forgot_password_test extends phpbb_functional_test_case
 {
 	public function test_forgot_password_enabled()
 	{
-		global $config;
 		$this->add_lang('ucp');
 		$crawler = self::request('GET', 'app.php/user/forgot_password');
 		$this->assertEquals($this->lang('RESET_PASSWORD'), $crawler->filter('h2')->text());
@@ -41,11 +40,11 @@ class phpbb_functional_forgot_password_test extends phpbb_functional_test_case
 		$this->logout();
 
 		$crawler = self::request('GET', 'app.php/user/forgot_password');
-		$this->assertContains($this->lang('UCP_PASSWORD_RESET_DISABLED', '', ''), $crawler->text());
+		$this->assertStringContainsString($this->lang('UCP_PASSWORD_RESET_DISABLED', '', ''), $crawler->text());
 
 	}
 
-	public function tearDown(): void
+	protected function tearDown(): void
 	{
 		$this->login();
 		$this->admin_login();

@@ -118,7 +118,7 @@ function generate_smilies($mode, $forum_id)
 				SMILIES_TABLE => 's',
 			],
 			'GROUP_BY'	=> 's.smiley_url, s.smiley_width, s.smiley_height',
-			'ORDER_BY'	=> 'min_smiley_order',
+			'ORDER_BY'	=> $db->sql_quote('min_smiley_order'),
 		];
 	}
 	else
@@ -327,7 +327,7 @@ function update_post_information($type, $ids, $return_update_sql = false)
 	{
 		$empty_forums = array_merge($empty_forums, array_diff($ids, $not_empty_forums));
 
-		foreach ($empty_forums as $void => $forum_id)
+		foreach ($empty_forums as $forum_id)
 		{
 			$update_sql[$forum_id][] = 'forum_last_post_id = 0';
 			$update_sql[$forum_id][] = "forum_last_post_subject = ''";
@@ -542,12 +542,17 @@ function get_supported_image_types($type = false)
 				case IMAGETYPE_WBMP:
 					$new_type = ($format & IMG_WBMP) ? IMG_WBMP : false;
 				break;
+
+				// WEBP
+				case IMAGETYPE_WEBP:
+					$new_type = ($format & IMG_WEBP) ? IMG_WEBP : false;
+				break;
 			}
 		}
 		else
 		{
-			$new_type = array();
-			$go_through_types = array(IMG_GIF, IMG_JPG, IMG_PNG, IMG_WBMP);
+			$new_type = [];
+			$go_through_types = [IMG_GIF, IMG_JPG, IMG_PNG, IMG_WBMP, IMG_WEBP];
 
 			foreach ($go_through_types as $check_type)
 			{
@@ -558,14 +563,14 @@ function get_supported_image_types($type = false)
 			}
 		}
 
-		return array(
+		return [
 			'gd'		=> ($new_type) ? true : false,
 			'format'	=> $new_type,
 			'version'	=> (function_exists('imagecreatetruecolor')) ? 2 : 1
-		);
+		];
 	}
 
-	return array('gd' => false);
+	return ['gd' => false];
 }
 
 /**
@@ -659,6 +664,10 @@ function create_thumbnail($source, $destination, $mimetype)
 				case IMG_WBMP:
 					$image = @imagecreatefromwbmp($source);
 				break;
+
+				case IMG_WEBP:
+					$image = @imagecreatefromwebp($source);
+				break;
 			}
 
 			if (empty($image))
@@ -709,6 +718,10 @@ function create_thumbnail($source, $destination, $mimetype)
 
 				case IMG_WBMP:
 					imagewbmp($new_image, $destination);
+				break;
+
+				case IMG_WEBP:
+					imagewebp($new_image, $destination);
 				break;
 			}
 
@@ -770,10 +783,11 @@ function posting_gen_attachment_entry($attachment_data, &$filename_data, $show_a
 
 	// Some default template variables
 	$template->assign_vars(array(
-		'S_SHOW_ATTACH_BOX'	=> $show_attach_box,
-		'S_HAS_ATTACHMENTS'	=> count($attachment_data),
-		'FILESIZE'			=> $config['max_filesize'],
-		'FILE_COMMENT'		=> (isset($filename_data['filecomment'])) ? $filename_data['filecomment'] : '',
+		'S_SHOW_ATTACH_BOX'				=> $show_attach_box,
+		'S_HAS_ATTACHMENTS'				=> count($attachment_data),
+		'FILESIZE'						=> $config['max_filesize'],
+		'FILE_COMMENT'					=> (isset($filename_data['filecomment'])) ? $filename_data['filecomment'] : '',
+		'MAX_ATTACHMENT_FILESIZE'		=> $config['max_filesize'] > 0 ? $user->lang('MAX_ATTACHMENT_FILESIZE', get_formatted_filesize($config['max_filesize'])) : '',
 	));
 
 	if (count($attachment_data))
@@ -838,7 +852,7 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 	global $user, $db, $template, $auth;
 	global $phpbb_root_path, $phpbb_dispatcher, $phpEx;
 
-	$topic_ids = $forum_ids = $draft_rows = array();
+	$topic_ids = $draft_rows = array();
 
 	// Load those drafts not connected to forums/topics
 	// If forum_id == 0 AND topic_id == 0 then this is a PM draft
@@ -1619,8 +1633,8 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 	$data_ary['topic_title'] = truncate_string($data_ary['topic_title'], 120);
 
 	// Collect some basic information about which tables and which rows to update/insert
-	$sql_data = $topic_row = array();
-	$poster_id = ($mode == 'edit') ? $data_ary['poster_id'] : (int) $user->data['user_id'];
+	$sql_data = array();
+	$poster_id = ($mode == 'edit') ? (int) $data_ary['poster_id'] : (int) $user->data['user_id'];
 
 	// Retrieve some additional information if not present
 	if ($mode == 'edit' && (!isset($data_ary['post_visibility']) || !isset($data_ary['topic_visibility']) || $data_ary['post_visibility'] === false || $data_ary['topic_visibility'] === false))
@@ -2098,7 +2112,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 		$space_taken = $files_added = 0;
 		$orphan_rows = array();
 
-		foreach ($data_ary['attachment_data'] as $pos => $attach_row)
+		foreach ($data_ary['attachment_data'] as $attach_row)
 		{
 			$orphan_rows[(int) $attach_row['attach_id']] = array();
 		}
@@ -2120,7 +2134,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 			$db->sql_freeresult($result);
 		}
 
-		foreach ($data_ary['attachment_data'] as $pos => $attach_row)
+		foreach ($data_ary['attachment_data'] as $attach_row)
 		{
 			if ($attach_row['is_orphan'] && !isset($orphan_rows[$attach_row['attach_id']]))
 			{
@@ -2201,7 +2215,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 			$sql_data[TOPICS_TABLE]['stat'][] = "topic_last_post_subject = '" . $db->sql_escape($subject) . "'";
 
 			// Maybe not only the subject, but also changing anonymous usernames. ;)
-			if ($data_ary['poster_id'] == ANONYMOUS)
+			if ((int) $data_ary['poster_id'] == ANONYMOUS)
 			{
 				$sql_data[TOPICS_TABLE]['stat'][] = "topic_last_poster_name = '" . $db->sql_escape($username) . "'";
 			}
@@ -2218,7 +2232,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 				$db->sql_freeresult($result);
 
 				// this post is the latest post in the forum, better update
-				if ($row['forum_last_post_id'] == $data_ary['post_id'] && ($row['forum_last_post_subject'] !== $subject || $data_ary['poster_id'] == ANONYMOUS))
+				if ($row['forum_last_post_id'] == $data_ary['post_id'] && ($row['forum_last_post_subject'] !== $subject || (int) $data_ary['poster_id'] == ANONYMOUS))
 				{
 					// the post's subject changed
 					if ($row['forum_last_post_subject'] !== $subject)
@@ -2227,7 +2241,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 					}
 
 					// Update the user name if poster is anonymous... just in case a moderator changed it
-					if ($data_ary['poster_id'] == ANONYMOUS)
+					if ((int) $data_ary['poster_id'] == ANONYMOUS)
 					{
 						$sql_data[FORUMS_TABLE]['stat'][] = "forum_last_poster_name = '" . $db->sql_escape($username) . "'";
 					}
@@ -2277,27 +2291,28 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 	// Index message contents
 	if ($update_search_index && $data_ary['enable_indexing'])
 	{
-		// Select the search method and do some additional checks to ensure it can actually be utilised
-		$search_type = $config['search_type'];
-
-		if (!class_exists($search_type))
+		try
 		{
-			trigger_error('NO_SUCH_SEARCH_MODULE');
+			$search_backend_factory = $phpbb_container->get('search.backend_factory');
+			$search = $search_backend_factory->get_active();
+		}
+		catch (RuntimeException $e)
+		{
+			if (strpos($e->getMessage(), 'No service found') === 0)
+			{
+				trigger_error('NO_SUCH_SEARCH_MODULE');
+			}
+			else
+			{
+				throw $e;
+			}
 		}
 
-		$error = false;
-		$search = new $search_type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
-
-		if ($error)
-		{
-			trigger_error($error);
-		}
-
-		$search->index($mode, $data_ary['post_id'], $data_ary['message'], $subject, $poster_id, $data_ary['forum_id']);
+		$search->index($mode, (int) $data_ary['post_id'], $data_ary['message'], $subject, $poster_id, (int) $data_ary['forum_id']);
 	}
 
 	// Topic Notification, do not change if moderator is changing other users posts...
-	if ($user->data['user_id'] == $poster_id)
+	if ((int) $user->data['user_id'] == $poster_id)
 	{
 		if (!$data_ary['notify_set'] && $data_ary['notify'])
 		{
@@ -2401,6 +2416,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 					'notification.type.quote',
 					'notification.type.bookmark',
 					'notification.type.post',
+					'notification.type.forum',
 				), $notification_data);
 			break;
 
@@ -2419,6 +2435,7 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 					'notification.type.bookmark',
 					'notification.type.topic',
 					'notification.type.post',
+					'notification.type.forum',
 				), $notification_data);
 			break;
 		}

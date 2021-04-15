@@ -45,7 +45,7 @@ class installer
 	protected $install_config;
 
 	/**
-	 * @var ordered_service_collection
+	 * @var ordered_service_collection|null
 	 */
 	protected $installer_modules;
 
@@ -137,7 +137,7 @@ class installer
 
 		if (!$this->install_config->get('cache_purged_before', false) && $this->purge_cache_before)
 		{
-			/** @var \phpbb\cache\driver\driver_interface $cache */
+			/** @var driver_interface $cache */
 			$cache = $this->container_factory->get('cache.driver');
 			$cache->purge();
 			$this->install_config->set('cache_purged_before', true);
@@ -311,7 +311,7 @@ class installer
 
 				try
 				{
-					/** @var \phpbb\cache\driver\driver_interface $cache */
+					/** @var driver_interface $cache */
 					$cache = $this->container_factory->get('cache.driver');
 					$cache->purge();
 				}

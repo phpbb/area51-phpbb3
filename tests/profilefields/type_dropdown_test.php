@@ -20,13 +20,10 @@ class phpbb_profilefield_type_dropdown_test extends phpbb_test_case
 	/**
 	* Sets up basic test objects
 	*
-	* @access public
-	* @return null
+	* @access protected
 	*/
-	public function setUp(): void
+	protected function setUp(): void
 	{
-		global $phpbb_root_path, $phpEx;
-
 		$db = $this->createMock('phpbb\\db\\driver\\driver');
 
 		$user = $this->createMock('\phpbb\user');
@@ -69,6 +66,7 @@ class phpbb_profilefield_type_dropdown_test extends phpbb_test_case
 			'field_required'   => false,
 			'field_validation' => '.*',
 			'field_novalue'    => 0,
+			'field_show_novalue'	=> null,
 		);
 
 		$this->dropdown_options = array(
@@ -156,7 +154,7 @@ class phpbb_profilefield_type_dropdown_test extends phpbb_test_case
 				'Field should output nothing for empty value',
 			),
 			array(
-				'',
+				null, // Since PHP 8, '' == 0 returns false, hence use null instead of '' (empty string)
 				array('field_show_novalue' => false),
 				null,
 				'Field should simply output null for empty value',
@@ -187,7 +185,7 @@ class phpbb_profilefield_type_dropdown_test extends phpbb_test_case
 				'Field should return the correct raw value',
 			),
 			array(
-				'',
+				null, // Since PHP 8, '' == 0 returns false, hence use null instead of '' (empty string)
 				array('field_show_novalue' => false),
 				null,
 				'Field should null for empty value without show_novalue',

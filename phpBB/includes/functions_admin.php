@@ -904,7 +904,7 @@ function delete_topics($where_type, $where_ids, $auto_sync = true, $post_count_s
 */
 function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync = true, $post_count_sync = true, $call_delete_topics = true)
 {
-	global $db, $config, $phpbb_root_path, $phpEx, $auth, $user, $phpbb_container, $phpbb_dispatcher;
+	global $db, $config, $phpbb_container, $phpbb_dispatcher;
 
 	// Notifications types to delete
 	$delete_notifications_types = array(
@@ -978,7 +978,7 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 	}
 
 	$approved_posts = 0;
-	$post_ids = $topic_ids = $forum_ids = $post_counts = $remove_topics = array();
+	$post_ids = $poster_ids = $topic_ids = $forum_ids = $post_counts = $remove_topics = array();
 
 	$sql = 'SELECT post_id, poster_id, post_visibility, post_postcount, topic_id, forum_id
 		FROM ' . POSTS_TABLE . '
@@ -1086,19 +1086,21 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 	}
 
 	// Remove the message from the search index
-	$search_type = $config['search_type'];
-
-	if (!class_exists($search_type))
+	try
 	{
-		trigger_error('NO_SUCH_SEARCH_MODULE');
+		$search_backend_factory = $phpbb_container->get('search.backend_factory');
+		$search = $search_backend_factory->get_active();
 	}
-
-	$error = false;
-	$search = new $search_type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
-
-	if ($error)
+	catch (RuntimeException $e)
 	{
-		trigger_error($error);
+		if (strpos($e->getMessage(), 'No service found') === 0)
+		{
+			trigger_error('NO_SUCH_SEARCH_MODULE');
+		}
+		else
+		{
+			throw $e;
+		}
 	}
 
 	$search->index_remove($post_ids, $poster_ids, $forum_ids);
@@ -1518,7 +1520,7 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 
 			// $post_reported should be empty by now, if it's not it contains
 			// posts that are falsely flagged as reported
-			foreach ($post_reported as $post_id => $void)
+			foreach (array_keys($post_reported) as $post_id)
 			{
 				$post_ids[] = $post_id;
 			}
@@ -1623,7 +1625,7 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 
 			// $post_attachment should be empty by now, if it's not it contains
 			// posts that are falsely flagged as having attachments
-			foreach ($post_attachment as $post_id => $void)
+			foreach (array_keys($post_attachment) as $post_id)
 			{
 				$post_ids[] = $post_id;
 			}
@@ -1696,7 +1698,7 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 				$where_sql";
 			$result = $db->sql_query($sql);
 
-			$forum_data = $forum_ids = $post_ids = $last_post_id = $post_info = array();
+			$forum_data = $forum_ids = $post_ids = $post_info = array();
 			while ($row = $db->sql_fetchrow($result))
 			{
 				if ($row['forum_type'] == FORUM_LINK)
@@ -2031,7 +2033,7 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 			if (count($delete_topics))
 			{
 				$delete_topic_ids = array();
-				foreach ($delete_topics as $topic_id => $void)
+				foreach (array_keys($delete_topics) as $topic_id)
 				{
 					unset($topic_data[$topic_id]);
 					$delete_topic_ids[] = $topic_id;
@@ -2418,7 +2420,7 @@ function auto_prune($forum_id, $prune_mode, $prune_flags, $prune_days, $prune_fr
 * must be carried through for the moderators table.
 *
 * @param \phpbb\db\driver\driver_interface $db Database connection
-* @param \phpbb\cache\driver\driver_interface Cache driver
+* @param \phpbb\cache\driver\driver_interface $cache Cache driver
 * @param \phpbb\auth\auth $auth Authentication object
 * @return null
 */
@@ -2605,7 +2607,7 @@ function phpbb_cache_moderators($db, $cache, $auth)
 * @param	mixed	$forum_id		Restrict the log entries to the given forum_id (can also be an array of forum_ids)
 * @param	int		$topic_id		Restrict the log entries to the given topic_id
 * @param	int		$user_id		Restrict the log entries to the given user_id
-* @param	int		$log_time		Only get log entries newer than the given timestamp
+* @param	int		$limit_days		Only get log entries newer than the given timestamp
 * @param	string	$sort_by		SQL order option, e.g. 'l.log_time DESC'
 * @param	string	$keywords		Will only return log entries that have the keywords in log_operation or log_data
 *
@@ -2832,56 +2834,36 @@ function view_warned_users(&$users, &$user_count, $limit = 0, $offset = 0, $limi
 
 /**
 * Get database size
-* Currently only mysql and mssql are supported
 */
 function get_database_size()
 {
-	global $db, $user, $table_prefix;
+	global $db, $user;
 
 	$database_size = false;
 
-	// This code is heavily influenced by a similar routine in phpMyAdmin 2.2.0
 	switch ($db->get_sql_layer())
 	{
 		case 'mysqli':
-			$sql = 'SELECT VERSION() AS mysql_version';
-			$result = $db->sql_query($sql);
-			$row = $db->sql_fetchrow($result);
-			$db->sql_freeresult($result);
+			$mysql_engine	= ['MyISAM', 'InnoDB', 'Aria'];
+			$db_name		= $db->get_db_name();
+			$database_size	= 0;
 
-			if ($row)
+			$sql = 'SHOW TABLE STATUS
+				FROM ' . $db->sql_quote($db_name);
+			$result = $db->sql_query($sql, 7200);
+
+			while ($row = $db->sql_fetchrow($result))
 			{
-				$version = $row['mysql_version'];
-
-				if (preg_match('#(3\.23|[45]\.|10\.[0-9]\.[0-9]{1,2}-+Maria)#', $version))
+				if (isset($row['Engine']) && in_array($row['Engine'], $mysql_engine))
 				{
-					$db_name = (preg_match('#^(?:3\.23\.(?:[6-9]|[1-9]{2}))|[45]\.|10\.[0-9]\.[0-9]{1,2}-+Maria#', $version)) ? "`{$db->get_db_name()}`" : $db->get_db_name();
-
-					$sql = 'SHOW TABLE STATUS
-						FROM ' . $db_name;
-					$result = $db->sql_query($sql, 7200);
-
-					$database_size = 0;
-					while ($row = $db->sql_fetchrow($result))
-					{
-						if ((isset($row['Type']) && $row['Type'] != 'MRG_MyISAM') || (isset($row['Engine']) && ($row['Engine'] == 'MyISAM' || $row['Engine'] == 'InnoDB' || $row['Engine'] == 'Aria')))
-						{
-							if ($table_prefix != '')
-							{
-								if (strpos($row['Name'], $table_prefix) !== false)
-								{
-									$database_size += $row['Data_length'] + $row['Index_length'];
-								}
-							}
-							else
-							{
-								$database_size += $row['Data_length'] + $row['Index_length'];
-							}
-						}
-					}
-					$db->sql_freeresult($result);
+					$database_size += $row['Data_length'] + $row['Index_length'];
 				}
 			}
+
+			$db->sql_freeresult($result);
+
+			$database_size = $database_size ? $database_size : false;
+
 		break;
 
 		case 'sqlite3':
@@ -2920,37 +2902,18 @@ function get_database_size()
 		break;
 
 		case 'postgres':
-			$sql = "SELECT proname
-				FROM pg_proc
-				WHERE proname = 'pg_database_size'";
-			$result = $db->sql_query($sql);
-			$row = $db->sql_fetchrow($result);
-			$db->sql_freeresult($result);
+			$database = $db->get_db_name();
 
-			if ($row['proname'] == 'pg_database_size')
+			if (strpos($database, '.') !== false)
 			{
-				$database = $db->get_db_name();
-				if (strpos($database, '.') !== false)
-				{
-					list($database, ) = explode('.', $database);
-				}
-
-				$sql = "SELECT oid
-					FROM pg_database
-					WHERE datname = '$database'";
-				$result = $db->sql_query($sql);
-				$row = $db->sql_fetchrow($result);
-				$db->sql_freeresult($result);
-
-				$oid = $row['oid'];
-
-				$sql = 'SELECT pg_database_size(' . $oid . ') as size';
-				$result = $db->sql_query($sql);
-				$row = $db->sql_fetchrow($result);
-				$db->sql_freeresult($result);
-
-				$database_size = $row['size'];
+				$database = explode('.', $database)[0];
 			}
+
+			$sql = "SELECT pg_database_size('" . $database . "') AS dbsize";
+			$result = $db->sql_query($sql, 7200);
+			$row = $db->sql_fetchrow($result);
+			$database_size = !empty($row['dbsize']) ? $row['dbsize'] : false;
+			$db->sql_freeresult($result);
 		break;
 
 		case 'oracle':

@@ -17,10 +17,10 @@ class phpbb_notification_user_list_trim_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/user_list_trim.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/user_list_trim.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $phpbb_root_path, $phpEx, $phpbb_dispatcher, $user, $cache, $auth;
 
@@ -51,10 +51,17 @@ class phpbb_notification_user_list_trim_test extends phpbb_database_test_case
 		$lang_loader = new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx);
 		$lang = new \phpbb\language\language($lang_loader);
 		$user = new \phpbb\user($lang, '\phpbb\datetime');
-		$user->data = array('user_lang' => 'en');
+		$user->data = [
+			'user_id'	=> 1,
+			'user_lang' => 'en',
+		];
 		$lang->add_lang('common');
 
-		$user_loader = new phpbb\user_loader($db, $phpbb_root_path, $phpEx, USERS_TABLE);
+		$avatar_helper = $this->getMockBuilder('\phpbb\avatar\helper')
+			->disableOriginalConstructor()
+			->getMock();
+
+		$user_loader = new phpbb\user_loader($avatar_helper, $db, $phpbb_root_path, $phpEx, USERS_TABLE);
 		$user_loader->load_users(array(2, 3, 4, 5, 6));
 
 		$this->notification = new phpbb_mock_notification_type_post(

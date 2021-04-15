@@ -18,15 +18,18 @@ class phpbb_user_loader_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/user_loader.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/user_loader.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
+		$avatar_helper = $this->getMockBuilder('\phpbb\avatar\helper')
+			->disableOriginalConstructor()
+			->getMock();
 		$this->db = $this->new_dbal();
-		$this->user_loader = new \phpbb\user_loader($this->db, __DIR__ . '/../../phpBB/', 'php', 'phpbb_users');
+		$this->user_loader = new \phpbb\user_loader($avatar_helper, $this->db, __DIR__ . '/../../phpBB/', 'php', 'phpbb_users');
 	}
 
 	public function test_load_get()

@@ -66,7 +66,7 @@ class report_post extends \phpbb\notification\type\post_in_queue
 	* @var bool|array False if the service should use it's default data
 	* 					Array of data (including keys 'id' and 'lang')
 	*/
-	static public $notification_option = array(
+	public static $notification_option = array(
 		'id'	=> 'notification.type.report',
 		'lang'	=> 'NOTIFICATION_TYPE_REPORT',
 		'group'	=> 'NOTIFICATION_GROUP_MODERATION',
@@ -110,8 +110,8 @@ class report_post extends \phpbb\notification\type\post_in_queue
 		$board_url = generate_board_url();
 
 		return array(
-			'POST_SUBJECT'				=> htmlspecialchars_decode(censor_text($this->get_data('post_subject'))),
-			'TOPIC_TITLE'				=> htmlspecialchars_decode(censor_text($this->get_data('topic_title'))),
+			'POST_SUBJECT'				=> htmlspecialchars_decode(censor_text($this->get_data('post_subject')), ENT_COMPAT),
+			'TOPIC_TITLE'				=> htmlspecialchars_decode(censor_text($this->get_data('topic_title')), ENT_COMPAT),
 
 			'U_VIEW_REPORT'				=> "{$board_url}/mcp.{$this->php_ext}?f={$this->get_data('forum_id')}&p={$this->item_id}&i=reports&mode=report_details#reports",
 			'U_VIEW_POST'				=> "{$board_url}/viewtopic.{$this->php_ext}?p={$this->item_id}#p{$this->item_id}",

@@ -11,25 +11,22 @@
  *
  */
 
-require_once(dirname(__FILE__) . '/attachments_mock_feed.php');
+require_once(__DIR__ . '/attachments_mock_feed.php');
 
 class phpbb_feed_attachments_base_test extends phpbb_database_test_case
 {
-	protected $filesystem;
-
 	/** @var \phpbb_feed_attachments_mock_feed */
 	protected $attachments_mocks_feed;
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/../extension/fixtures/extensions.xml');
+		return $this->createXMLDataSet(__DIR__ . '/../extension/fixtures/extensions.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $phpbb_root_path, $phpEx;
 
-		$this->filesystem = new \phpbb\filesystem();
 		$config = new \phpbb\config\config(array());
 		$path_helper = new \phpbb\path_helper(
 			new \phpbb\symfony_request(
@@ -48,10 +45,10 @@ class phpbb_feed_attachments_base_test extends phpbb_database_test_case
 		$container = new phpbb_mock_container_builder();
 		$this->get_test_case_helpers()->set_s9e_services($container);
 		$container->set('feed.quote_helper', new \phpbb\feed\quote_helper($user, $phpbb_root_path, 'php'));
-		$feed_helper = new \phpbb\feed\helper($config, $container, $path_helper, $container->get('text_formatter.renderer'), $user);
 		$db = $this->new_dbal();
 		$cache = new \phpbb_mock_cache();
 		$auth = new \phpbb\auth\auth();
+		$feed_helper = new \phpbb\feed\helper($auth, $config, $container, $path_helper, $container->get('text_formatter.renderer'), $user);
 		$content_visibility = new \phpbb\content_visibility(
 			$auth,
 			$config,

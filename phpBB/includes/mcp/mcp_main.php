@@ -881,16 +881,38 @@ function mcp_restore_topic($topic_ids)
 */
 function mcp_delete_topic($topic_ids, $is_soft = false, $soft_delete_reason = '', $action = 'delete_topic')
 {
-	global $auth, $user, $db, $phpEx, $phpbb_root_path, $request, $phpbb_container, $phpbb_log;
+	global $auth, $user, $db, $phpEx, $phpbb_root_path, $request, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
 
-	$check_permission = ($is_soft) ? 'm_softdelete' : 'm_delete';
-	if (!phpbb_check_ids($topic_ids, TOPICS_TABLE, 'topic_id', array($check_permission)))
+	$forum_id = $request->variable('f', 0);
+	$check_permission = ($is_soft) ? ['m_softdelete'] : ['m_delete'];
+	/**
+	* This event allows you to modify the current user's checked permissions when deleting a topic
+	*
+	* @event core.mcp_delete_topic_modify_permissions
+	* @var	array	topic_ids				The array of topic IDs to be deleted
+	* @var	int		forum_id				The current forum ID
+	* @var	bool	is_soft					Boolean designating whether we're soft deleting or not
+	* @var	string	soft_delete_reason		The reason we're soft deleting
+	* @var	string	action					The current delete action
+	* @var	array	check_permission		The array with a permission to check for, can be set to false to not check them
+	* @since 3.3.3-RC1
+	*/
+	$vars = array(
+		'topic_ids',
+		'forum_id',
+		'is_soft',
+		'soft_delete_reason',
+		'action',
+		'check_permission',
+	);
+	extract($phpbb_dispatcher->trigger_event('core.mcp_delete_topic_modify_permissions', compact($vars)));
+
+	if (!phpbb_check_ids($topic_ids, TOPICS_TABLE, 'topic_id', $check_permission))
 	{
 		return;
 	}
 
 	$redirect = $request->variable('redirect', build_url(array('action', 'quickmod')));
-	$forum_id = $request->variable('f', 0);
 
 	$s_hidden_fields = array(
 		'topic_id_list'	=> $topic_ids,
@@ -1001,6 +1023,28 @@ function mcp_delete_topic($topic_ids, $is_soft = false, $soft_delete_reason = ''
 		{
 			$s_hidden_fields['delete_permanent'] = '1';
 		}
+
+		/**
+		* This event allows you to modify the hidden form fields when deleting topics
+		*
+		* @event core.mcp_delete_topic_modify_hidden_fields
+		* @var	string	l_confirm				The confirmation text language variable (DELETE_TOPIC(S), DELETE_TOPIC(S)_PERMANENTLY)
+		* @var	array	s_hidden_fields			The array holding the hidden form fields
+		* @var	array	topic_ids				The array of topic IDs to be deleted
+		* @var	int		forum_id				The current forum ID
+		* @var	bool	only_softdeleted		If the topic_ids are all soft deleted, this is true
+		* @var	bool	only_shadow				If the topic_ids are all shadow topics, this is true
+		* @since 3.3.3-RC1
+		*/
+		$vars = array(
+			'l_confirm',
+			's_hidden_fields',
+			'topic_ids',
+			'forum_id',
+			'only_softdeleted',
+			'only_shadow',
+		);
+		extract($phpbb_dispatcher->trigger_event('core.mcp_delete_topic_modify_hidden_fields', compact($vars)));
 
 		confirm_box(false, $l_confirm, build_hidden_fields($s_hidden_fields), 'confirm_delete_body.html');
 	}
@@ -1286,7 +1330,7 @@ function mcp_delete_post($post_ids, $is_soft = false, $soft_delete_reason = '', 
 */
 function mcp_fork_topic($topic_ids)
 {
-	global $auth, $user, $db, $template, $config;
+	global $auth, $user, $db, $template, $config, $phpbb_container;
 	global $phpEx, $phpbb_root_path, $phpbb_log, $request, $phpbb_dispatcher;
 
 	if (!phpbb_check_ids($topic_ids, TOPICS_TABLE, 'topic_id', array('m_')))
@@ -1354,28 +1398,30 @@ function mcp_fork_topic($topic_ids)
 
 		foreach ($topic_data as $topic_id => $topic_row)
 		{
-			if (!isset($search_type) && $topic_row['enable_indexing'])
+			if (!isset($search) && $topic_row['enable_indexing'])
 			{
 				// Select the search method and do some additional checks to ensure it can actually be utilised
-				$search_type = $config['search_type'];
-
-				if (!class_exists($search_type))
+				try
 				{
-					trigger_error('NO_SUCH_SEARCH_MODULE');
+					$search_backend_factory = $phpbb_container->get('search.backend_factory');
+					$search = $search_backend_factory->get_active();
 				}
-
-				$error = false;
-				$search = new $search_type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
+				catch (RuntimeException $e)
+				{
+					if (strpos($e->getMessage(), 'No service found') === 0)
+					{
+						trigger_error('NO_SUCH_SEARCH_MODULE');
+					}
+					else
+					{
+						throw $e;
+					}
+				}
 				$search_mode = 'post';
-
-				if ($error)
-				{
-					trigger_error($error);
-				}
 			}
-			else if (!isset($search_type) && !$topic_row['enable_indexing'])
+			else if (!isset($search) && !$topic_row['enable_indexing'])
 			{
-				$search_type = false;
+				$search = false;
 			}
 
 			$sql_ary = array(
@@ -1520,7 +1566,7 @@ function mcp_fork_topic($topic_ids)
 					}
 				}
 				$db->sql_query('INSERT INTO ' . POSTS_TABLE . ' ' . $db->sql_build_array('INSERT', $sql_ary));
-				$new_post_id = $db->sql_nextid();
+				$new_post_id = (int) $db->sql_nextid();
 
 				/**
 				* Perform actions after forked topic is created.
@@ -1557,9 +1603,9 @@ function mcp_fork_topic($topic_ids)
 				// Copy whether the topic is dotted
 				markread('post', $to_forum_id, $new_topic_id, 0, $row['poster_id']);
 
-				if (!empty($search_type))
+				if (!empty($search))
 				{
-					$search->index($search_mode, $new_post_id, $sql_ary['post_text'], $sql_ary['post_subject'], $sql_ary['poster_id'], ($topic_row['topic_type'] == POST_GLOBAL) ? 0 : $to_forum_id);
+					$search->index($search_mode, $new_post_id, $sql_ary['post_text'], $sql_ary['post_subject'], (int) $sql_ary['poster_id'], ($topic_row['topic_type'] == POST_GLOBAL) ? 0 : $to_forum_id);
 					$search_mode = 'reply'; // After one we index replies
 				}
 

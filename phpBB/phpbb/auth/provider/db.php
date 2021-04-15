@@ -14,10 +14,10 @@
 namespace phpbb\auth\provider;
 
 use phpbb\captcha\factory;
+use phpbb\captcha\plugins\captcha_abstract;
 use phpbb\config\config;
 use phpbb\db\driver\driver_interface;
 use phpbb\passwords\manager;
-use phpbb\request\request_interface;
 use phpbb\user;
 
 /**
@@ -35,17 +35,8 @@ class db extends base
 	/** @var driver_interface DBAL driver instance */
 	protected $db;
 
-	/** @var request_interface Request object */
-	protected $request;
-
 	/** @var user User object */
 	protected $user;
-
-	/** @var string phpBB root path */
-	protected $phpbb_root_path;
-
-	/** @var string PHP file extension */
-	protected $php_ext;
 
 	/**
 	* phpBB passwords manager
@@ -61,21 +52,15 @@ class db extends base
 	 * @param	config 		$config
 	 * @param	driver_interface		$db
 	 * @param	manager	$passwords_manager
-	 * @param	request_interface		$request
 	 * @param	user			$user
-	 * @param	string				$phpbb_root_path
-	 * @param	string				$php_ext
 	 */
-	public function __construct(factory $captcha_factory, config $config, driver_interface $db, manager $passwords_manager, request_interface $request, user $user, $phpbb_root_path, $php_ext)
+	public function __construct(factory $captcha_factory, config $config, driver_interface $db, manager $passwords_manager, user $user)
 	{
 		$this->captcha_factory = $captcha_factory;
 		$this->config = $config;
 		$this->db = $db;
 		$this->passwords_manager = $passwords_manager;
-		$this->request = $request;
 		$this->user = $user;
-		$this->phpbb_root_path = $phpbb_root_path;
-		$this->php_ext = $php_ext;
 	}
 
 	/**
@@ -151,13 +136,27 @@ class db extends base
 			$attempts = 0;
 		}
 
+		$login_error_attempts = 'LOGIN_ERROR_ATTEMPTS';
+		$show_captcha = ($this->config['max_login_attempts'] && $row['user_login_attempts'] >= $this->config['max_login_attempts']) ||
+			($this->config['ip_login_limit_max'] && $attempts >= $this->config['ip_login_limit_max']);
+		if ($show_captcha)
+		{
+			$captcha = $this->captcha_factory->get_instance($this->config['captcha_plugin']);
+
+			// Get custom message for login error when exceeding maximum number of attempts
+			if ($captcha instanceof captcha_abstract)
+			{
+				$login_error_attempts = $captcha->get_login_error_attempts();
+			}
+		}
+
 		if (!$row)
 		{
 			if ($this->config['ip_login_limit_max'] && $attempts >= $this->config['ip_login_limit_max'])
 			{
 				return array(
 					'status'		=> LOGIN_ERROR_ATTEMPTS,
-					'error_msg'		=> 'LOGIN_ERROR_ATTEMPTS',
+					'error_msg'		=> $login_error_attempts,
 					'user_row'		=> array('user_id' => ANONYMOUS),
 				);
 			}
@@ -169,21 +168,17 @@ class db extends base
 			);
 		}
 
-		$show_captcha = ($this->config['max_login_attempts'] && $row['user_login_attempts'] >= $this->config['max_login_attempts']) ||
-			($this->config['ip_login_limit_max'] && $attempts >= $this->config['ip_login_limit_max']);
-
 		// If there are too many login attempts, we need to check for a confirm image
 		// Every auth module is able to define what to do by itself...
 		if ($show_captcha)
 		{
-			$captcha = $this->captcha_factory->get_instance($this->config['captcha_plugin']);
 			$captcha->init(CONFIRM_LOGIN);
 			$vc_response = $captcha->validate($row);
 			if ($vc_response)
 			{
 				return array(
 					'status'		=> LOGIN_ERROR_ATTEMPTS,
-					'error_msg'		=> 'LOGIN_ERROR_ATTEMPTS',
+					'error_msg'		=> $login_error_attempts,
 					'user_row'		=> $row,
 				);
 			}

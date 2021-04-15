@@ -59,7 +59,7 @@ class report
 	protected $php_ext;
 
 	/**
-	 * @var \phpbb\report\report_handler_interface
+	 * @var \phpbb\report\handler_factory
 	 */
 	protected $report_handler;
 
@@ -92,7 +92,7 @@ class report
 	 * @param int		$id		ID of the entity to report
 	 * @param string	$mode
 	 * @return \Symfony\Component\HttpFoundation\Response a Symfony response object
-	 * @throws \phpbb\exception\http_exception when $mode or $id is invalid for some reason
+	 * @throws http_exception when $mode or $id is invalid for some reason
 	 */
 	public function handle($id, $mode)
 	{

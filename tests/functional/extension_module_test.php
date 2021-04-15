@@ -10,7 +10,7 @@
 * the docs/CREDITS.txt file.
 *
 */
-require_once dirname(__FILE__) . '/../../phpBB/includes/acp/acp_modules.php';
+require_once __DIR__ . '/../../phpBB/includes/acp/acp_modules.php';
 
 /**
 * @group functional
@@ -19,28 +19,28 @@ class phpbb_functional_extension_module_test extends phpbb_functional_test_case
 {
 	protected $phpbb_extension_manager;
 
-	static private $helper;
+	private static $helper;
 
-	static protected $fixtures = array(
+	protected static $fixtures = array(
 		'./',
 	);
 
-	static public function setUpBeforeClass()
+	static public function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
 
 		self::$helper = new phpbb_test_case_helpers(__CLASS__);
-		self::$helper->copy_ext_fixtures(dirname(__FILE__) . '/fixtures/ext/', self::$fixtures);
+		self::$helper->copy_ext_fixtures(__DIR__ . '/fixtures/ext/', self::$fixtures);
 	}
 
-	static public function tearDownAfterClass()
+	static public function tearDownAfterClass(): void
 	{
 		parent::tearDownAfterClass();
 
 		self::$helper->restore_original_ext_dir();
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $db;
 
@@ -51,7 +51,7 @@ class phpbb_functional_extension_module_test extends phpbb_functional_test_case
 
 		$db = $this->get_db();
 		$cache = $this->get_cache_driver();
-		$modules = new \phpbb\module\module_manager($cache, $db, $this->phpbb_extension_manager, MODULES_TABLE, dirname(__FILE__) . '/../../phpBB/', 'php');
+		$modules = new \phpbb\module\module_manager($cache, $db, $this->phpbb_extension_manager, MODULES_TABLE, __DIR__ . '/../../phpBB/', 'php');
 
 		$sql = 'SELECT module_id
 			FROM ' . MODULES_TABLE . "
@@ -118,7 +118,7 @@ class phpbb_functional_extension_module_test extends phpbb_functional_test_case
 		$this->admin_login();
 
 		$crawler = self::request('GET', 'adm/index.php?i=foo%5cbar%5cacp%5cmain_module&mode=mode&sid=' . $this->sid);
-		$this->assertContains('Bertie rulez!', $crawler->filter('#main')->text());
+		$this->assertStringContainsString('Bertie rulez!', $crawler->filter('#main')->text());
 	}
 
 	public function test_ucp()
@@ -126,11 +126,11 @@ class phpbb_functional_extension_module_test extends phpbb_functional_test_case
 		$this->login();
 
 		$crawler = self::request('GET', 'ucp.php?sid=' . $this->sid);
-		$this->assertContains('UCP_FOOBAR_TITLE', $crawler->filter('#tabs')->text());
+		$this->assertStringContainsString('UCP_FOOBAR_TITLE', $crawler->filter('#tabs')->text());
 
 		$link = $crawler->selectLink('UCP_FOOBAR_TITLE')->link()->getUri();
 		$crawler = self::request('GET', substr($link, strpos($link, 'ucp.')));
-		$this->assertContains('UCP Extension Template Test Passed!', $crawler->filter('#content')->text());
+		$this->assertStringContainsString('UCP Extension Template Test Passed!', $crawler->filter('#content')->text());
 
 		$this->phpbb_extension_manager->purge('foo/bar');
 	}

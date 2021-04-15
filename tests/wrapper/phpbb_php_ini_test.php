@@ -11,14 +11,14 @@
 *
 */
 
-require_once dirname(__FILE__) . '/phpbb_php_ini_fake.php';
+require_once __DIR__ . '/phpbb_php_ini_fake.php';
 
 class phpbb_wrapper_phpbb_php_ini_test extends phpbb_test_case
 {
 	/** @var \phpbb_php_ini_fake php_ini */
 	protected $php_ini;
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		$this->php_ini = new phpbb_php_ini_fake;
 	}

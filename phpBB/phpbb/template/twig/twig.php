@@ -129,7 +129,7 @@ class twig extends \phpbb\template\base
 	*
 	* @return array Style tree, most specific first
 	*
-	* @throws \phpbb\template\exception\user_object_not_available	When user service was not set
+	* @throws user_object_not_available	When user service was not set
 	*/
 	public function get_user_style()
 	{
@@ -224,7 +224,7 @@ class twig extends \phpbb\template\base
 	*			'name' 		=> 'adm',
 	*			'ext_path' 	=> 'adm/style/',
 	*		)
-	* @param string|array of string $paths Array of style paths, relative to current root directory
+	* @param string|array $paths Array of style paths, relative to current root directory
 	* @return \phpbb\template\template $this
 	*/
 	public function set_custom_style($names, $paths)

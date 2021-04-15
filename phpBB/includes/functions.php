@@ -580,6 +580,7 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 				'notification.type.post',
 				'notification.type.approve_topic',
 				'notification.type.approve_post',
+				'notification.type.forum',
 			), false, $user->data['user_id'], $post_time);
 
 			if ($config['load_db_lastread'] && $user->data['is_registered'])
@@ -663,6 +664,7 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 			'notification.type.bookmark',
 			'notification.type.post',
 			'notification.type.approve_post',
+			'notification.type.forum',
 		), $topic_ids, $user->data['user_id'], $post_time);
 
 		// Add 0 to forums array to mark global announcements correctly
@@ -773,6 +775,7 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 			'notification.type.bookmark',
 			'notification.type.post',
 			'notification.type.approve_post',
+			'notification.type.forum',
 		), $topic_id, $user->data['user_id'], $post_time);
 
 		if ($config['load_db_lastread'] && $user->data['is_registered'])
@@ -915,7 +918,7 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 /**
 * Get topic tracking info by using already fetched info
 */
-function get_topic_tracking($forum_id, $topic_ids, &$rowset, $forum_mark_time, $global_announce_list = false)
+function get_topic_tracking($forum_id, $topic_ids, &$rowset, $forum_mark_time)
 {
 	global $user;
 
@@ -959,7 +962,7 @@ function get_topic_tracking($forum_id, $topic_ids, &$rowset, $forum_mark_time, $
 /**
 * Get topic tracking info from db (for cookie based tracking only this function is used)
 */
-function get_complete_topic_tracking($forum_id, $topic_ids, $global_announce_list = false)
+function get_complete_topic_tracking($forum_id, $topic_ids)
 {
 	global $config, $user, $request;
 
@@ -1072,7 +1075,7 @@ function get_complete_topic_tracking($forum_id, $topic_ids, $global_announce_lis
 * @param string $sql_limit		Limits the size of unread topics list, 0 for unlimited query
 * @param string $sql_limit_offset  Sets the offset of the first row to search, 0 to search from the start
 *
-* @return array[int][int]		Topic ids as keys, mark_time of topic as value
+* @return int[]		Topic ids as keys, mark_time of topic as value
 */
 function get_unread_topics($user_id = false, $sql_extra = '', $sql_sort = '', $sql_limit = 1001, $sql_limit_offset = 0)
 {
@@ -2468,7 +2471,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		'LOGIN_ERROR'		=> $err,
 		'LOGIN_EXPLAIN'		=> $l_explain,
 
-		'U_SEND_PASSWORD' 		=> ($config['email_enable']) ? $controller_helper->route('phpbb_ucp_forgot_password_controller') : '',
+		'U_SEND_PASSWORD' 		=> ($config['email_enable'] && $config['allow_password_reset']) ? $controller_helper->route('phpbb_ucp_forgot_password_controller') : '',
 		'U_RESEND_ACTIVATION'	=> ($config['require_activation'] == USER_ACTIVATION_SELF && $config['email_enable']) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=resend_act') : '',
 		'U_TERMS_USE'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=terms'),
 		'U_PRIVACY'				=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy'),
@@ -2666,63 +2669,6 @@ function build_hidden_fields($field_ary, $specialchar = false, $stripslashes = f
 }
 
 /**
-* Parse cfg file
-*/
-function parse_cfg_file($filename, $lines = false)
-{
-	$parsed_items = array();
-
-	if ($lines === false)
-	{
-		$lines = file($filename);
-	}
-
-	foreach ($lines as $line)
-	{
-		$line = trim($line);
-
-		if (!$line || $line[0] == '#' || ($delim_pos = strpos($line, '=')) === false)
-		{
-			continue;
-		}
-
-		// Determine first occurrence, since in values the equal sign is allowed
-		$key = htmlspecialchars(strtolower(trim(substr($line, 0, $delim_pos))));
-		$value = trim(substr($line, $delim_pos + 1));
-
-		if (in_array($value, array('off', 'false', '0')))
-		{
-			$value = false;
-		}
-		else if (in_array($value, array('on', 'true', '1')))
-		{
-			$value = true;
-		}
-		else if (!trim($value))
-		{
-			$value = '';
-		}
-		else if (($value[0] == "'" && $value[strlen($value) - 1] == "'") || ($value[0] == '"' && $value[strlen($value) - 1] == '"'))
-		{
-			$value = htmlspecialchars(substr($value, 1, strlen($value)-2));
-		}
-		else
-		{
-			$value = htmlspecialchars($value);
-		}
-
-		$parsed_items[$key] = $value;
-	}
-
-	if (isset($parsed_items['parent']) && isset($parsed_items['name']) && $parsed_items['parent'] == $parsed_items['name'])
-	{
-		unset($parsed_items['parent']);
-	}
-
-	return $parsed_items;
-}
-
-/**
 * Return a nicely formatted backtrace.
 *
 * Turns the array returned by debug_backtrace() into HTML markup.
@@ -2741,7 +2687,7 @@ function get_backtrace()
 	foreach ($backtrace as $trace)
 	{
 		// Strip the current directory from path
-		$trace['file'] = (empty($trace['file'])) ? '(not given by php)' : htmlspecialchars(phpbb_filter_root_path($trace['file']));
+		$trace['file'] = (empty($trace['file'])) ? '(not given by php)' : htmlspecialchars(phpbb_filter_root_path($trace['file']), ENT_COMPAT);
 		$trace['line'] = (empty($trace['line'])) ? '(not given by php)' : $trace['line'];
 
 		// Only show function arguments for include etc.
@@ -2749,7 +2695,7 @@ function get_backtrace()
 		$argument = '';
 		if (!empty($trace['args'][0]) && in_array($trace['function'], array('include', 'require', 'include_once', 'require_once')))
 		{
-			$argument = htmlspecialchars(phpbb_filter_root_path($trace['args'][0]));
+			$argument = htmlspecialchars(phpbb_filter_root_path($trace['args'][0]), ENT_COMPAT);
 		}
 
 		$trace['class'] = (!isset($trace['class'])) ? '' : $trace['class'];
@@ -2759,7 +2705,7 @@ function get_backtrace()
 		$output .= '<b>FILE:</b> ' . $trace['file'] . '<br />';
 		$output .= '<b>LINE:</b> ' . ((!empty($trace['line'])) ? $trace['line'] : '') . '<br />';
 
-		$output .= '<b>CALL:</b> ' . htmlspecialchars($trace['class'] . $trace['type'] . $trace['function']);
+		$output .= '<b>CALL:</b> ' . htmlspecialchars($trace['class'] . $trace['type'] . $trace['function'], ENT_COMPAT);
 		$output .= '(' . (($argument !== '') ? "'$argument'" : '') . ')<br />';
 	}
 	$output .= '</div>';
@@ -3216,13 +3162,11 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 */
 function phpbb_filter_root_path($errfile)
 {
-	global $phpbb_filesystem;
-
 	static $root_path;
 
 	if (empty($root_path))
 	{
-		$root_path = \phpbb\filesystem\helper::realpath(dirname(__FILE__) . '/../');
+		$root_path = \phpbb\filesystem\helper::realpath(__DIR__ . '/../');
 	}
 
 	return str_replace(array($root_path, '\\'), array('[ROOT]', '/'), $errfile);
@@ -3579,6 +3523,8 @@ function phpbb_quoteattr($data, $entities = null)
 /**
 * Get user avatar
 *
+* @deprecated 4.0.0 Use \phpbb\avatar\helper::get_user_avatar() instead
+*
 * @param array $user_row Row from the users table
 * @param string $alt Optional language string for alt tag within image, can be a language key or text
 * @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
@@ -3595,6 +3541,8 @@ function phpbb_get_user_avatar($user_row, $alt = 'USER_AVATAR', $ignore_config =
 /**
 * Get group avatar
 *
+* @deprecated 4.0.0 Use \phpbb\avatar\helper::get_group_avatar() instead
+*
 * @param array $group_row Row from the groups table
 * @param string $alt Optional language string for alt tag within image, can be a language key or text
 * @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
@@ -3610,6 +3558,8 @@ function phpbb_get_group_avatar($group_row, $alt = 'GROUP_AVATAR', $ignore_confi
 
 /**
 * Get avatar
+*
+* @deprecated 4.0.0 Use \phpbb\avatar\helper::get_avatar() instead
 *
 * @param array $row Row cleaned by \phpbb\avatar\manager::clean_row
 * @param string $alt Optional language string for alt tag within image, can be a language key or text
@@ -3918,6 +3868,12 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 	// Add form token for login box, in case page is presenting a login form.
 	add_form_key('login', '_LOGIN');
 
+	/** @var \phpbb\avatar\helper $avatar_helper */
+	$avatar_helper = $phpbb_container->get('avatar.helper');
+
+	$avatar = $avatar_helper->get_user_avatar($user->data);
+	$template->assign_vars($avatar_helper->get_template_vars($avatar, 'CURRENT_USER_'));
+
 	// The following assigns all _common_ variables that may be used at any point in a template.
 	$template->assign_vars(array(
 		'SITENAME'						=> $config['sitename'],
@@ -3931,10 +3887,11 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'LOGGED_IN_USER_LIST'			=> $online_userlist,
 		'RECORD_USERS'					=> $l_online_record,
 
+		'NO_AVATAR_SOURCE'				=> $avatar_helper->get_no_avatar_source(),
 		'PRIVATE_MESSAGE_COUNT'			=> (!empty($user->data['user_unread_privmsg'])) ? $user->data['user_unread_privmsg'] : 0,
-		'CURRENT_USER_AVATAR'			=> phpbb_get_user_avatar($user->data),
 		'CURRENT_USERNAME_SIMPLE'		=> get_username_string('no_profile', $user->data['user_id'], $user->data['username'], $user->data['user_colour']),
 		'CURRENT_USERNAME_FULL'			=> get_username_string('full', $user->data['user_id'], $user->data['username'], $user->data['user_colour']),
+		'CURRENT_USER_GROUP_COLOR'		=> $user->data['user_colour'],
 		'UNREAD_NOTIFICATIONS_COUNT'	=> ($notifications !== false) ? $notifications['unread_count'] : '',
 		'NOTIFICATIONS_COUNT'			=> ($notifications !== false) ? $notifications['unread_count'] : '',
 		'U_VIEW_ALL_NOTIFICATIONS'		=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=ucp_notifications'),
@@ -4018,7 +3975,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'S_ENABLE_FEEDS_TOPICS_ACTIVE'	=> ($config['feed_topics_active']) ? true : false,
 		'S_ENABLE_FEEDS_NEWS'		=> ($s_feed_news) ? true : false,
 
-		'S_LOAD_UNREADS'			=> ($config['load_unreads_search'] && ($config['load_anon_lastread'] || $user->data['is_registered'])) ? true : false,
+		'S_LOAD_UNREADS'			=> (bool) $config['load_unreads_search'] && ($config['load_anon_lastread'] || !empty($user->data['is_registered'])),
 
 		'S_SEARCH_HIDDEN_FIELDS'	=> build_hidden_fields($s_search_hidden_fields),
 
@@ -4096,25 +4053,6 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 	}
 
 	return;
-}
-
-/**
-* Check and display the SQL report if requested.
-*
-* @param \phpbb\request\request_interface		$request	Request object
-* @param \phpbb\auth\auth						$auth		Auth object
-* @param \phpbb\db\driver\driver_interface		$db			Database connection
- *
- * @deprecated 3.3.1 (To be removed: 4.0.0-a1); use controller helper's display_sql_report()
-*/
-function phpbb_check_and_display_sql_report(\phpbb\request\request_interface $request, \phpbb\auth\auth $auth, \phpbb\db\driver\driver_interface $db)
-{
-	global $phpbb_container;
-
-	/** @var \phpbb\controller\helper $controller_helper */
-	$controller_helper = $phpbb_container->get('controller.helper');
-
-	$controller_helper->display_sql_report();
 }
 
 /**
@@ -4263,7 +4201,7 @@ function garbage_collection()
 		* @event core.garbage_collection
 		* @since 3.1.0-a1
 		*/
-		$phpbb_dispatcher->dispatch('core.garbage_collection');
+		$phpbb_dispatcher->trigger_event('core.garbage_collection');
 	}
 
 	// Unload cache, must be done before the DB connection if closed
@@ -4317,19 +4255,6 @@ function exit_handler()
 }
 
 /**
-* Casts a numeric string $input to an appropriate numeric type (i.e. integer or float)
-*
-* @param string $input		A numeric string.
-*
-* @return int|float			Integer $input if $input fits integer,
-*							float $input otherwise.
-*/
-function phpbb_to_numeric($input)
-{
-	return ($input > PHP_INT_MAX) ? (float) $input : (int) $input;
-}
-
-/**
 * Get the board contact details (e.g. for emails)
 *
 * @param \phpbb\config\config	$config
@@ -4364,6 +4289,6 @@ function phpbb_get_board_contact_link(\phpbb\config\config $config, $phpbb_root_
 	}
 	else
 	{
-		return 'mailto:' . htmlspecialchars($config['board_contact']);
+		return 'mailto:' . htmlspecialchars($config['board_contact'], ENT_COMPAT);
 	}
 }

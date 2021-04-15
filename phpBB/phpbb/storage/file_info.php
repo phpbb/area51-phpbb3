@@ -19,7 +19,7 @@ use phpbb\storage\adapter\adapter_interface;
 class file_info
 {
 	/**
-	 * @var \phpbb\storage\adapter\adapter_interface
+	 * @var adapter_interface
 	 */
 	protected $adapter;
 
@@ -56,7 +56,7 @@ class file_info
 	/**
 	 * Load propertys lazily
 	 *
-	 * @param string	name		The property name.
+	 * @param string	$name		The property name.
 	 *
 	 * @return string	Returns the property value
 	 */

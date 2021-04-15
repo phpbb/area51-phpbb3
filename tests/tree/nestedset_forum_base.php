@@ -15,7 +15,7 @@ class phpbb_tests_tree_nestedset_forum_base extends phpbb_database_test_case
 {
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/phpbb_forums.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/phpbb_forums.xml');
 	}
 
 	protected $forum_data = array(
@@ -48,7 +48,7 @@ class phpbb_tests_tree_nestedset_forum_base extends phpbb_database_test_case
 		$lock,
 		$db;
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 

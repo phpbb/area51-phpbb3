@@ -19,7 +19,7 @@ class phpbb_email_parsing_test extends phpbb_test_case
 	/** @var \ReflectionProperty */
 	protected $reflection_template_property;
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $phpbb_container, $config, $phpbb_root_path, $phpEx, $request, $user;
 
@@ -52,9 +52,10 @@ class phpbb_email_parsing_test extends phpbb_test_case
 		$lang_loader = new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx);
 		$lang = new \phpbb\language\language($lang_loader);
 		$user = new \phpbb\user($lang, '\phpbb\datetime');
+		$user->data['user_lang'] = 'en';
 		$phpbb_container->set('user', $user);
 		$extension_manager = new phpbb_mock_extension_manager(
-			dirname(__FILE__) . '/',
+			__DIR__ . '/',
 			array(
 				'vendor2/foo' => array(
 					'ext_name' => 'vendor2/foo',
@@ -73,7 +74,7 @@ class phpbb_email_parsing_test extends phpbb_test_case
 			$cache_path,
 			null,
 			new \phpbb\template\twig\loader(''),
-			new \phpbb\event\dispatcher($phpbb_container),
+			new \phpbb\event\dispatcher(),
 			array(
 				'cache'			=> false,
 				'debug'			=> false,
@@ -121,8 +122,8 @@ class phpbb_email_parsing_test extends phpbb_test_case
 		$this->messenger->set_addresses($user->data);
 
 		$this->messenger->assign_vars(array(
-			'EMAIL_SIG'	=> str_replace('<br />', "\n", "-- \n" . htmlspecialchars_decode($config['board_email_sig'])),
-			'SITENAME'	=> htmlspecialchars_decode($config['sitename']),
+			'EMAIL_SIG'	=> str_replace('<br />', "\n", "-- \n" . htmlspecialchars_decode($config['board_email_sig'], ENT_COMPAT)),
+			'SITENAME'	=> htmlspecialchars_decode($config['sitename'], ENT_COMPAT),
 
 			'AUTHOR_NAME'				=> $author_name,
 			'FORUM_NAME'				=> $forum_name,
@@ -137,13 +138,13 @@ class phpbb_email_parsing_test extends phpbb_test_case
 		$reflection_template = $this->reflection_template_property->getValue($this->messenger);
 		$msg = trim($reflection_template->assign_display('body'));
 
-		$this->assertContains($author_name, $msg);
-		$this->assertContains($forum_name, $msg);
-		$this->assertContains($topic_title, $msg);
-		$this->assertContains($username, $msg);
-		$this->assertContains(htmlspecialchars_decode($config['sitename']), $msg);
-		$this->assertContains(str_replace('<br />', "\n", "-- \n" . htmlspecialchars_decode($config['board_email_sig'])), $msg);
-		$this->assertNotContains('EMAIL_SIG', $msg);
-		$this->assertNotContains('U_STOP_WATCHING_FORUM', $msg);
+		$this->assertStringContainsString($author_name, $msg);
+		$this->assertStringContainsString($forum_name, $msg);
+		$this->assertStringContainsString($topic_title, $msg);
+		$this->assertStringContainsString($username, $msg);
+		$this->assertStringContainsString(htmlspecialchars_decode($config['sitename'], ENT_COMPAT), $msg);
+		$this->assertStringContainsString(str_replace('<br />', "\n", "-- \n" . htmlspecialchars_decode($config['board_email_sig'], ENT_COMPAT)), $msg);
+		$this->assertStringNotContainsString('EMAIL_SIG', $msg);
+		$this->assertStringNotContainsString('U_STOP_WATCHING_FORUM', $msg);
 	}
 }

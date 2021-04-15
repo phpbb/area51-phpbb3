@@ -50,7 +50,7 @@ class post extends \phpbb\notification\type\base
 	* @var bool|array False if the service should use it's default data
 	* 					Array of data (including keys 'id', 'lang', and 'group')
 	*/
-	static public $notification_option = array(
+	public static $notification_option = array(
 		'lang'	=> 'NOTIFICATION_TYPE_POST',
 		'group'	=> 'NOTIFICATION_GROUP_POSTING',
 	);
@@ -85,7 +85,7 @@ class post extends \phpbb\notification\type\base
 	* @param array $post The data from the post
 	* @return int The post id
 	*/
-	static public function get_item_id($post)
+	public static function get_item_id($post)
 	{
 		return (int) $post['post_id'];
 	}
@@ -96,7 +96,7 @@ class post extends \phpbb\notification\type\base
 	* @param array $post The data from the post
 	* @return int The topic id
 	*/
-	static public function get_item_parent_id($post)
+	public static function get_item_parent_id($post)
 	{
 		return (int) $post['topic_id'];
 	}
@@ -120,18 +120,6 @@ class post extends \phpbb\notification\type\base
 		$sql = 'SELECT user_id
 			FROM ' . TOPICS_WATCH_TABLE . '
 			WHERE topic_id = ' . (int) $post['topic_id'] . '
-				AND notify_status = ' . NOTIFY_YES . '
-				AND user_id <> ' . (int) $post['poster_id'];
-		$result = $this->db->sql_query($sql);
-		while ($row = $this->db->sql_fetchrow($result))
-		{
-			$users[] = (int) $row['user_id'];
-		}
-		$this->db->sql_freeresult($result);
-
-		$sql = 'SELECT user_id
-			FROM ' . FORUMS_WATCH_TABLE . '
-			WHERE forum_id = ' . (int) $post['forum_id'] . '
 				AND notify_status = ' . NOTIFY_YES . '
 				AND user_id <> ' . (int) $post['poster_id'];
 		$result = $this->db->sql_query($sql);
@@ -274,9 +262,9 @@ class post extends \phpbb\notification\type\base
 		}
 
 		return array(
-			'AUTHOR_NAME'				=> htmlspecialchars_decode($username),
-			'POST_SUBJECT'				=> htmlspecialchars_decode(censor_text($this->get_data('post_subject'))),
-			'TOPIC_TITLE'				=> htmlspecialchars_decode(censor_text($this->get_data('topic_title'))),
+			'AUTHOR_NAME'				=> htmlspecialchars_decode($username, ENT_COMPAT),
+			'POST_SUBJECT'				=> htmlspecialchars_decode(censor_text($this->get_data('post_subject')), ENT_COMPAT),
+			'TOPIC_TITLE'				=> htmlspecialchars_decode(censor_text($this->get_data('topic_title')), ENT_COMPAT),
 
 			'U_VIEW_POST'				=> generate_board_url() . "/viewtopic.{$this->php_ext}?p={$this->item_id}#p{$this->item_id}",
 			'U_NEWEST_POST'				=> generate_board_url() . "/viewtopic.{$this->php_ext}?f={$this->get_data('forum_id')}&t={$this->item_parent_id}&e=1&view=unread#unread",

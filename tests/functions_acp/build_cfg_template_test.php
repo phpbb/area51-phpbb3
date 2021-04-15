@@ -11,7 +11,7 @@
 *
 */
 
-require_once dirname(__FILE__) . '/../../phpBB/includes/functions_acp.php';
+require_once __DIR__ . '/../../phpBB/includes/functions_acp.php';
 
 class phpbb_functions_acp_build_cfg_template_test extends phpbb_test_case
 {
@@ -113,6 +113,14 @@ class phpbb_functions_acp_build_cfg_template_test extends phpbb_test_case
 				'config_key_name',
 				array(),
 				'<input id="number_key_name" type="number" min="-1" max="9999" name="config[config_key_name]" value="10" />',
+			),
+			array(
+				array('number', 0, 9999),
+				'number_key_name',
+				array('config_key_name' => 10),
+				'config_key_name',
+				array(),
+				'<input id="number_key_name" type="number" min="0" max="9999" name="config[config_key_name]" value="10" />',
 			),
 		);
 	}

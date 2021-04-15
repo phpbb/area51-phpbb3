@@ -13,8 +13,8 @@
 
 namespace phpbb\mimetype;
 
-require_once dirname(__FILE__) . '/null_guesser.php';
-require_once dirname(__FILE__) . '/incorrect_guesser.php';
+require_once __DIR__ . '/null_guesser.php';
+require_once __DIR__ . '/incorrect_guesser.php';
 
 function function_exists($name)
 {
@@ -27,25 +27,25 @@ class guesser_test extends \phpbb_test_case
 
 	protected $fileinfo_supported = false;
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $phpbb_root_path;
 
 		$guessers = array(
-			new \Symfony\Component\HttpFoundation\File\MimeType\FileinfoMimeTypeGuesser(),
-			new \Symfony\Component\HttpFoundation\File\MimeType\FileBinaryMimeTypeGuesser(),
+			new \Symfony\Component\Mime\FileinfoMimeTypeGuesser(),
+			new \Symfony\Component\Mime\FileBinaryMimeTypeGuesser(),
 			new \phpbb\mimetype\extension_guesser,
 			new \phpbb\mimetype\content_guesser,
 		);
 
 		// Check if any guesser except the extension_guesser is available
-		$this->fileinfo_supported = $guessers[0]->isSupported() | $guessers[1]->isSupported() | $guessers[3]->is_supported();
+		$this->fileinfo_supported = $guessers[0]->isGuesserSupported() | $guessers[1]->isGuesserSupported() | $guessers[3]->is_supported();
 
 		// Also create a guesser that emulates not having fileinfo available
 		$this->guesser_no_fileinfo = new \phpbb\mimetype\guesser(array($guessers[2]));
 
 		$this->guesser = new \phpbb\mimetype\guesser($guessers);
-		$this->path = dirname(__FILE__);
+		$this->path = __DIR__;
 		$this->jpg_file = $this->path . '/fixtures/jpg';
 		$this->phpbb_root_path = $phpbb_root_path;
 	}
@@ -123,11 +123,10 @@ class guesser_test extends \phpbb_test_case
 
 	/**
 	* @dataProvider data_incorrect_guessers
-	*
-	* @expectedException \LogicException
 	*/
 	public function test_incorrect_guesser($guessers)
 	{
+		$this->expectException(\LogicException::class);
 		$guesser = new \phpbb\mimetype\guesser($guessers);
 	}
 
@@ -176,7 +175,11 @@ class guesser_test extends \phpbb_test_case
 		// Cover possible LogicExceptions
 		foreach ($guessers as $cur_guesser)
 		{
-			$supported += $cur_guesser->is_supported();
+			$is_supported = (method_exists($cur_guesser, 'is_supported')) ? 'is_supported' : '';
+			$is_supported = (method_exists($cur_guesser, 'isSupported')) ? 'isSupported' : $is_supported;
+			$is_supported = (method_exists($cur_guesser, 'isGuesserSupported')) ? 'isGuesserSupported' : $is_supported;
+
+			$supported += $cur_guesser->$is_supported();
 		}
 
 		if (!$supported)
@@ -195,9 +198,9 @@ class guesser_test extends \phpbb_test_case
 	public function test_sort_priority()
 	{
 		$guessers = array(
-			'FileinfoMimeTypeGuesser'	=> new \Symfony\Component\HttpFoundation\File\MimeType\FileinfoMimeTypeGuesser,
+			'FileinfoMimeTypeGuesser'	=> new \Symfony\Component\Mime\FileinfoMimeTypeGuesser,
 			'extension_guesser'		=> new \phpbb\mimetype\extension_guesser,
-			'FileBinaryMimeTypeGuesser'	=> new \Symfony\Component\HttpFoundation\File\MimeType\FileBinaryMimeTypeGuesser,
+			'FileBinaryMimeTypeGuesser'	=> new \Symfony\Component\Mime\FileBinaryMimeTypeGuesser,
 			'content_guesser'		=> new \phpbb\mimetype\content_guesser,
 		);
 		$guessers['content_guesser']->set_priority(5);

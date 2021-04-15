@@ -21,7 +21,7 @@ if (!defined('IN_PHPBB'))
 
 if (empty($lang) || !is_array($lang))
 {
-	$lang = array();
+	$lang = [];
 }
 
 // DEVELOPERS PLEASE NOTE
@@ -36,7 +36,7 @@ if (empty($lang) || !is_array($lang))
 // equally where a string contains only two placeholders which are used to wrap text
 // in a url you again do not need to specify an order e.g., 'Click %sHERE%s' is fine
 
-$lang = array_merge($lang, array(
+$lang = array_merge($lang, [
 	// Find the language/country code on https://developers.google.com/recaptcha/docs/language
 	// If no code exists for your language you can use "en" or leave the string empty
 	'RECAPTCHA_LANG'				=> 'en-GB',
@@ -44,10 +44,11 @@ $lang = array_merge($lang, array(
 	'CAPTCHA_RECAPTCHA'				=> 'reCaptcha v2',
 	'CAPTCHA_RECAPTCHA_V3'			=> 'reCaptcha v3',
 
-	'RECAPTCHA_INCORRECT'			=> 'The solution you provided was incorrect',
-	'RECAPTCHA_NOSCRIPT'			=> 'Please enable JavaScript in your browser to load the challenge.',
-	'RECAPTCHA_NOT_AVAILABLE'		=> 'In order to use reCaptcha, you must create an account on <a href="https://www.google.com/recaptcha">www.google.com/recaptcha</a>.',
-	'RECAPTCHA_INVISIBLE'			=> 'This CAPTCHA is actually invisible. To verify that it works, a small icon should appear in right bottom corner of this page.',
+	'RECAPTCHA_INCORRECT'				=> 'The solution you provided was incorrect',
+	'RECAPTCHA_NOSCRIPT'				=> 'Please enable JavaScript in your browser to load the challenge.',
+	'RECAPTCHA_NOT_AVAILABLE'			=> 'In order to use reCaptcha, you must create an account on <a href="https://www.google.com/recaptcha">www.google.com/recaptcha</a>.',
+	'RECAPTCHA_INVISIBLE'				=> 'This CAPTCHA is actually invisible. To verify that it works, a small icon should appear in right bottom corner of this page.',
+	'RECAPTCHA_V3_LOGIN_ERROR_ATTEMPTS'	=> 'You have exceeded the maximum number of login attempts allowed.<br>In addition to your username and password the invisible reCAPTCHA v3 will be used to authenticate your session.',
 
 	'RECAPTCHA_PUBLIC'				=> 'Site key',
 	'RECAPTCHA_PUBLIC_EXPLAIN'		=> 'Your site reCAPTCHA key. Keys can be obtained on <a href="https://www.google.com/recaptcha">www.google.com/recaptcha</a>. Please, use reCAPTCHA v2 &gt; Invisible reCAPTCHA badge type.',
@@ -73,4 +74,5 @@ $lang = array_merge($lang, array(
 	'RECAPTCHA_V3_THRESHOLD_REPORT'				=> 'Report threshold',
 	'RECAPTCHA_V3_THRESHOLDS'					=> 'Thresholds',
 	'RECAPTCHA_V3_THRESHOLDS_EXPLAIN'			=> 'reCAPTCHA v3 returns a score (<samp>1.0</samp> is very likely a good interaction, <samp>0.0</samp> is very likely a bot). Here you can set the minimum score per action.',
-));
+	'EMPTY_RECAPTCHA_V3_REQUEST_METHOD'			=> 'reCAPTCHA v3 requires to know which available method you want to use when verifying the request.',
+]);

@@ -29,7 +29,7 @@ class phpbb_extension_metadata_manager_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/extensions.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/extensions.xml');
 	}
 
 	protected function setUp(): void
@@ -42,7 +42,7 @@ class phpbb_extension_metadata_manager_test extends phpbb_database_test_case
 		$this->db = $this->new_dbal();
 		$factory = new \phpbb\db\tools\factory();
 		$this->db_tools = $factory->get($this->db);
-		$this->phpbb_root_path = dirname(__FILE__) . '/';
+		$this->phpbb_root_path = __DIR__ . '/';
 		$this->phpEx = 'php';
 
 		$this->cache =  new \phpbb\cache\service(new phpbb_mock_cache(), $this->config, $this->db, $this->phpbb_root_path, $this->phpEx);
@@ -69,7 +69,7 @@ class phpbb_extension_metadata_manager_test extends phpbb_database_test_case
 			$cache_path,
 			null,
 			$loader,
-			new \phpbb\event\dispatcher($container),
+			new \phpbb\event\dispatcher(),
 			array(
 				'cache'			=> false,
 				'debug'			=> false,

@@ -14,6 +14,7 @@
 namespace phpbb\composer;
 
 use Composer\Composer;
+use Composer\DependencyResolver\Request as composer_request;
 use Composer\Factory;
 use Composer\IO\IOInterface;
 use Composer\IO\NullIO;
@@ -22,7 +23,7 @@ use Composer\Package\BasePackage;
 use Composer\Package\CompletePackage;
 use Composer\Repository\ComposerRepository;
 use Composer\Semver\Constraint\ConstraintInterface;
-use Composer\Util\RemoteFilesystem;
+use Composer\Util\HttpDownloader;
 use phpbb\composer\io\null_io;
 use phpbb\config\config;
 use phpbb\exception\runtime_exception;
@@ -69,12 +70,12 @@ class installer
 	protected $root_path;
 
 	/**
-	 * @var string Stores the original working directory in case it has been changed through move_to_root()
+	 * @var string|null Stores the original working directory in case it has been changed through move_to_root()
 	 */
 	private $original_cwd;
 
 	/**
-	 * @var array Stores the content of the ext json file before generate_ext_json_file() overrides it
+	 * @var array|null Stores the content of the ext json file before generate_ext_json_file() overrides it
 	 */
 	private $ext_json_file_backup;
 
@@ -84,10 +85,15 @@ class installer
 	private $request;
 
 	/**
+	 * @var filesystem phpBB filesystem
+	 */
+	private $filesystem;
+
+	/**
 	 * @param string		$root_path	phpBB root path
 	 * @param filesystem	$filesystem	Filesystem object
 	 * @param request		$request	phpBB request object
-	 * @param config		$config		Config object
+	 * @param config|null		$config		Config object
 	 */
 	public function __construct($root_path, filesystem $filesystem, request $request, config $config = null)
 	{
@@ -108,6 +114,7 @@ class installer
 
 		$this->root_path = $root_path;
 		$this->request = $request;
+		$this->filesystem = $filesystem;
 
 		putenv('COMPOSER_HOME=' . filesystem_helper::realpath($root_path) . '/store/composer');
 	}
@@ -118,7 +125,7 @@ class installer
 	 * @param array $packages Packages to install.
 	 *        Each entry may be a name or an array associating a version constraint to a name
 	 * @param array $whitelist White-listed packages (packages that can be installed/updated/removed)
-	 * @param IOInterface $io IO object used for the output
+	 * @param IOInterface|null $io IO object used for the output
 	 *
 	 * @throws runtime_exception
 	 */
@@ -137,7 +144,7 @@ class installer
 	 * @param array $packages Packages to install.
 	 *        Each entry may be a name or an array associating a version constraint to a name
 	 * @param array $whitelist White-listed packages (packages that can be installed/updated/removed)
-	 * @param IOInterface $io IO object used for the output
+	 * @param IOInterface|null $io IO object used for the output
 	 *
 	 * @throws runtime_exception
 	 */
@@ -153,7 +160,7 @@ class installer
 		$composer = Factory::create($io, $this->get_composer_ext_json_filename(), false);
 		$install = \Composer\Installer::create($io, $composer);
 
-		$composer->getDownloadManager()->setOutputProgress(false);
+		$composer->getInstallationManager()->setOutputProgress(false);
 
 		$install
 			->setVerbose(true)
@@ -161,8 +168,8 @@ class installer
 			->setPreferDist(true)
 			->setDevMode(false)
 			->setUpdate(true)
-			->setUpdateWhitelist($whitelist)
-			->setWhitelistDependencies(false)
+			->setUpdateAllowList($whitelist)
+			->setUpdateAllowTransitiveDependencies(composer_request::UPDATE_ONLY_LISTED)
 			->setIgnorePlatformRequirements(false)
 			->setOptimizeAutoloader(true)
 			->setDumpAutoloader(true)
@@ -295,21 +302,21 @@ class installer
 			{
 				try
 				{
-					if ($repository instanceof ComposerRepository && $repository->hasProviders())
+					if ($repository instanceof ComposerRepository)
 					{
 						// Special case for packagist which exposes an api to retrieve all packages of a given type.
 						// For the others composer repositories with providers we can't do anything. It would be too slow.
 
-						$r        = new \ReflectionObject($repository);
-						$repo_url = $r->getProperty('url');
+						$repositoryReflection = new \ReflectionObject($repository);
+						$repo_url = $repositoryReflection->getProperty('url');
 						$repo_url->setAccessible(true);
 
-						if ($repo_url->getValue($repository) === 'http://packagist.org')
+						if ($repo_url->getValue($repository) === 'https://repo.packagist.org')
 						{
-							$url      = 'https://packagist.org/packages/list.json?type=' . $type;
-							$rfs      = new RemoteFilesystem($io);
-							$hostname = parse_url($url, PHP_URL_HOST) ?: $url;
-							$json     = $rfs->getContents($hostname, $url, false);
+							$url = 'https://packagist.org/packages/list.json?type=' . $type;
+							$composer_config = new \Composer\Config([]);
+							$downloader = new HttpDownloader($io, $composer_config);
+							$json = $downloader->get($url)->getBody();
 
 							/** @var \Composer\Package\PackageInterface $package */
 							foreach (JsonFile::parseJson($json, $url)['packageNames'] as $package)
@@ -402,9 +409,7 @@ class installer
 	 */
 	public function check_requirements()
 	{
-		$filesystem = new \phpbb\filesystem\filesystem();
-
-		return $filesystem->is_writable([
+		return $this->filesystem->is_writable([
 			$this->root_path . $this->composer_filename,
 			$this->root_path . $this->packages_vendor_dir,
 			$this->root_path . substr($this->composer_filename, 0, -5) . '.lock',

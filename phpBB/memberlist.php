@@ -81,7 +81,6 @@ switch ($mode)
 
 			login_box('', ((isset($user->lang['LOGIN_EXPLAIN_' . strtoupper($mode)])) ? $user->lang['LOGIN_EXPLAIN_' . strtoupper($mode)] : $user->lang['LOGIN_EXPLAIN_MEMBERLIST']));
 		}
-	break;
 }
 
 /** @var \phpbb\group\helper $group_helper */
@@ -442,16 +441,16 @@ switch ($mode)
 						$messenger = new messenger(false);
 
 						$messenger->template('profile_send_im', $row['user_lang']);
-						$messenger->subject(htmlspecialchars_decode($subject));
+						$messenger->subject(htmlspecialchars_decode($subject, ENT_COMPAT));
 
 						$messenger->replyto($user->data['user_email']);
 						$messenger->set_addresses($row);
 
 						$messenger->assign_vars(array(
 							'BOARD_CONTACT'	=> phpbb_get_board_contact($config, $phpEx),
-							'FROM_USERNAME'	=> htmlspecialchars_decode($user->data['username']),
-							'TO_USERNAME'	=> htmlspecialchars_decode($row['username']),
-							'MESSAGE'		=> htmlspecialchars_decode($message))
+							'FROM_USERNAME'	=> htmlspecialchars_decode($user->data['username'], ENT_COMPAT),
+							'TO_USERNAME'	=> htmlspecialchars_decode($row['username'], ENT_COMPAT),
+							'MESSAGE'		=> htmlspecialchars_decode($message, ENT_COMPAT))
 						);
 
 						$messenger->send(NOTIFY_IM);
@@ -804,8 +803,8 @@ switch ($mode)
 			'S_USER_NOTES'				=> ($user_notes_enabled) ? true : false,
 			'S_WARN_USER'				=> ($warn_user_enabled) ? true : false,
 			'S_ZEBRA'					=> ($user->data['user_id'] != $user_id && $user->data['is_registered'] && $zebra_enabled) ? true : false,
-			'U_ADD_FRIEND'				=> (!$friend && !$foe && $friends_enabled) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=zebra&amp;add=' . urlencode(htmlspecialchars_decode($member['username']))) : '',
-			'U_ADD_FOE'					=> (!$friend && !$foe && $foes_enabled) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=zebra&amp;mode=foes&amp;add=' . urlencode(htmlspecialchars_decode($member['username']))) : '',
+			'U_ADD_FRIEND'				=> (!$friend && !$foe && $friends_enabled) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=zebra&amp;add=' . urlencode(htmlspecialchars_decode($member['username'], ENT_COMPAT))) : '',
+			'U_ADD_FOE'					=> (!$friend && !$foe && $foes_enabled) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=zebra&amp;mode=foes&amp;add=' . urlencode(htmlspecialchars_decode($member['username'], ENT_COMPAT))) : '',
 			'U_REMOVE_FRIEND'			=> ($friend && $friends_enabled) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=zebra&amp;remove=1&amp;usernames[]=' . $user_id) : '',
 			'U_REMOVE_FOE'				=> ($foe && $foes_enabled) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=zebra&amp;remove=1&amp;mode=foes&amp;usernames[]=' . $user_id) : '',
 
@@ -1291,8 +1290,6 @@ switch ($mode)
 				break;
 			}
 
-			$avatar_img = phpbb_get_group_avatar($group_row);
-
 			// ... same for group rank
 			$group_rank_data = array(
 				'title'		=> null,
@@ -1332,6 +1329,12 @@ switch ($mode)
 				'U_BREADCRUMB'		=> append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=group&amp;g=$group_id"),
 			));
 
+			/** @var \phpbb\avatar\helper $avatar_helper */
+			$avatar_helper = $phpbb_container->get('avatar.helper');
+
+			$group_avatar = $avatar_helper->get_group_avatar($group_row);
+			$template->assign_vars($avatar_helper->get_template_vars($group_avatar));
+
 			$template->assign_vars(array(
 				'GROUP_DESC'	=> generate_text_for_display($group_row['group_desc'], $group_row['group_desc_uid'], $group_row['group_desc_bitfield'], $group_row['group_desc_options']),
 				'GROUP_NAME'	=> $group_helper->get_name($group_row['group_name']),
@@ -1339,7 +1342,6 @@ switch ($mode)
 				'GROUP_TYPE'	=> $user->lang['GROUP_IS_' . $group_row['l_group_type']],
 				'GROUP_RANK'	=> $group_rank_data['title'],
 
-				'AVATAR_IMG'	=> $avatar_img,
 				'RANK_IMG'		=> $group_rank_data['img'],
 				'RANK_IMG_SRC'	=> $group_rank_data['img_src'],
 

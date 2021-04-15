@@ -11,13 +11,13 @@
 *
 */
 
-require_once dirname(__FILE__) . '/base.php';
+require_once __DIR__ . '/base.php';
 
 class phpbb_notification_group_request_test extends phpbb_tests_notification_base
 {
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/group_request.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/group_request.xml');
 	}
 
 	protected function get_notification_types()
@@ -40,16 +40,15 @@ class phpbb_notification_group_request_test extends phpbb_tests_notification_bas
 		include_once($phpbb_root_path . 'includes/functions_content.' . $phpEx);
 
 		$this->container->set('groupposition.legend', new \phpbb\groupposition\legend(
-			$this->db,
-			$this->user
+			$this->db
 		));
 		$this->container->set('groupposition.teampage', new \phpbb\groupposition\teampage(
 			$this->db,
-			$this->user,
 			$this->cache->get_driver()
 		));
 		$this->container->set('group_helper', new \phpbb\group\helper(
 			$this->getMockBuilder('\phpbb\auth\auth')->disableOriginalConstructor()->getMock(),
+			$this->getMockBuilder('\phpbb\avatar\helper')->disableOriginalConstructor()->getMock(),
 			$this->cache,
 			$this->config,
 			new \phpbb\language\language(

@@ -193,7 +193,7 @@ class acp_board
 						'allow_post_flash'		=> array('lang' => 'ALLOW_POST_FLASH',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'allow_smilies'			=> array('lang' => 'ALLOW_SMILIES',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_post_links'		=> array('lang' => 'ALLOW_POST_LINKS',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
-						'allowed_schemes_links'	=> array('lang' => 'ALLOWED_SCHEMES_LINKS',	'validate' => 'string',	'type' => 'text:0:255', 'explain' => true),
+						'allowed_schemes_links'	=> array('lang' => 'ALLOWED_SCHEMES_LINKS',	'validate' => 'csv',	'type' => 'text:0:255', 'explain' => true),
 						'allow_nocensors'		=> array('lang' => 'ALLOW_NO_CENSORS',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'allow_bookmarks'		=> array('lang' => 'ALLOW_BOOKMARKS',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'enable_post_confirm'	=> array('lang' => 'VISUAL_CONFIRM_POST',	'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
@@ -497,6 +497,19 @@ class acp_board
 		$cfg_array = (isset($_REQUEST['config'])) ? $request->variable('config', array('' => ''), true) : $this->new_config;
 		$error = array();
 
+		// Prevalidate allowed URL schemes
+		if ($mode == 'post')
+		{
+			$schemes = array_filter(explode(',', $cfg_array['allowed_schemes_links']));
+			foreach ($schemes as $scheme)
+			{
+				if (!preg_match('#^[a-z][a-z0-9+\\-.]*$#Di', $scheme))
+				{
+					$error[] = $language->lang('URL_SCHEME_INVALID', $language->lang('ALLOWED_SCHEMES_LINKS'), $scheme);
+				}
+			}
+		}
+
 		// We validate the complete config if wished
 		validate_config_vars($display_vars['vars'], $cfg_array, $error);
 
@@ -546,7 +559,37 @@ class acp_board
 					continue;
 				}
 
-				$config->set($config_name, $config_value);
+				// Array of emoji-enabled configurations
+				$config_name_ary = [
+					'sitename',
+					'site_desc',
+					'site_home_text',
+					'board_index_text',
+					'board_disable_msg',
+				];
+
+				/**
+				 * Event to manage the array of emoji-enabled configurations
+				 *
+				 * @event core.acp_board_config_emoji_enabled
+				 * @var array	config_name_ary		Array of config names to process
+				 * @since 3.3.3-RC1
+				 */
+				$vars = ['config_name_ary'];
+				extract($phpbb_dispatcher->trigger_event('core.acp_board_config_emoji_enabled', compact($vars)));
+
+				if (in_array($config_name, $config_name_ary))
+				{
+					/**
+					 * Replace Emojis and other 4bit UTF-8 chars not allowed by MySQL to UCR/NCR.
+					 * Using their Numeric Character Reference's Hexadecimal notation.
+					 */
+					$config->set($config_name, utf8_encode_ucr($config_value));
+				}
+				else
+				{
+					$config->set($config_name, $config_value);
+				}
 
 				if ($config_name == 'allow_quick_reply' && isset($_POST['allow_quick_reply_enable']))
 				{
@@ -622,7 +665,7 @@ class acp_board
 			if ($submit && (($cfg_array['auth_method'] != $this->new_config['auth_method']) || $updated_auth_settings))
 			{
 				$method = basename($cfg_array['auth_method']);
-				if (array_key_exists('auth.provider.' . $method, $auth_providers))
+				if (array_key_exists('auth.provider.' . $method, (array) $auth_providers))
 				{
 					$provider = $auth_providers['auth.provider.' . $method];
 					if ($error = $provider->init())
@@ -653,8 +696,8 @@ class acp_board
 				$messenger->set_addresses($user->data);
 				$messenger->anti_abuse_headers($config, $user);
 				$messenger->assign_vars(array(
-					'USERNAME'	=> htmlspecialchars_decode($user->data['username']),
-					'MESSAGE'	=> htmlspecialchars_decode($request->variable('send_test_email_text', '', true)),
+					'USERNAME'	=> htmlspecialchars_decode($user->data['username'], ENT_COMPAT),
+					'MESSAGE'	=> htmlspecialchars_decode($request->variable('send_test_email_text', '', true), ENT_COMPAT),
 				));
 				$messenger->send(NOTIFY_EMAIL);
 

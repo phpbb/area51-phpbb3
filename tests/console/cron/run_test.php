@@ -15,7 +15,7 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use phpbb\console\command\cron\run;
 
-require_once dirname(__FILE__) . '/tasks/simple.php';
+require_once __DIR__ . '/tasks/simple.php';
 
 class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 {
@@ -29,10 +29,10 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/config.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/config.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $db, $config, $phpbb_root_path, $phpEx;
 
@@ -40,10 +40,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		$config = $this->config = new \phpbb\config\config(array('cron_lock' => '0'));
 		$this->lock = new \phpbb\lock\db('cron_lock', $this->config, $this->db);
 
-		$this->user = $this->createMock('\phpbb\user', array(), array(
-			new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx)),
-			'\phpbb\datetime'
-		));
+		$this->user = $this->createMock('\phpbb\user');
 		$this->user->method('lang')->will($this->returnArgument(0));
 
 		$this->task = new phpbb_cron_task_simple();
@@ -77,7 +74,11 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 			$phpEx
 		);
 
-		$this->cron_manager = new \phpbb\cron\manager($tasks, $routing_helper, $phpbb_root_path, $phpEx);
+		$mock_container = new phpbb_mock_container_builder();
+		$mock_container->set('cron.task_collection', []);
+
+		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx);
+		$this->cron_manager->load_tasks($tasks);
 
 		$this->assertSame('0', $config['cron_lock']);
 	}
@@ -98,23 +99,22 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		$command_tester = $this->get_command_tester();
 		$exit_status = $command_tester->execute(array('command' => $this->command_name, '--verbose' => true));
 
-		$this->assertContains('RUNNING_TASK', $command_tester->getDisplay());
+		$this->assertStringContainsString('RUNNING_TASK', $command_tester->getDisplay());
 		$this->assertSame(true, $this->task->executed);
 		$this->assertSame(0, $exit_status);
 		$this->assertSame(false, $this->lock->owns_lock());
 	}
 
-	/**
-	 * @expectedException \phpbb\exception\runtime_exception
-	 * @expectedExceptionMessage CRON_LOCK_ERROR
-	 */
 	public function test_error_lock()
 	{
+		$this->expectException(\phpbb\exception\runtime_exception::class);
+		$this->expectExceptionMessage('CRON_LOCK_ERROR');
+
 		$this->lock->acquire();
 		$command_tester = $this->get_command_tester();
 		$exit_status = $command_tester->execute(array('command' => $this->command_name));
 
-		$this->assertContains('CRON_LOCK_ERROR', $command_tester->getDisplay());
+		$this->assertStringContainsString('CRON_LOCK_ERROR', $command_tester->getDisplay());
 		$this->assertSame(false, $this->task->executed);
 		$this->assertSame(1, $exit_status);
 	}
@@ -152,7 +152,12 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 			$phpEx
 		);
 
-		$this->cron_manager = new \phpbb\cron\manager($tasks, $routing_helper, $phpbb_root_path, $phpEx);
+		$mock_container = new phpbb_mock_container_builder();
+		$mock_container->set('cron.task_collection', []);
+
+		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx);
+		$this->cron_manager->load_tasks($tasks);
+
 		$command_tester = $this->get_command_tester();
 		$exit_status = $command_tester->execute(array('command' => $this->command_name));
 
@@ -194,11 +199,16 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 			$phpEx
 		);
 
-		$this->cron_manager = new \phpbb\cron\manager($tasks, $routing_helper, $phpbb_root_path, $phpEx);
+		$mock_container = new phpbb_mock_container_builder();
+		$mock_container->set('cron.task_collection', []);
+
+		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx);
+		$this->cron_manager->load_tasks($tasks);
+
 		$command_tester = $this->get_command_tester();
 		$exit_status = $command_tester->execute(array('command' => $this->command_name, '--verbose' => true));
 
-		$this->assertContains('CRON_NO_TASK', $command_tester->getDisplay());
+		$this->assertStringContainsString('CRON_NO_TASK', $command_tester->getDisplay());
 		$this->assertSame(0, $exit_status);
 		$this->assertSame(false, $this->lock->owns_lock());
 	}
@@ -214,16 +224,15 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		$this->assertSame(false, $this->lock->owns_lock());
 	}
 
-	/**
-	 * @expectedException \phpbb\exception\runtime_exception
-	 * @expectedExceptionMessage CRON_NO_SUCH_TASK
-	 */
 	public function test_arg_invalid()
 	{
+		$this->expectException(\phpbb\exception\runtime_exception::class);
+		$this->expectExceptionMessage('CRON_NO_SUCH_TASK');
+
 		$command_tester = $this->get_command_tester();
 		$exit_status = $command_tester->execute(array('command' => $this->command_name, 'name' => 'foo'));
 
-		$this->assertContains('CRON_NO_SUCH_TASK', $command_tester->getDisplay());
+		$this->assertStringContainsString('CRON_NO_SUCH_TASK', $command_tester->getDisplay());
 		$this->assertSame(false, $this->task->executed);
 		$this->assertSame(2, $exit_status);
 		$this->assertSame(false, $this->lock->owns_lock());
@@ -234,7 +243,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		$command_tester = $this->get_command_tester();
 		$exit_status = $command_tester->execute(array('command' => $this->command_name, 'name' => 'phpbb_cron_task_simple', '--verbose' => true));
 
-		$this->assertContains('RUNNING_TASK', $command_tester->getDisplay());
+		$this->assertStringContainsString('RUNNING_TASK', $command_tester->getDisplay());
 		$this->assertSame(true, $this->task->executed);
 		$this->assertSame(0, $exit_status);
 		$this->assertSame(false, $this->lock->owns_lock());

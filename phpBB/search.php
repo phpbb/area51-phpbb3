@@ -296,19 +296,21 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 	}
 
 	// Select which method we'll use to obtain the post_id or topic_id information
-	$search_type = $config['search_type'];
-
-	if (!class_exists($search_type))
+	try
 	{
-		trigger_error('NO_SUCH_SEARCH_MODULE');
+		$search_backend_factory = $phpbb_container->get('search.backend_factory');
+		$search = $search_backend_factory->get_active();
 	}
-	// We do some additional checks in the module to ensure it can actually be utilised
-	$error = false;
-	$search = new $search_type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
-
-	if ($error)
+	catch (RuntimeException $e)
 	{
-		trigger_error($error);
+		if (strpos($e->getMessage(), 'No service found') === 0)
+		{
+			trigger_error('NO_SUCH_SEARCH_MODULE');
+		}
+		else
+		{
+			throw $e;
+		}
 	}
 
 	// let the search module split up the keywords
@@ -544,7 +546,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 	extract($phpbb_dispatcher->trigger_event('core.search_modify_param_after', compact($vars)));
 
 	// show_results should not change after this
-	$per_page = ($show_results == 'posts') ? $config['posts_per_page'] : $config['topics_per_page'];
+	$per_page = ($show_results == 'posts') ? (int) $config['posts_per_page'] : (int) $config['topics_per_page'];
 	$total_match_count = 0;
 
 	// Set limit for the $total_match_count to reduce server load
@@ -680,16 +682,16 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 	$hilit = phpbb_clean_search_string(str_replace(array('+', '-', '|', '(', ')', '&quot;'), ' ', $keywords));
 	$hilit = str_replace(' ', '|', $hilit);
 
-	$u_hilit = urlencode(htmlspecialchars_decode(str_replace('|', ' ', $hilit)));
+	$u_hilit = urlencode(htmlspecialchars_decode(str_replace('|', ' ', $hilit), ENT_COMPAT));
 	$u_show_results = '&amp;sr=' . $show_results;
 	$u_search_forum = implode('&amp;fid%5B%5D=', $search_forum);
 
 	$u_search = append_sid("{$phpbb_root_path}search.$phpEx", $u_sort_param . $u_show_results);
 	$u_search .= ($search_id) ? '&amp;search_id=' . $search_id : '';
-	$u_search .= ($u_hilit) ? '&amp;keywords=' . urlencode(htmlspecialchars_decode($keywords)) : '';
+	$u_search .= ($u_hilit) ? '&amp;keywords=' . urlencode(htmlspecialchars_decode($keywords, ENT_COMPAT)) : '';
 	$u_search .= ($search_terms != 'all') ? '&amp;terms=' . $search_terms : '';
 	$u_search .= ($topic_id) ? '&amp;t=' . $topic_id : '';
-	$u_search .= ($author) ? '&amp;author=' . urlencode(htmlspecialchars_decode($author)) : '';
+	$u_search .= ($author) ? '&amp;author=' . urlencode(htmlspecialchars_decode($author, ENT_COMPAT)) : '';
 	$u_search .= ($author_id) ? '&amp;author_id=' . $author_id : '';
 	$u_search .= ($u_search_forum) ? '&amp;fid%5B%5D=' . $u_search_forum : '';
 	$u_search .= (!$search_child) ? '&amp;sc=0' : '';
@@ -1124,6 +1126,11 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 					'TOPIC_IMG_STYLE'		=> $folder_img,
 					'TOPIC_FOLDER_IMG'		=> $user->img($folder_img, $folder_alt),
 					'TOPIC_FOLDER_IMG_ALT'	=> $user->lang[$folder_alt],
+					'S_POST_ANNOUNCE'		=> $row['topic_type'] == POST_ANNOUNCE,
+					'S_POST_GLOBAL'			=> $row['topic_type'] == POST_GLOBAL,
+					'S_POST_STICKY'			=> $row['topic_type'] == POST_STICKY,
+					'S_TOPIC_LOCKED'		=> $row['topic_status'] == ITEM_LOCKED,
+					'S_TOPIC_MOVED'			=> $row['topic_status'] == ITEM_MOVED,
 
 					'TOPIC_ICON_IMG'		=> (!empty($icons[$row['icon_id']])) ? $icons[$row['icon_id']]['img'] : '',
 					'TOPIC_ICON_IMG_WIDTH'	=> (!empty($icons[$row['icon_id']])) ? $icons[$row['icon_id']]['width'] : '',
@@ -1132,14 +1139,14 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 					'UNAPPROVED_IMG'		=> ($topic_unapproved || $posts_unapproved) ? $user->img('icon_topic_unapproved', ($topic_unapproved) ? 'TOPIC_UNAPPROVED' : 'POSTS_UNAPPROVED') : '',
 
 					'S_TOPIC_TYPE'			=> $row['topic_type'],
-					'S_USER_POSTED'			=> (!empty($row['topic_posted'])) ? true : false,
+					'S_USER_POSTED'			=> !empty($row['topic_posted']),
 					'S_UNREAD_TOPIC'		=> $unread_topic,
 
-					'S_TOPIC_REPORTED'		=> (!empty($row['topic_reported']) && $auth->acl_get('m_report', $forum_id)) ? true : false,
+					'S_TOPIC_REPORTED'		=> !empty($row['topic_reported']) && $auth->acl_get('m_report', $forum_id),
 					'S_TOPIC_UNAPPROVED'	=> $topic_unapproved,
 					'S_POSTS_UNAPPROVED'	=> $posts_unapproved,
 					'S_TOPIC_DELETED'		=> $topic_deleted,
-					'S_HAS_POLL'			=> ($row['poll_start']) ? true : false,
+					'S_HAS_POLL'			=> (bool) $row['poll_start'],
 
 					'U_LAST_POST'			=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", $view_topic_url_params . '&amp;p=' . $row['topic_last_post_id']) . '#p' . $row['topic_last_post_id'],
 					'U_LAST_POST_AUTHOR'	=> get_username_string('profile', $row['topic_last_poster_id'], $row['topic_last_poster_name'], $row['topic_last_poster_colour']),
@@ -1296,7 +1303,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 
 	// Check if search backend supports phrase search or not
 	$phrase_search_disabled = '';
-	if (strpos(html_entity_decode($keywords), '"') !== false && method_exists($search, 'supports_phrase_search'))
+	if (strpos(html_entity_decode($keywords), '"') !== false)
 	{
 		$phrase_search_disabled = $search->supports_phrase_search() ? false : true;
 	}
@@ -1566,7 +1573,7 @@ if ($auth->acl_get('a_search'))
 			'KEYWORDS'	=> $keywords,
 			'TIME'		=> $user->format_date($row['search_time']),
 
-			'U_KEYWORDS'	=> append_sid("{$phpbb_root_path}search.$phpEx", 'keywords=' . urlencode(htmlspecialchars_decode($keywords)))
+			'U_KEYWORDS'	=> append_sid("{$phpbb_root_path}search.$phpEx", 'keywords=' . urlencode(htmlspecialchars_decode($keywords, ENT_COMPAT)))
 		));
 	}
 	$db->sql_freeresult($result);

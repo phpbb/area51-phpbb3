@@ -11,7 +11,7 @@
 *
 */
 
-require_once dirname(__FILE__) . '/../../phpBB/includes/functions_user.php';
+require_once __DIR__ . '/../../phpBB/includes/functions_user.php';
 
 class phpbb_functions_user_delete_test extends phpbb_database_test_case
 {
@@ -20,7 +20,7 @@ class phpbb_functions_user_delete_test extends phpbb_database_test_case
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/user_delete.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/user_delete.xml');
 	}
 
 	protected function setUp(): void
@@ -33,6 +33,7 @@ class phpbb_functions_user_delete_test extends phpbb_database_test_case
 		$lang_loader = new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx);
 		$lang = new \phpbb\language\language($lang_loader);
 		$user = new \phpbb\user($lang, '\phpbb\datetime');
+		$user->data['user_id'] = 2;
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 		$phpbb_container = new phpbb_mock_container_builder();
 		$config = new \phpbb\config\config(array(
@@ -76,10 +77,7 @@ class phpbb_functions_user_delete_test extends phpbb_database_test_case
 			$config,
 			$db,
 			$passwords_manager,
-			$request,
-			$user,
-			$phpbb_root_path,
-			$phpEx
+			$user
 		);
 
 		$oauth_provider = new \phpbb\auth\provider\oauth\oauth(

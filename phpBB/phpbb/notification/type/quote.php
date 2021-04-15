@@ -48,7 +48,7 @@ class quote extends \phpbb\notification\type\post
 	* @var bool|array False if the service should use it's default data
 	* 					Array of data (including keys 'id', 'lang', and 'group')
 	*/
-	static public $notification_option = array(
+	public static $notification_option = array(
 		'lang'	=> 'NOTIFICATION_TYPE_QUOTE',
 		'group'	=> 'NOTIFICATION_GROUP_POSTING',
 	);
@@ -168,7 +168,7 @@ class quote extends \phpbb\notification\type\post
 		$user_data = $this->user_loader->get_user($this->get_data('poster_id'));
 
 		return array_merge(parent::get_email_template_variables(), array(
-			'AUTHOR_NAME'		=> htmlspecialchars_decode($user_data['username']),
+			'AUTHOR_NAME'		=> htmlspecialchars_decode($user_data['username'], ENT_COMPAT),
 		));
 	}
 

@@ -29,7 +29,7 @@ $phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path, $phpEx);
 extract($phpbb_config_php_file->get_all());
 unset($dbpasswd);
 
-$dbms = $phpbb_config_php_file->convert_30_dbms_to_31($dbms);
+$dbms = \phpbb\config_php_file::convert_30_dbms_to_31($dbms);
 
 /**
 * $convertor_data provides some basic information about this convertor which is
@@ -962,7 +962,6 @@ if (!$get_info)
 				array('pf_phpbb_location',		'users.user_from',					array('function1' => 'phpbb_set_encoding')),
 				array('pf_phpbb_icq',			'users.user_icq',					array('function1' => 'phpbb_set_encoding')),
 				array('pf_phpbb_yahoo',			'users.user_yim',					array('function1' => 'phpbb_set_encoding')),
-				array('pf_phpbb_aol',			'users.user_aim',					array('function1' => 'phpbb_set_encoding')),
 				array('pf_phpbb_website',		'users.user_website',				'validate_website'),
 
 				'where'			=> 'users.user_id <> -1',

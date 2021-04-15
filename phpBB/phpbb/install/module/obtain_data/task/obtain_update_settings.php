@@ -21,12 +21,12 @@ use phpbb\install\task_base;
 class obtain_update_settings extends task_base
 {
 	/**
-	 * @var \phpbb\install\helper\config
+	 * @var config
 	 */
 	protected $installer_config;
 
 	/**
-	 * @var \phpbb\install\helper\iohandler\iohandler_interface
+	 * @var iohandler_interface
 	 */
 	protected $iohandler;
 
@@ -67,10 +67,12 @@ class obtain_update_settings extends task_base
 		{
 			if ($this->installer_config->get('disable_filesystem_update', false))
 			{
-				$options[] = array(
-					'value'		=> 'db_only',
-					'label'		=> 'UPDATE_TYPE_DB_ONLY',
-					'selected'	=> true,
+				$options = array(
+					array(
+						'value'		=> 'db_only',
+						'label'		=> 'UPDATE_TYPE_DB_ONLY',
+						'selected'	=> true,
+					),
 				);
 			}
 			else
@@ -108,7 +110,7 @@ class obtain_update_settings extends task_base
 	/**
 	 * {@inheritdoc}
 	 */
-	static public function get_step_count()
+	public static function get_step_count()
 	{
 		return 0;
 	}

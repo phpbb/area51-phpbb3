@@ -161,6 +161,7 @@ class php_exporter
 	*
 	* @param string $action
 	* @return string
+	* @deprecated 3.3.5-RC1 (To be removed: 4.0.0-a1)
 	*/
 	public function export_events_for_wiki($action = '')
 	{
@@ -185,6 +186,28 @@ class php_exporter
 	}
 
 	/**
+	 * Format the PHP events as a rst table
+	 *
+	 * @param string $action
+	 * @return string
+	 */
+	public function export_events_for_rst(string $action = ''): string
+	{
+		$rst_exporter = new rst_exporter();
+		$rst_exporter->add_section_header($action === 'diff' ? 'h3' : 'h2', 'PHP Events');
+		$rst_exporter->set_columns([
+			'event'			=> 'Identifier',
+			'file'			=> 'Placement',
+			'arguments'		=> 'Arguments',
+			'since'			=> 'Added in Release',
+			'description'	=> 'Explanation',
+		]);
+		$rst_exporter->generate_events_table($this->events);
+
+		return $rst_exporter->get_rst_output();
+	}
+
+	/**
 	* @param string $file
 	* @return int Number of events found in this file
 	* @throws \LogicException
@@ -203,16 +226,20 @@ class php_exporter
 			{
 				$event_line = false;
 				$found_trigger_event = strpos($this->file_lines[$i], 'dispatcher->trigger_event(');
+				$found_use_vars = strpos($this->file_lines[$i], ', compact($vars)');
 				$arguments = array();
 				if ($found_trigger_event !== false)
 				{
 					$event_line = $i;
 					$this->set_current_event($this->get_event_name($event_line, false), $event_line);
 
-					// Find variables of the event
-					$arguments = $this->get_vars_from_array();
-					$doc_vars = $this->get_vars_from_docblock();
-					$this->validate_vars_docblock_array($arguments, $doc_vars);
+					if ($found_use_vars)
+					{
+						// Find variables of the event
+						$arguments = $this->get_vars_from_array();
+						$doc_vars = $this->get_vars_from_docblock();
+						$this->validate_vars_docblock_array($arguments, $doc_vars);
+					}
 				}
 				else
 				{
@@ -287,24 +314,32 @@ class php_exporter
 						array_pop($description_lines);
 					}
 
-					$description = trim(implode('<br/>', $description_lines));
+					$description = trim(implode('<br>', $description_lines));
+					sort($arguments);
 
 					if (isset($this->events[$this->current_event]))
 					{
-						throw new \LogicException("The event '{$this->current_event}' from file "
-							. "'{$this->current_file}:{$event_line_num}' already exists in file "
-							. "'{$this->events[$this->current_event]['file']}'", 10);
-					}
+						if ($this->events[$this->current_event]['arguments'] != $arguments ||
+							$this->events[$this->current_event]['since'] != $since)
+						{
+							throw new \LogicException("The event '{$this->current_event}' from file "
+								. "'{$this->current_file}:{$event_line_num}' already exists in file "
+								. "'{$this->events[$this->current_event]['file']}'", 10);
+						}
 
-					sort($arguments);
-					$this->events[$this->current_event] = array(
-						'event'			=> $this->current_event,
-						'file'			=> $this->current_file,
-						'arguments'		=> $arguments,
-						'since'			=> $since,
-						'description'	=> $description,
-					);
-					$num_events_found++;
+						$this->events[$this->current_event]['file'] .= '<br>' . $this->current_file;
+					}
+					else
+					{
+						$this->events[$this->current_event] = array(
+							'event' => $this->current_event,
+							'file' => $this->current_file,
+							'arguments' => $arguments,
+							'since' => $since,
+							'description' => $description,
+						);
+						$num_events_found++;
+					}
 				}
 			}
 		}
@@ -346,10 +381,10 @@ class php_exporter
 		}
 		else
 		{
-			$regex = '#extract\(\$[a-z](?:[a-z0-9_]|->)*';
+			$regex = '#(?:extract\()?\$[a-z](?:[a-z0-9_]|->)*';
 			$regex .= '->trigger_event\((\[)?';
 			$regex .= '\'' . $this->preg_match_event_name() . '(?(1)\', \'(?2))+\'';
-			$regex .= '(?(1)\]), compact\(\$vars\)\)\);#';
+			$regex .= '(?(1)\])(?:, compact\(\$vars\)\))?\);#';
 		}
 
 		$match = array();

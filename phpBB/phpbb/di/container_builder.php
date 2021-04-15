@@ -117,6 +117,11 @@ class container_builder
 	private $build_exception;
 
 	/**
+	 * @var array
+	 */
+	private $env_parameters = [];
+
+	/**
 	 * Constructor
 	 *
 	 * @param string $phpbb_root_path Path to the phpbb includes directory.
@@ -124,8 +129,14 @@ class container_builder
 	 */
 	public function __construct($phpbb_root_path, $php_ext)
 	{
-		$this->phpbb_root_path = $phpbb_root_path;
-		$this->php_ext = $php_ext;
+		$this->phpbb_root_path	= $phpbb_root_path;
+		$this->php_ext			= $php_ext;
+		$this->env_parameters	= $this->get_env_parameters();
+
+		if (isset($this->env_parameters['core.cache_dir']))
+		{
+			$this->with_cache_dir($this->env_parameters['core.cache_dir']);
+		}
 	}
 
 	/**
@@ -189,6 +200,9 @@ class container_builder
 
 				// Easy collections through tags
 				$this->container->addCompilerPass(new pass\collection_pass());
+
+				// Mark all services public
+				$this->container->addCompilerPass(new pass\markpublic_pass());
 
 				// Event listeners "phpBB style"
 				$this->container->addCompilerPass(new RegisterListenersPass('dispatcher', 'event.listener_listener', 'event.listener'));
@@ -561,7 +575,7 @@ class container_builder
 		{
 			if ($this->dbal_connection === null)
 			{
-				$dbal_driver_class = $this->config_php_file->convert_30_dbms_to_31($this->config_php_file->get('dbms'));
+				$dbal_driver_class = \phpbb\config_php_file::convert_30_dbms_to_31($this->config_php_file->get('dbms'));
 				/** @var \phpbb\db\driver\driver_interface $dbal_connection */
 				$this->dbal_connection = new $dbal_driver_class();
 				$this->dbal_connection->sql_connect(
@@ -586,14 +600,14 @@ class container_builder
 	protected function get_core_parameters()
 	{
 		return array_merge(
-			array(
+			[
 				'core.root_path'     => $this->phpbb_root_path,
 				'core.php_ext'       => $this->php_ext,
 				'core.environment'   => $this->get_environment(),
 				'core.debug'         => defined('DEBUG') ? DEBUG : false,
 				'core.cache_dir'     => $this->get_cache_dir(),
-			),
-			$this->get_env_parameters()
+			],
+			$this->env_parameters
 		);
 	}
 

@@ -11,13 +11,13 @@
 *
 */
 
-require_once dirname(__FILE__) . '/submit_post_base.php';
+require_once __DIR__ . '/submit_post_base.php';
 
 class phpbb_notification_submit_post_type_post_in_queue_test extends phpbb_notification_submit_post_base
 {
 	protected $item_type = 'notification.type.post_in_queue';
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 

@@ -10,9 +10,9 @@
 * the docs/CREDITS.txt file.
 *
 */
-require_once dirname(__FILE__) . '/ext/vendor2/bar/migrations/bar.php';
-require_once dirname(__FILE__) . '/ext/vendor2/bar/migrations/foo.php';
-require_once dirname(__FILE__) . '/ext/vendor2/bar/migrations/migration.php';
+require_once __DIR__ . '/ext/vendor2/bar/migrations/bar.php';
+require_once __DIR__ . '/ext/vendor2/bar/migrations/foo.php';
+require_once __DIR__ . '/ext/vendor2/bar/migrations/migration.php';
 
 class phpbb_extension_extension_base_test extends phpbb_test_case
 {
@@ -21,7 +21,7 @@ class phpbb_extension_extension_base_test extends phpbb_test_case
 	/** @var phpbb_mock_extension_manager */
 	protected $extension_manager;
 
-	public static function setUpBeforeClass()
+	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
 
@@ -30,14 +30,14 @@ class phpbb_extension_extension_base_test extends phpbb_test_case
 		self::$reflection_method_get_migration_file_list->setAccessible(true);
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		$container = new phpbb_mock_container_builder();
 		$migrator = new phpbb_mock_migrator();
 		$container->set('migrator', $migrator);
 
 		$this->extension_manager = new phpbb_mock_extension_manager(
-			dirname(__FILE__) . '/',
+			__DIR__ . '/',
 			array(
 				'vendor2/foo' => array(
 					'ext_name' => 'vendor2/foo',

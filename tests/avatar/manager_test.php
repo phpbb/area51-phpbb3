@@ -11,7 +11,7 @@
 *
 */
 
-require_once dirname(__FILE__) . '/driver/foobar.php';
+require_once __DIR__ . '/driver/foobar.php';
 
 class phpbb_avatar_manager_test extends \phpbb_database_test_case
 {
@@ -19,13 +19,16 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 	protected $manager;
 	protected $avatar_foobar;
 	protected $avatar_barfoo;
+	protected $config;
+	protected $db;
+	protected $user;
 
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__) . '/fixtures/users.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/users.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		global $phpbb_root_path, $phpEx;
 
@@ -49,13 +52,6 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 			$phpEx
 		);
 
-		$guessers = array(
-			new \Symfony\Component\HttpFoundation\File\MimeType\FileinfoMimeTypeGuesser(),
-			new \Symfony\Component\HttpFoundation\File\MimeType\FileBinaryMimeTypeGuesser(),
-			new \phpbb\mimetype\extension_guesser,
-			new \phpbb\mimetype\content_guesser,
-		);
-		$guesser = new \phpbb\mimetype\guesser($guessers);
 		$imagesize = new \FastImageSize\FastImageSize();
 
 		$dispatcher = new phpbb_mock_event_dispatcher();
@@ -334,7 +330,9 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 					'avatar_type'	=> '',
 					'avatar_width'	=> 0,
 					'avatar_height'	=> 0,
-				), 1, array(
+				),
+				array(
+					'id' => 1,
 					'avatar'		=> 'foobar@example.com',
 					'avatar_type'	=> 'avatar.driver.gravatar',
 					'avatar_width'	=> '16',
@@ -347,7 +345,9 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 					'avatar_type'	=> '',
 					'avatar_width'	=> 0,
 					'avatar_height'	=> 0,
-				), 5, array(
+				),
+				array(
+					'id' => 5,
 					'avatar'		=> 'g5_1414350991.jpg',
 					'avatar_type'	=> 'avatar.driver.upload',
 					'avatar_width'	=> '80',
@@ -360,13 +360,13 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 	/**
 	* @dataProvider data_handle_avatar_delete
 	*/
-	public function test_handle_avatar_delete($expected, $id, $avatar_data, $table, $prefix)
+	public function test_handle_avatar_delete($expected, $avatar_data, $table, $prefix)
 	{
 		$this->config['allow_avatar_gravatar'] = true;
 		$this->assertNull($this->manager->handle_avatar_delete($this->db, $this->user, $avatar_data, $table, $prefix));
 
 		$sql = 'SELECT * FROM ' . $table . '
-				WHERE ' . $prefix . 'id = ' . $id;
+				WHERE ' . $prefix . 'id = ' . (int) $avatar_data['id'];
 		$result = $this->db->sql_query_limit($sql, 1);
 
 		$row = $this->manager->clean_row($this->db->sql_fetchrow($result), substr($prefix, 0, -1));

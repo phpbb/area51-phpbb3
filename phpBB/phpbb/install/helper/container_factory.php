@@ -35,7 +35,7 @@ class container_factory
 	protected $php_ext;
 
 	/**
-	 * @var \phpbb\request\request
+	 * @var request
 	 */
 	protected $request;
 
@@ -47,7 +47,7 @@ class container_factory
 	/**
 	 * The full phpBB container
 	 *
-	 * @var \Symfony\Component\DependencyInjection\ContainerInterface
+	 * @var \Symfony\Component\DependencyInjection\ContainerInterface|null
 	 */
 	protected $container;
 
@@ -78,7 +78,7 @@ class container_factory
 	 * @return \Symfony\Component\DependencyInjection\ContainerInterface|Object	phpBB's dependency injection container
 	 * 																			or the service specified in $service_name
 	 *
-	 * @throws \phpbb\install\exception\cannot_build_container_exception							When container cannot be built
+	 * @throws cannot_build_container_exception														When container cannot be built
 	 * @throws \Symfony\Component\DependencyInjection\Exception\InvalidArgumentException			If the service is not defined
 	 * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException	When a circular reference is detected
 	 * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException			When the service is not defined
@@ -101,7 +101,7 @@ class container_factory
 	 *
 	 * @return mixed
 	 *
-	 * @throws \phpbb\install\exception\cannot_build_container_exception	When container cannot be built
+	 * @throws cannot_build_container_exception	When container cannot be built
 	 */
 	public function get_parameter($param_name)
 	{
@@ -117,7 +117,7 @@ class container_factory
 	/**
 	 * Build dependency injection container
 	 *
-	 * @throws \phpbb\install\exception\cannot_build_container_exception	When container cannot be built
+	 * @throws cannot_build_container_exception	When container cannot be built
 	 */
 	protected function build_container()
 	{
@@ -135,12 +135,6 @@ class container_factory
 			throw new cannot_build_container_exception();
 		}
 
-		$phpbb_config_php_file = new \phpbb\config_php_file($this->phpbb_root_path, $this->php_ext);
-		$phpbb_container_builder = new \phpbb\di\container_builder($this->phpbb_root_path, $this->php_ext);
-
-		// For BC with functions that we need during install
-		global $phpbb_container, $table_prefix;
-
 		$disable_super_globals = $this->request->super_globals_disabled();
 
 		// This is needed because container_builder::get_env_parameters() uses $_SERVER
@@ -148,6 +142,12 @@ class container_factory
 		{
 			$this->request->enable_super_globals();
 		}
+
+		$phpbb_config_php_file = new \phpbb\config_php_file($this->phpbb_root_path, $this->php_ext);
+		$phpbb_container_builder = new \phpbb\di\container_builder($this->phpbb_root_path, $this->php_ext);
+
+		// For BC with functions that we need during install
+		global $phpbb_container, $table_prefix;
 
 		$other_config_path = $this->phpbb_root_path . 'install/update/new/config';
 		$config_path = (is_dir($other_config_path)) ? $other_config_path : $this->phpbb_root_path . 'config';
@@ -161,7 +161,7 @@ class container_factory
 
 		// Setting request is required for the compatibility globals as those are generated from
 		// this container
-		if (!$this->container->isFrozen())
+		if (!$this->container->isCompiled())
 		{
 			$this->container->register('request')->setSynthetic(true);
 			$this->container->register('language')->setSynthetic(true);

@@ -36,10 +36,10 @@ class manager_test extends phpbb_database_test_case
 	 */
 	public function getDataSet()
 	{
-		return $this->createXMLDataSet(dirname(__FILE__).'/fixtures/manager.xml');
+		return $this->createXMLDataSet(__DIR__ . '/fixtures/manager.xml');
 	}
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -55,9 +55,6 @@ class manager_test extends phpbb_database_test_case
 		$container	= new phpbb_mock_container_builder();
 		$dispatcher	= new phpbb_mock_event_dispatcher();
 
-		$request	= $this->getMockBuilder('\phpbb\request\request')
-			->disableOriginalConstructor()
-			->getMock();
 		$template	= $this->getMockBuilder('\phpbb\template\template')
 			->disableOriginalConstructor()
 			->getMock();
@@ -66,6 +63,8 @@ class manager_test extends phpbb_database_test_case
 		$language	= new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx));
 		$collection = new \phpbb\di\service_collection($container);
 		$user		= new \phpbb\user($language, '\phpbb\datetime');
+		$user->data['user_id'] = 2;
+		$user->ip = '';
 
 		$this->log	= new \phpbb\log\log($this->db, $user, $auth, $dispatcher, $phpbb_root_path, 'adm/', $phpEx, $table_prefix . 'log');
 
@@ -77,7 +76,6 @@ class manager_test extends phpbb_database_test_case
 			$dispatcher,
 			$language,
 			$this->log,
-			$request,
 			$template,
 			$collection,
 			$user,

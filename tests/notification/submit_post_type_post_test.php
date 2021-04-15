@@ -11,13 +11,13 @@
 *
 */
 
-require_once dirname(__FILE__) . '/submit_post_base.php';
+require_once __DIR__ . '/submit_post_base.php';
 
 class phpbb_notification_submit_post_type_post_test extends phpbb_notification_submit_post_base
 {
 	protected $item_type = 'notification.type.post';
 
-	public function setUp(): void
+	protected function setUp(): void
 	{
 		parent::setUp();
 
@@ -30,6 +30,16 @@ class phpbb_notification_submit_post_type_post_test extends phpbb_notification_s
 				$this->stringContains('_'),
 				$this->greaterThan(0))
 			->will($this->returnValueMap(array(
+				array(
+					array(3, 4, 5, 6),
+					'f_read',
+					1,
+					array(
+						1 => array(
+							'f_read' => array(3, 5, 6),
+						),
+					),
+				),
 				array(
 					array(3, 4, 5, 6, 7, 8),
 					'f_read',
@@ -61,8 +71,8 @@ class phpbb_notification_submit_post_type_post_test extends phpbb_notification_s
 			*	4	=> Topic subscribed, but unauthed to read, should NOT receive a notification
 			*	5	=> Topic subscribed, but already notified, should NOT receive a new notification
 			*	6	=> Topic and forum subscribed, should receive ONE notification
-			*	7	=> Forum subscribed, should receive a notification
-			*	8	=> Forum subscribed, but already notified, should NOT receive a new notification
+			*	7	=> Forum subscribed, should NOT receive a notification
+			*	8	=> Forum subscribed, and already notified, should NOT receive a new notification
 			*/
 			array(
 				array(),
@@ -74,7 +84,6 @@ class phpbb_notification_submit_post_type_post_test extends phpbb_notification_s
 					array('user_id' => 3, 'item_id' => 2, 'item_parent_id' => 1),
 					array('user_id' => 5, 'item_id' => 1, 'item_parent_id' => 1),
 					array('user_id' => 6, 'item_id' => 2, 'item_parent_id' => 1),
-					array('user_id' => 7, 'item_id' => 2, 'item_parent_id' => 1),
 					array('user_id' => 8, 'item_id' => 1, 'item_parent_id' => 1),
 				),
 			),

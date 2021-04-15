@@ -20,6 +20,7 @@ use phpbb\exception\runtime_exception;
 use phpbb\language\language;
 use phpbb\passwords\manager;
 use phpbb\user;
+use Symfony\Component\Console\Command\Command as symfony_command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -142,7 +143,7 @@ class add extends command
 		catch (runtime_exception $e)
 		{
 			$io->error($e->getMessage());
-			return 1;
+			return symfony_command::FAILURE;
 		}
 
 		$user_row = array(
@@ -161,7 +162,7 @@ class add extends command
 		if (!$user_id)
 		{
 			$io->error($this->language->lang('AUTH_NO_PROFILE_CREATED'));
-			return 1;
+			return symfony_command::FAILURE;
 		}
 
 		if ($input->getOption('send-email') && $this->config['email_enable'])
@@ -171,7 +172,7 @@ class add extends command
 
 		$io->success($this->language->lang('CLI_USER_ADD_SUCCESS', $this->data['username']));
 
-		return 0;
+		return symfony_command::SUCCESS;
 	}
 
 	/**
@@ -312,9 +313,9 @@ class add extends command
 		$messenger->to($this->data['email'], $this->data['username']);
 		$messenger->anti_abuse_headers($this->config, $this->user);
 		$messenger->assign_vars(array(
-			'WELCOME_MSG' => htmlspecialchars_decode($this->language->lang('WELCOME_SUBJECT', $this->config['sitename'])),
-			'USERNAME'    => htmlspecialchars_decode($this->data['username']),
-			'PASSWORD'    => htmlspecialchars_decode($this->data['new_password']),
+			'WELCOME_MSG' => htmlspecialchars_decode($this->language->lang('WELCOME_SUBJECT', $this->config['sitename']), ENT_COMPAT),
+			'USERNAME'    => htmlspecialchars_decode($this->data['username'], ENT_COMPAT),
+			'PASSWORD'    => htmlspecialchars_decode($this->data['new_password'], ENT_COMPAT),
 			'U_ACTIVATE'  => generate_board_url() . "/ucp.{$this->php_ext}?mode=activate&u=$user_id&k=$user_actkey")
 		);
 

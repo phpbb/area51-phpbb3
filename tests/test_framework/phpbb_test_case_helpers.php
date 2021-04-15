@@ -81,12 +81,20 @@ class phpbb_test_case_helpers
 		{
 			case E_NOTICE:
 			case E_STRICT:
-				PHPUnit\Framework\Error\Notice::$enabled = true;
+				// The static property was removed from PHPUnit since v.8.3.0
+				if (isset(PHPUnit\Framework\Error\Notice::$enabled))
+				{
+					PHPUnit\Framework\Error\Notice::$enabled = true;
+				}
 				$exceptionName = 'PHPUnit\Framework\Error\Notice';
 			break;
 
 			case E_WARNING:
-				PHPUnit\Framework\Error\Warning::$enabled = true;
+				// The static property was removed from PHPUnit since v.8.3.0
+				if (isset(PHPUnit\Framework\Error\Warning::$enabled))
+				{
+					PHPUnit\Framework\Error\Warning::$enabled = true;
+				}
 				$exceptionName = 'PHPUnit\Framework\Error\Warning';
 			break;
 
@@ -120,7 +128,7 @@ class phpbb_test_case_helpers
 		{
 			$config = array_merge($config, array(
 				'dbms'		=> 'phpbb\db\driver\sqlite3',
-				'dbhost'	=> dirname(__FILE__) . '/../phpbb_unit_tests.sqlite3', // filename
+				'dbhost'	=> __DIR__ . '/../phpbb_unit_tests.sqlite3', // filename
 				'dbport'	=> '',
 				'dbname'	=> '',
 				'dbuser'	=> '',
@@ -135,7 +143,7 @@ class phpbb_test_case_helpers
 		}
 		else
 		{
-			$test_config = dirname(__FILE__) . '/../test_config.php';
+			$test_config = __DIR__ . '/../test_config.php';
 		}
 
 		$config_php_file = new \phpbb\config_php_file('', '');
@@ -146,7 +154,7 @@ class phpbb_test_case_helpers
 			extract($config_php_file->get_all());
 
 			$config = array_merge($config, array(
-				'dbms'		=> $config_php_file->convert_30_dbms_to_31($dbms),
+				'dbms'		=> \phpbb\config_php_file::convert_30_dbms_to_31($dbms),
 				'dbhost'	=> $dbhost,
 				'dbport'	=> $dbport,
 				'dbname'	=> $dbname,
@@ -188,7 +196,7 @@ class phpbb_test_case_helpers
 		if (isset($_SERVER['PHPBB_TEST_DBMS']))
 		{
 			$config = array_merge($config, array(
-				'dbms'		=> isset($_SERVER['PHPBB_TEST_DBMS']) ? $config_php_file->convert_30_dbms_to_31($_SERVER['PHPBB_TEST_DBMS']) : '',
+				'dbms'		=> isset($_SERVER['PHPBB_TEST_DBMS']) ? \phpbb\config_php_file::convert_30_dbms_to_31($_SERVER['PHPBB_TEST_DBMS']) : '',
 				'dbhost'	=> isset($_SERVER['PHPBB_TEST_DBHOST']) ? $_SERVER['PHPBB_TEST_DBHOST'] : '',
 				'dbport'	=> isset($_SERVER['PHPBB_TEST_DBPORT']) ? $_SERVER['PHPBB_TEST_DBPORT'] : '',
 				'dbname'	=> isset($_SERVER['PHPBB_TEST_DBNAME']) ? $_SERVER['PHPBB_TEST_DBNAME'] : '',
@@ -402,7 +410,7 @@ class phpbb_test_case_helpers
 			$tables['phpbb_styles'][] = array(
 				'style_id' => 1,
 				'style_path' => 'prosilver',
-				'bbcode_bitfield' => 'kNg='
+				'bbcode_bitfield' => '//g='
 			);
 		}
 
@@ -447,7 +455,7 @@ class phpbb_test_case_helpers
 		$cache_key_renderer = $prefix . '_renderer';
 		$container->set('cache.driver', $cache);
 
-		if (!$container->isFrozen())
+		if (!$container->isCompiled())
 		{
 			$container->setParameter('cache.dir', $cache_dir);
 		}
@@ -531,6 +539,14 @@ class phpbb_test_case_helpers
 		if ($container->has('user'))
 		{
 			$user = $container->get('user');
+
+			// Set default required user data if not set
+			$user->data['is_bot'] = $user->data['is_bot'] ?? false;
+			$user->data['is_registered'] = $user->data['is_registered'] ?? false;
+			$user->data['style_id'] = $user->data['style_id'] ?? 1;
+			$user->data['user_id'] = $user->data['user_id'] ?? ANONYMOUS;
+			$user->data['user_options'] = $user->data['user_options'] ?? 230271;
+			$user->style['style_id'] = $user->style['style_id'] ?? 1;
 		}
 		else
 		{
@@ -545,6 +561,14 @@ class phpbb_test_case_helpers
 			     ->method('format_date')
 			     ->will($this->test_case->returnCallback(__CLASS__ . '::format_date'));
 
+			// Set default required user data
+			$user->data['is_bot'] = false;
+			$user->data['is_registered'] = false;
+			$user->data['style_id'] = 1;
+			$user->data['user_id'] = ANONYMOUS;
+			$user->data['user_options'] = 230271;
+			$user->style['style_id'] = 1;
+
 			$user->date_format = 'Y-m-d H:i:s';
 			$user->optionset('viewcensors', true);
 			$user->optionset('viewflash', true);
@@ -554,11 +578,6 @@ class phpbb_test_case_helpers
 			$container->set('user', $user);
 		}
 		$user->add_lang('common');
-
-		if (!isset($user->style))
-		{
-			$user->style = array('style_id' => 1);
-		}
 
 		// Create and register a quote_helper
 		$quote_helper = new \phpbb\textformatter\s9e\quote_helper(
