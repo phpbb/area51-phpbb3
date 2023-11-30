@@ -29,8 +29,10 @@ class admin_activate_user extends \phpbb\notification\type\base
 	}
 
 	/**
-	* {@inheritdoc}
-	*/
+	 * Language key used to output the text
+	 *
+	 * @var string
+	 */
 	protected $language_key = 'NOTIFICATION_ADMIN_ACTIVATE_USER';
 
 	/**
@@ -68,15 +70,15 @@ class admin_activate_user extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	public static function get_item_id($user)
+	public static function get_item_id($type_data)
 	{
-		return (int) $user['user_id'];
+		return (int) $type_data['user_id'];
 	}
 
 	/**
 	* {@inheritdoc}
 	*/
-	public static function get_item_parent_id($post)
+	public static function get_item_parent_id($type_data)
 	{
 		return 0;
 	}
@@ -84,7 +86,7 @@ class admin_activate_user extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	public function find_users_for_notification($user, $options = array())
+	public function find_users_for_notification($type_data, $options = array())
 	{
 		$options = array_merge(array(
 			'ignore_users'	=> array(),
@@ -150,7 +152,7 @@ class admin_activate_user extends \phpbb\notification\type\base
 		$username = $this->user_loader->get_username($this->item_id, 'username');
 
 		return array(
-			'USERNAME'			=> htmlspecialchars_decode($username, ENT_COMPAT),
+			'USERNAME'			=> html_entity_decode($username, ENT_COMPAT),
 			'U_USER_DETAILS'	=> "{$board_url}/memberlist.{$this->php_ext}?mode=viewprofile&u={$this->item_id}",
 			'U_ACTIVATE'		=> "{$board_url}/ucp.{$this->php_ext}?mode=activate&u={$this->item_id}&k={$this->get_data('user_actkey')}",
 		);
@@ -175,11 +177,11 @@ class admin_activate_user extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	public function create_insert_array($user, $pre_create_data = array())
+	public function create_insert_array($type_data, $pre_create_data = array())
 	{
-		$this->set_data('user_actkey', $user['user_actkey']);
-		$this->notification_time = $user['user_regdate'];
+		$this->set_data('user_actkey', $type_data['user_actkey']);
+		$this->notification_time = $type_data['user_regdate'];
 
-		parent::create_insert_array($user, $pre_create_data);
+		parent::create_insert_array($type_data, $pre_create_data);
 	}
 }

@@ -50,10 +50,17 @@ function mcp_forum_view($id, $mode, $action, $forum_info)
 
 	$url = append_sid("{$phpbb_root_path}mcp.$phpEx?$url_extra");
 
+	add_form_key('mcp_forum');
+
 	// Resync Topics
 	switch ($action)
 	{
 		case 'resync':
+			if (!check_form_key('mcp_forum'))
+			{
+				trigger_error('FORM_INVALID');
+			}
+
 			$topic_ids = $request->variable('topic_id_list', array(0));
 			mcp_resync_topics($topic_ids);
 		break;
@@ -350,6 +357,7 @@ function mcp_forum_view($id, $mode, $action, $forum_info)
 			}
 			$topic_row = array_merge($topic_row, array(
 				'U_VIEW_TOPIC'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", "i=$id&amp;f=$forum_id&amp;t={$row_ary['topic_id']}&amp;mode=topic_view"),
+				'U_NEWEST_POST' 	=> append_sid("{$phpbb_root_path}mcp.$phpEx", "i=$id&amp;f=$forum_id&amp;t={$row_ary['topic_id']}&amp;mode=topic_view&amp;view=unread#unread"),
 
 				'S_SELECT_TOPIC'	=> ($merge_select && !in_array($row_ary['topic_id'], $source_topic_ids)) ? true : false,
 				'U_SELECT_TOPIC'	=> $u_select_topic,
@@ -548,8 +556,8 @@ function merge_topics($forum_id, $topic_ids, $to_topic_id)
 		sync('forum', 'forum_id', $sync_forums, true, true);
 
 		// Link to the new topic
-		$return_link .= (($return_link) ? '<br /><br />' : '') . sprintf($user->lang['RETURN_NEW_TOPIC'], '<a href="' . append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . $to_forum_id . '&amp;t=' . $to_topic_id) . '">', '</a>');
-		$redirect = $request->variable('redirect', "{$phpbb_root_path}viewtopic.$phpEx?f=$to_forum_id&amp;t=$to_topic_id");
+		$return_link .= (($return_link) ? '<br /><br />' : '') . sprintf($user->lang['RETURN_NEW_TOPIC'], '<a href="' . append_sid("{$phpbb_root_path}viewtopic.$phpEx", 't=' . $to_topic_id) . '">', '</a>');
+		$redirect = $request->variable('redirect', "{$phpbb_root_path}viewtopic.$phpEx?t=$to_topic_id");
 		$redirect = reapply_sid($redirect);
 
 		/**

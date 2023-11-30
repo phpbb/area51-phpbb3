@@ -74,7 +74,7 @@ class phpbb_questionnaire_data_collector
 	/**
 	* Collect info into the data property.
 	*
-	* @return	null
+	* @return	void
 	*/
 	function collect()
 	{
@@ -150,11 +150,11 @@ class phpbb_questionnaire_system_data_provider
 
 		// Start discovering the IPV4 server address, if available
 		// Try apache, IIS, fall back to 0.0.0.0
-		$server_address = htmlspecialchars_decode($request->server('SERVER_ADDR', $request->server('LOCAL_ADDR', '0.0.0.0')), ENT_COMPAT);
+		$server_address = html_entity_decode($request->server('SERVER_ADDR', $request->server('LOCAL_ADDR', '0.0.0.0')), ENT_COMPAT);
 
 		return array(
 			'os'	=> PHP_OS,
-			'httpd'	=> htmlspecialchars_decode($request->server('SERVER_SOFTWARE'), ENT_COMPAT),
+			'httpd'	=> html_entity_decode($request->server('SERVER_SOFTWARE'), ENT_COMPAT),
 			// we don't want the real IP address (for privacy policy reasons) but only
 			// a network address to see whether your installation is running on a private or public network.
 			'private_ip'	=> $this->is_private_ip($server_address),
@@ -267,7 +267,6 @@ class phpbb_questionnaire_phpbb_data_provider
 			'allow_autologin' => true,
 			'allow_avatar' => true,
 			'allow_avatar_local' => true,
-			'allow_avatar_remote' => true,
 			'allow_avatar_upload' => true,
 			'allow_bbcode' => true,
 			'allow_birthdays' => true,
@@ -280,13 +279,11 @@ class phpbb_questionnaire_phpbb_data_provider
 			'allow_nocensors' => true,
 			'allow_pm_attach' => true,
 			'allow_pm_report' => true,
-			'allow_post_flash' => true,
 			'allow_post_links' => true,
 			'allow_privmsg' => true,
 			'allow_quick_reply' => true,
 			'allow_sig' => true,
 			'allow_sig_bbcode' => true,
-			'allow_sig_flash' => true,
 			'allow_sig_img' => true,
 			'allow_sig_links' => true,
 			'allow_sig_pm' => true,
@@ -295,7 +292,6 @@ class phpbb_questionnaire_phpbb_data_provider
 			'allow_topic_notify' => true,
 			'attachment_quota' => true,
 			'auth_bbcode_pm' => true,
-			'auth_flash_pm' => true,
 			'auth_img_pm' => true,
 			'auth_method' => true,
 			'auth_smilies_pm' => true,
@@ -404,8 +400,6 @@ class phpbb_questionnaire_phpbb_data_provider
 			'max_poll_options' => true,
 			'max_post_chars' => true,
 			'max_post_font_size' => true,
-			'max_post_img_height' => true,
-			'max_post_img_width' => true,
 			'max_post_smilies' => true,
 			'max_post_urls' => true,
 			'max_quote_depth' => true,
@@ -448,7 +442,6 @@ class phpbb_questionnaire_phpbb_data_provider
 			'smtp_auth_method' => true,
 			'smtp_delivery' => true,
 			'topics_per_page' => true,
-			'tpl_allow_php' => true,
 			'version' => true,
 			'warnings_expire_days' => true,
 			'warnings_gc' => true,

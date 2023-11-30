@@ -17,19 +17,19 @@ on:
 jobs:
     # Basic checks, e.g. parse errors, commit messages, etc.
     basic-checks:
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-latest
         strategy:
             matrix:
                 include:
                     - db: 'none'
-                      php: '7.3'
+                      php: '8.1'
                       NOTESTS: 1
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db }}
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
               with:
                   fetch-depth: 100
 
@@ -42,19 +42,16 @@ jobs:
 
             - name: Get Composer Cache Directory
               id: composer-cache
-              env:
-                  PHP_VERSION: ${{ matrix.php }}
               run: |
                   cd phpBB
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
-                  echo "::set-output name=version::${PHP_VERSION%.*}"
+                  echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v2
+              uses: actions/cache@v3
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-${{ steps.composer-cache.outputs.version }}-${{ hashFiles('phpBB/composer.lock') }}
+                  key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
 
             - name: Setup environment for phpBB
               env:
@@ -72,6 +69,10 @@ jobs:
               run: |
                   .github/check-doctum-parse-errors.sh
 
+            - name: Check code with psalm
+              run: |
+                  phpBB/vendor/bin/psalm --output-format=github
+
             - name: Check image ICC profiles
               run: |
                   .github/check-image-icc-profiles.sh
@@ -84,47 +85,58 @@ jobs:
               run: |
                   .github/check-stylesheet.sh
 
+            - name: Lint JavaScript files
+              run: |
+                  .github/check-js.sh
+
             - name: Check commit message
               if: github.event_name == 'pull_request'
               run: |
-                  git-tools/commit-msg-hook-range.sh $(git rev-list --merges -n 1 HEAD^1)..$GITHUB_SHA
+                  git fetch origin $GITHUB_BASE_REF &> /dev/null
+                  git-tools/commit-msg-hook-range.sh $(git rev-parse origin/$GITHUB_BASE_REF)..$GITHUB_SHA
 
     # Tests for MySQL and MariaDB
     mysql-tests:
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-latest
         strategy:
             matrix:
                 include:
-                    - php: '7.3'
-                      db: "mariadb:10.1"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "mariadb:10.2"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "mariadb:10.3"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "mariadb:10.4"
-                    - php: '7.3'
-                      db: "mariadb:10.5"
-                    - php: '7.3'
-                      db: "mysql:5.6"
+                    - php: '8.1'
+                      db: "mariadb:10.6"
+                    - php: '8.1'
+                      db: "mariadb:10.9"
+                    - php: '8.1'
+                      db: "mariadb:10.10"
+                    - php: '8.1'
+                      db: "mariadb:10.11"
+                    - php: '8.1'
+                      db: "mysql:5.7"
                       db_alias: "MySQL Slow Tests"
                       SLOWTESTS: 1
-                    - php: '7.3'
-                      db: "mysql:5.6"
+                    - php: '8.1'
+                      db: "mysql:5.7"
                       db_alias: "MyISAM Tests"
                       MYISAM: 1
-                    - php: '7.3'
-                      db: "mysql:5.6"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "mysql:5.7"
-                    - php: '7.4'
-                      db: "mysql:5.7"
-                    - php: '7.4'
+                    - php: '8.1'
                       db: "mysql:8.0"
-                    - php: '8.0'
+                    - php: '8.1'
+                      db: "mysql:8.1"
+                    - php: '8.2'
+                      db: "mysql:8.0"
+                    - php: '8.2'
+                      db: "mariadb:10.2"
+                    - php: '8.3'
                       db: "mysql:5.7"
-                    #- php: '8.1'
-                    #  db: "mysql:5.7"
+                    - php: '8.3'
+                      db: "mariadb:10.2"
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db_alias != '' && matrix.db_alias || matrix.db }}
 
@@ -154,14 +166,14 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - id: database-type
               env:
                   MATRIX_DB: ${{ matrix.db }}
               run: |
                   db=$(echo "${MATRIX_DB%%:*}")
-                  echo "::set-output name=db::$db"
+                  echo "db=$db" >> $GITHUB_OUTPUT
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -176,15 +188,14 @@ jobs:
                   PHP_VERSION: ${{ matrix.php }}
               run: |
                   cd phpBB
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
-                  echo "::set-output name=version::${PHP_VERSION%.*}"
+                  echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v2
+              uses: actions/cache@v3
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-${{ steps.composer-cache.outputs.version }}-${{ hashFiles('phpBB/composer.lock') }}
+                  key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
 
             - name: Setup environment for phpBB
               env:
@@ -206,6 +217,10 @@ jobs:
               run: |
                   .github/setup-ldap.sh
 
+            - name: Setup SPHINX
+              run: |
+                  .github/setup-sphinx.sh
+
             - name: Lint tests
               if: ${{ matrix.SLOWTESTS != 1 && steps.database-type.outputs.db == 'mysql' }}
               run: phpBB/vendor/bin/phpunit tests/lint_test.php
@@ -226,28 +241,36 @@ jobs:
 
     # Tests for PostgreSQL
     postgres-tests:
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-latest
         strategy:
             matrix:
                 include:
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "postgres:9.5"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "postgres:9.6"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "postgres:10"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "postgres:11"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "postgres:12"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "postgres:13"
+                    - php: '8.1'
+                      db: "postgres:14"
+                    - php: '8.1'
+                      db: "postgres:15"
+                    - php: '8.2'
+                      db: "postgres:9.5"
+                    - php: '8.3'
+                      db: "postgres:9.5"
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db }}
 
         services:
             postgres:
-                image: ${{ matrix.db != 'postgres:9.5' && matrix.db != 'postgres:9.6' && matrix.db != 'postgres:10' && matrix.db != 'postgres:11' && matrix.db != 'postgres:12' && matrix.db != 'postgres:13' && 'postgres:10' || matrix.db }}
+                image: ${{ matrix.db != 'postgres:9.5' && matrix.db != 'postgres:9.6' && matrix.db != 'postgres:10' && matrix.db != 'postgres:11' && matrix.db != 'postgres:12' && matrix.db != 'postgres:13' && matrix.db != 'postgres:14' && matrix.db != 'postgres:15' && 'postgres:10' || matrix.db }}
                 env:
                     POSTGRES_HOST: localhost
                     POSTGRES_USER: postgres
@@ -273,14 +296,14 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - id: database-type
               env:
                   MATRIX_DB: ${{ matrix.db }}
               run: |
                   db=$(echo "${MATRIX_DB%%:*}")
-                  echo "::set-output name=db::$db"
+                  echo "db=$db" >> $GITHUB_OUTPUT
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -295,15 +318,14 @@ jobs:
                   PHP_VERSION: ${{ matrix.php }}
               run: |
                   cd phpBB
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
-                  echo "::set-output name=version::${PHP_VERSION%.*}"
+                  echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v2
+              uses: actions/cache@v3
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-${{ steps.composer-cache.outputs.version }}-${{ hashFiles('phpBB/composer.lock') }}
+                  key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
 
             - name: Setup environment for phpBB
               env:
@@ -328,24 +350,27 @@ jobs:
 
     # Other database types, namely sqlite3 and mssql
     other-tests:
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-latest
         strategy:
             matrix:
                 include:
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "sqlite3"
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "mcr.microsoft.com/mssql/server:2017-latest"
                       db_alias: 'MSSQL 2017'
-                    - php: '7.3'
+                    - php: '8.1'
                       db: "mcr.microsoft.com/mssql/server:2019-latest"
                       db_alias: 'MSSQL 2019'
+                    - php: '8.1'
+                      db: "mcr.microsoft.com/mssql/server:2022-latest"
+                      db_alias: 'MSSQL 2022'
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db_alias != '' && matrix.db_alias || matrix.db }}
 
         services:
             mssql:
-                image: ${{ matrix.db != 'mcr.microsoft.com/mssql/server:2017-latest' && matrix.db != 'mcr.microsoft.com/mssql/server:2019-latest' && 'mcr.microsoft.com/mssql/server:2017-latest' || matrix.db }}
+                image: ${{ matrix.db != 'mcr.microsoft.com/mssql/server:2017-latest' && matrix.db != 'mcr.microsoft.com/mssql/server:2019-latest' && matrix.db != 'mcr.microsoft.com/mssql/server:2022-latest' && 'mcr.microsoft.com/mssql/server:2017-latest' || matrix.db }}
                 env:
                     SA_PASSWORD: "Pssw0rd_12"
                     ACCEPT_EULA: "y"
@@ -371,19 +396,19 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - id: database-type
               env:
                   MATRIX_DB: ${{ matrix.db }}
               run: |
-                  if [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2017-latest' ] || [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2019-latest' ]
+                  if [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2017-latest' ] || [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2019-latest' ] || [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2022-latest' ]
                   then
                       db='mssql'
                   else
                       db=$(echo "${MATRIX_DB%%:*}")
                   fi
-                  echo "::set-output name=db::$db"
+                  echo "db=$db" >> $GITHUB_OUTPUT
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -398,15 +423,14 @@ jobs:
                   PHP_VERSION: ${{ matrix.php }}
               run: |
                   cd phpBB
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
-                  echo "::set-output name=version::${PHP_VERSION%.*}"
+                  echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v2
+              uses: actions/cache@v3
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-${{ steps.composer-cache.outputs.version }}-${{ hashFiles('phpBB/composer.lock') }}
+                  key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
 
             - name: Setup environment for phpBB
               env:
@@ -431,14 +455,14 @@ jobs:
 
     # Test with IIS & PostgreSQL on Windows
     windows-tests:
-        runs-on: windows-2016
+        runs-on: windows-latest
         strategy:
             matrix:
-                include:
-                    - php: '7.4'
-                      db: "postgres"
+                type: ['unit', 'functional']
+                php: ['8.1', '8.2']
+                db: ['postgres']
 
-        name: Windows - PHP ${{ matrix.php }} - ${{ matrix.db }}
+        name: Windows - ${{ matrix.type }} - PHP ${{ matrix.php }} - ${{ matrix.db }}
 
         steps:
             - name: Prepare git for Windows
@@ -446,7 +470,7 @@ jobs:
                   git config --system core.autocrlf false
                   git config --system core.eol lf
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -460,16 +484,14 @@ jobs:
               id: composer-cache
               run: |
                   cd phpBB
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
-                  $major_version="${{ matrix.php }}".substring(0,1)
-                  echo "::set-output name=version::$major_version"
+                  echo "dir=$(composer config cache-files-dir)" >> $env:GITHUB_OUTPUT
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v2
+              uses: actions/cache@v3
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-${{ steps.composer-cache.outputs.version }}-${{ hashFiles('phpBB/composer.lock') }}
+                  key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
 
             - name: Setup environment for phpBB
               env:
@@ -517,17 +539,27 @@ jobs:
               run: |
                   $postgreSqlSvc = Get-Service "postgresql*"
                   Set-Service $postgreSqlSvc.Name -StartupType manual
-                  $postgreSqlSvc.Start()
+                  $runningStatus = [System.ServiceProcess.ServiceControllerStatus]::Running
+                  $maxStartTimeout = New-TimeSpan -Seconds 30
                   try {
-                    (Get-Service "postgresql*").Start()
+                    $postgreSqlSvc.Start()
+                    $postgreSqlSvc.WaitForStatus($runningStatus, $maxStartTimeout)
                   } catch  {
                     $_ | select *
                   }
                   [System.Environment]::SetEnvironmentVariable('PATH',$Env:PATH+";${env:PGBIN}")
                   $env:PGPASSWORD = 'root'
+                  psql -c 'ALTER SYSTEM SET hot_standby = on;' -U postgres
+                  psql -c 'ALTER SYSTEM SET wal_level = minimal;' -U postgres
                   psql -c 'DROP DATABASE IF EXISTS phpbb_tests;' -U postgres
                   psql -c 'create database phpbb_tests;' -U postgres
-                  Add-MpPreference -ExclusionPath "${env:PGDATA}" # Exclude PGDATA directory from Windows Defender
+                  Set-MpPreference -ExclusionPath "${env:PGDATA}" # Exclude PGDATA directory from Windows Defender
+                  Set-MpPreference -DisableRealtimeMonitoring $true
             - name: Run unit tests
+              if: ${{ matrix.type == 'unit' }}
               run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --verbose --stop-on-error
+                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --verbose --stop-on-error --exclude-group functional,slow
+            - name: Run functional tests
+              if: ${{ matrix.type == 'functional' }}
+              run: |
+                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --verbose --stop-on-error --group functional

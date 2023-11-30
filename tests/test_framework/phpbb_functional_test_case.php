@@ -11,12 +11,19 @@
 *
 */
 use Symfony\Component\BrowserKit\CookieJar;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\NativeHttpClient;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 require_once __DIR__ . '/mock/phpbb_mock_null_installer_task.php';
 
 class phpbb_functional_test_case extends phpbb_test_case
 {
-	/** @var \Goutte\Client */
+	/** @var HttpClientInterface */
+	protected static $http_client;
+
+	/** @var HttpBrowser */
 	protected static $client;
 	protected static $cookieJar;
 	protected static $root_url;
@@ -24,6 +31,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 
 	protected $cache = null;
 	protected $db = null;
+	protected $db_doctrine = null;
 	protected $extension_manager = null;
 
 	/**
@@ -40,14 +48,12 @@ class phpbb_functional_test_case extends phpbb_test_case
 
 	protected static $config = array();
 	protected static $already_installed = false;
-	protected static $last_post_timestamp = 0;
 
 	static public function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
 
 		self::$config = phpbb_test_case_helpers::get_test_config();
-		self::$root_url = self::$config['phpbb_functional_url'];
 
 		// Important: this is used both for installation and by
 		// test cases for querying the tables.
@@ -59,6 +65,8 @@ class phpbb_functional_test_case extends phpbb_test_case
 		{
 			self::markTestSkipped('phpbb_functional_url was not set in test_config and wasn\'t set as PHPBB_FUNCTIONAL_URL environment variable either.');
 		}
+
+		self::$root_url = self::$config['phpbb_functional_url'];
 
 		if (!self::$already_installed)
 		{
@@ -87,7 +95,9 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$this->bootstrap();
 
 		self::$cookieJar = new CookieJar;
-		self::$client = new Goutte\Client(array(), null, self::$cookieJar);
+		// Force native client on windows platform
+		self::$http_client = strtolower(substr(PHP_OS, 0, 3)) === 'win' ? new NativeHttpClient() : HttpClient::create();
+		self::$client = new HttpBrowser(self::$http_client, null, self::$cookieJar);
 
 		// Clear the language array so that things
 		// that were added in other tests are gone
@@ -156,6 +166,16 @@ class phpbb_functional_test_case extends phpbb_test_case
 	*/
 	static public function submit(Symfony\Component\DomCrawler\Form $form, array $values = array(), $assert_response_html = true)
 	{
+		// Remove files from form if no file was submitted
+		// See: https://github.com/symfony/symfony/issues/49014
+		foreach ($form->getFiles() as $field_name => $value)
+		{
+			if (!$value['name'] && !$value['tmp_name'])
+			{
+				$form->remove($field_name);
+			}
+		}
+
 		$crawler = self::$client->submit($form, $values);
 
 		if ($assert_response_html)
@@ -187,10 +207,9 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		parent::__construct($name, $data, $dataName);
 
-		$backupStaticAttributesBlacklist = [
+		$this->backupStaticAttributesExcludeList += [
 			'phpbb_functional_test_case' => ['config', 'already_installed'],
 		];
-		$this->excludeBackupStaticAttributes($backupStaticAttributesBlacklist);
 	}
 
 	protected function get_db()
@@ -204,6 +223,16 @@ class phpbb_functional_test_case extends phpbb_test_case
 			$this->db->sql_connect(self::$config['dbhost'], self::$config['dbuser'], self::$config['dbpasswd'], self::$config['dbname'], self::$config['dbport']);
 		}
 		return $this->db;
+	}
+
+	protected function get_db_doctrine()
+	{
+		// so we don't reopen an open connection
+		if (!($this->db_doctrine instanceof \Doctrine\DBAL\Connection))
+		{
+			$this->db_doctrine = \phpbb\db\doctrine\connection_factory::get_connection_from_params(self::$config['dbms'], self::$config['dbhost'], self::$config['dbuser'], self::$config['dbpasswd'], self::$config['dbname'], self::$config['dbport']);
+		}
+		return $this->db_doctrine;
 	}
 
 	protected function get_cache_driver()
@@ -237,8 +266,10 @@ class phpbb_functional_test_case extends phpbb_test_case
 
 		$config = new \phpbb\config\config(array('version' => PHPBB_VERSION));
 		$db = $this->get_db();
+		$db_doctrine = $this->get_db_doctrine();
 		$factory = new \phpbb\db\tools\factory();
-		$db_tools = $factory->get($db);
+		$finder_factory = new \phpbb\finder\factory(null, false, $phpbb_root_path, $phpEx);
+		$db_tools = $factory->get($db_doctrine);
 
 		$container = new phpbb_mock_container_builder();
 		$migrator = new \phpbb\db\migrator(
@@ -254,17 +285,24 @@ class phpbb_functional_test_case extends phpbb_test_case
 			array(),
 			new \phpbb\db\migration\helper()
 		);
+		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 		$container->set('migrator', $migrator);
-		$container->set('dispatcher', new phpbb_mock_event_dispatcher());
+		$container->set('event_dispatcher', $phpbb_dispatcher);
+		$cache = $this->getMockBuilder('\phpbb\cache\service')
+			->setConstructorArgs([$this->get_cache_driver(), $config, $this->db, $phpbb_dispatcher, $phpbb_root_path, $phpEx])
+			->setMethods(['deferred_purge'])
+			->getMock();
+		$cache->method('deferred_purge')
+			->willReturnCallback([$cache, 'purge']);
 
 		$extension_manager = new \phpbb\extension\manager(
 			$container,
 			$db,
 			$config,
+			$finder_factory,
 			self::$config['table_prefix'] . 'ext',
 			__DIR__ . '/',
-			$phpEx,
-			new \phpbb\cache\service($this->get_cache_driver(), $config, $this->db, $phpbb_root_path, $phpEx)
+			$cache
 		);
 
 		return $extension_manager;
@@ -421,6 +459,10 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		$this->add_lang('acp/extensions');
 
+		if ($this->get_logged_in_user())
+		{
+			$this->logout();
+		}
 		$this->login();
 		$this->admin_login();
 
@@ -452,6 +494,10 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		$this->add_lang('acp/extensions');
 
+		if ($this->get_logged_in_user())
+		{
+			$this->logout();
+		}
 		$this->login();
 		$this->admin_login();
 
@@ -483,6 +529,10 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		$this->add_lang('acp/extensions');
 
+		if ($this->get_logged_in_user())
+		{
+			$this->logout();
+		}
 		$this->login();
 		$this->admin_login();
 
@@ -828,10 +878,13 @@ class phpbb_functional_test_case extends phpbb_test_case
 	{
 		$this->add_lang('ucp');
 
-		$crawler = self::request('GET', 'ucp.php?sid=' . $this->sid . '&mode=logout');
+		$crawler = self::request('GET', 'index.php');
+		$logout_link = $crawler->filter('a[title="' . $this->lang('LOGOUT') . '"]')->attr('href');
+		self::request('GET', $logout_link);
+
+		$crawler = self::request('GET', $logout_link);
 		$this->assertStringContainsString($this->lang('REGISTER'), $crawler->filter('.navbar')->text());
 		unset($this->sid);
-
 	}
 
 	/**
@@ -977,7 +1030,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		// Any output before the doc type means there was an error
 		$content = self::get_content();
 		self::assertStringNotContainsString('[phpBB Debug]', $content);
-		self::assertStringStartsWith('<!DOCTYPE', trim($content), 'Output found before DOCTYPE specification.');
+		self::assertStringStartsWith('<!DOCTYPE', strtoupper(substr(trim($content), 0, 10)), $content);
 
 		if ($status_code !== false)
 		{
@@ -1144,12 +1197,13 @@ class phpbb_functional_test_case extends phpbb_test_case
 	*/
 	public function create_post($forum_id, $topic_id, $subject, $message, $additional_form_data = array(), $expected = '')
 	{
-		$posting_url = "posting.php?mode=reply&f={$forum_id}&t={$topic_id}&sid={$this->sid}";
+		$posting_url = "posting.php?mode=reply&t={$topic_id}&sid={$this->sid}";
 
 		$form_data = array_merge(array(
 			'subject'		=> $subject,
 			'message'		=> $message,
 			'post'			=> true,
+			'topic_id'		=> $topic_id,
 		), $additional_form_data);
 
 		return self::submit_post($posting_url, 'POST_REPLY', $form_data, $expected);
@@ -1183,11 +1237,20 @@ class phpbb_functional_test_case extends phpbb_test_case
 			return null;
 		}
 
-		$url = $crawler->selectLink($form_data['subject'])->link()->getUri();
+		$post_link = $crawler->filter('.postbody a[title="Post"]')->last()->attr('href');
+		$topic_link = $crawler->filter('h2[class="topic-title"] > a')->attr('href');
+
+		$post_id = $this->get_parameter_from_link($post_link, 'p');
+		$topic_id = $this->get_parameter_from_link($topic_link, 't');
+
+		if (!$topic_id)
+		{
+			$topic_id = $form_data['topic_id'];
+		}
 
 		return array(
-			'topic_id'	=> $this->get_parameter_from_link($url, 't'),
-			'post_id'	=> $this->get_parameter_from_link($url, 'p'),
+			'topic_id'	=> $topic_id,
+			'post_id'	=> $post_id,
 		);
 	}
 
@@ -1237,13 +1300,6 @@ class phpbb_functional_test_case extends phpbb_test_case
 	*/
 	protected function submit_message($posting_url, $posting_contains, $form_data)
 	{
-		if (time() == self::$last_post_timestamp)
-		{
-			// Travis is too fast, so we have to wait to not mix up the post/topic order
-			sleep(1);
-		}
-		self::$last_post_timestamp = time();
-
 		$crawler = self::request('GET', $posting_url);
 		$this->assertStringContainsString($this->lang($posting_contains), $crawler->filter('html')->text());
 
@@ -1307,7 +1363,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 	public function delete_post($forum_id, $post_id)
 	{
 		$this->add_lang('posting');
-		$crawler = self::request('GET', "posting.php?mode=delete&f={$forum_id}&p={$post_id}&sid={$this->sid}");
+		$crawler = self::request('GET', "posting.php?mode=delete&p={$post_id}&sid={$this->sid}");
 		$this->assertContainsLang('DELETE_PERMANENTLY', $crawler->text());
 
 		$form = $crawler->selectButton('Yes')->form();
@@ -1395,7 +1451,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		}
 		$link = $crawler->filter('#quickmod')->selectLink($this->lang($action))->link()->getUri();
 
-		return self::request('GET', substr($link, strpos($link, 'mcp.')));
+		return self::request('GET', substr($link, strpos($link, 'mcp.')) . "&sid={$this->sid}");
 	}
 
 	/**
@@ -1429,5 +1485,88 @@ class phpbb_functional_test_case extends phpbb_test_case
 		}
 
 		return $file_form_data;
+	}
+
+	/**
+	 * Get username of currently logged in user
+	 *
+	 * @return string|bool username if logged in, false otherwise
+	 */
+	protected function get_logged_in_user()
+	{
+		$username_logged_in = false;
+		$crawler = self::request('GET', 'index.php');
+		$is_logged_in = strpos($crawler->filter('div[class="navbar"]')->text(), 'Login') === false;
+		if ($is_logged_in)
+		{
+			$username_logged_in = $crawler->filter('li[id="username_logged_in"] > div > a > span')->text();
+		}
+		return $username_logged_in;
+	}
+
+	/**
+	 * Posting flood control
+	 */
+	protected function set_flood_interval($flood_interval)
+	{
+		$relogin_back = false;
+		$logged_in_username = $this->get_logged_in_user();
+		if ($logged_in_username && $logged_in_username !== 'admin')
+		{
+			$this->logout();
+			$relogin_back = true;
+		}
+
+		if (!$logged_in_username || $relogin_back)
+		{
+			$this->login();
+			$this->admin_login();
+		}
+
+		$this->add_lang('acp/common');
+		$crawler = self::request('GET', 'adm/index.php?i=acp_board&mode=post&sid=' . $this->sid);
+		$form = $crawler->selectButton('submit')->form([
+			'config[flood_interval]'	=> $flood_interval,
+		]);
+		$crawler = self::submit($form);
+		$this->assertContainsLang('CONFIG_UPDATED', $crawler->text());
+
+		// Get logged out back or get logged in in user back if needed
+		if (!$logged_in_username)
+		{
+			$this->logout();
+		}
+
+		if ($relogin_back)
+		{
+			$this->logout();
+			$this->login($logged_in_username);
+		}
+	}
+
+	/**
+	* Check if a user exists by username or user_id
+	*
+	* @param string $username The username to check or empty if user_id is used
+	* @param int $user_id The user id to check or empty if username is used
+	*
+	* @return bool Returns true if a user exists, false otherwise
+	*/
+	protected function user_exists($username, $user_id = null)
+	{
+		global $db;
+
+		$db = $this->get_db();
+
+		if (!function_exists('utf_clean_string'))
+		{
+			require_once(__DIR__ . '/../../phpBB/includes/utf/utf_tools.php');
+		}
+		if (!function_exists('user_get_id_name'))
+		{
+			require_once(__DIR__ . '/../../phpBB/includes/functions_user.php');
+		}
+
+		return user_get_id_name($user_id, $username) ? false : true;
 	}
 }

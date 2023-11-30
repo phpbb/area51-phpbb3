@@ -69,6 +69,9 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 	/** @var \phpbb\request\request */
 	protected $request;
 
+	/** @var string */
+	protected $phpbb_root_path;
+
 	public function getDataSet()
 	{
 		return $this->createXMLDataSet(__DIR__ . '/fixtures/resync.xml');
@@ -87,7 +90,8 @@ class phpbb_attachment_upload_test extends \phpbb_database_test_case
 		$config = $this->config;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->db = $this->new_dbal();
-		$this->cache = new \phpbb\cache\service(new \phpbb\cache\driver\dummy(), $this->config, $this->db, $phpbb_root_path, $phpEx);
+		$this->phpbb_dispatcher = new phpbb_mock_event_dispatcher();
+		$this->cache = new \phpbb\cache\service(new \phpbb\cache\driver\dummy(), $this->config, $this->db, $this->phpbb_dispatcher, $phpbb_root_path, $phpEx);
 		$this->request = $this->createMock('\phpbb\request\request');
 
 		$this->filesystem = new \phpbb\filesystem\filesystem();

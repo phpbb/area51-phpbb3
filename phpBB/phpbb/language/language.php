@@ -298,7 +298,7 @@ class language
 
 		if ($lang === $key)
 		{
-			return $key;
+			return (string) $key;
 		}
 
 		// If the language entry is a string, we simply mimic sprintf() behaviour
@@ -315,7 +315,7 @@ class language
 		else if (count($lang) == 0)
 		{
 			// If the language entry is an empty array, we just return the language key
-			return $key;
+			return (string) $key;
 		}
 
 		// It is an array... now handle different nullar/singular/plural forms
@@ -384,8 +384,25 @@ class language
 				$this->load_core_file($lang_file);
 			}
 
+			$this->inject_default_variables();
+
 			$this->common_language_files_loaded = true;
 		}
+	}
+
+	/**
+	 * Inject default values based on composer.json
+	 *
+	 * @return void
+	 */
+	protected function inject_default_variables(): void
+	{
+		$lang_values = $this->loader->get_composer_lang_values($this->language_fallback);
+
+		$this->lang['DIRECTION'] = $lang_values['direction'] ?? 'ltr';
+		$this->lang['USER_LANG'] = $lang_values['user_lang'] ?? 'en-gb';
+		$this->lang['PLURAL_RULE'] = $lang_values['plural_rule'] ?? 1;
+		$this->lang['RECAPTCHA_LANG'] = $lang_values['recaptcha_lang'] ?? 'en-GB';
 	}
 
 	/**
@@ -404,14 +421,7 @@ class language
 	public function get_plural_form($number, $force_rule = false)
 	{
 		$number			= (int) $number;
-		$plural_rule	= ($force_rule !== false) ? $force_rule : ((isset($this->lang['PLURAL_RULE'])) ? $this->lang['PLURAL_RULE'] : 1);
-
-		if ($plural_rule > 15 || $plural_rule < 0)
-		{
-			throw new invalid_plural_rule_exception('INVALID_PLURAL_RULE', array(
-				'plural_rule' => $plural_rule,
-			));
-		}
+		$plural_rule = ($force_rule !== false) ? $force_rule : ((isset($this->lang['PLURAL_RULE'])) ? $this->lang['PLURAL_RULE'] : 1);
 
 		/**
 		 * The following plural rules are based on a list published by the Mozilla Developer Network
@@ -565,6 +575,9 @@ class language
 				 * 2 - everything else: 0, 2, 3, ... 10, 11, 12, ... 20, 22, ...
 				 */
 				return (($number % 10 === 1) && ($number % 100 != 11)) ? 1 : 2;
+
+			default:
+				throw new invalid_plural_rule_exception('INVALID_PLURAL_RULE', ['plural_rule' => $plural_rule]);
 		}
 	}
 

@@ -278,12 +278,12 @@ class mcp_queue
 					$l_deleted_by = '';
 				}
 
-				$post_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . $post_info['forum_id'] . '&amp;p=' . $post_info['post_id'] . '#p' . $post_info['post_id']);
-				$topic_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . $post_info['forum_id'] . '&amp;t=' . $post_info['topic_id']);
+				$post_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $post_info['post_id'] . '#p' . $post_info['post_id']);
+				$topic_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", 't=' . $post_info['topic_id']);
 
 				$post_data = array(
 					'S_MCP_QUEUE'			=> true,
-					'U_APPROVE_ACTION'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", "i=queue&amp;p=$post_id&amp;f=$forum_id"),
+					'U_APPROVE_ACTION'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", "i=queue&amp;p=$post_id"),
 					'S_CAN_DELETE_POST'		=> $auth->acl_get('m_delete', $post_info['forum_id']),
 					'S_CAN_VIEWIP'			=> $auth->acl_get('m_info', $post_info['forum_id']),
 					'S_POST_REPORTED'		=> $post_info['post_reported'],
@@ -294,9 +294,9 @@ class mcp_queue
 					'DELETED_MESSAGE'		=> $l_deleted_by,
 					'DELETE_REASON'			=> $post_info['post_delete_reason'],
 
-					'U_EDIT'				=> ($auth->acl_get('m_edit', $post_info['forum_id'])) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=edit&amp;f={$post_info['forum_id']}&amp;p={$post_info['post_id']}") : '',
-					'U_MCP_APPROVE'			=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $post_info['forum_id'] . '&amp;p=' . $post_id),
-					'U_MCP_REPORT'			=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $post_info['forum_id'] . '&amp;p=' . $post_id),
+					'U_EDIT'				=> ($auth->acl_get('m_edit', $post_info['forum_id'])) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=edit&amp;p={$post_info['post_id']}") : '',
+					'U_MCP_APPROVE'			=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;p=' . $post_id),
+					'U_MCP_REPORT'			=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;p=' . $post_id),
 					'U_MCP_USER_NOTES'		=> append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $post_info['user_id']),
 					'U_MCP_WARN_USER'		=> ($auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $post_info['user_id']) : '',
 					'U_VIEW_POST'			=> $post_url,
@@ -324,7 +324,7 @@ class mcp_queue
 					'POST_ID'				=> $post_info['post_id'],
 					'S_FIRST_POST'			=> ($post_info['topic_first_post_id'] == $post_id),
 
-					'U_LOOKUP_IP'			=> ($auth->acl_get('m_info', $post_info['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $post_info['forum_id'] . '&amp;p=' . $post_id . '&amp;lookup=' . $post_info['poster_ip']) . '#ip' : '',
+					'U_LOOKUP_IP'			=> ($auth->acl_get('m_info', $post_info['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;p=' . $post_id . '&amp;lookup=' . $post_info['poster_ip']) . '#ip' : '',
 				);
 
 				/**
@@ -369,7 +369,6 @@ class mcp_queue
 				$user->add_lang(array('viewtopic', 'viewforum'));
 
 				$topic_id = $request->variable('t', 0);
-				$forum_info = array();
 
 				// If 'sort' is set, "Go" was pressed which is located behind the forums <select> box
 				// Then, unset the topic id so it does not override the forum id
@@ -413,13 +412,6 @@ class mcp_queue
 					{
 						trigger_error('NOT_MODERATOR');
 					}
-
-					$sql = 'SELECT SUM(forum_topics_approved) as sum_forum_topics
-						FROM ' . FORUMS_TABLE . '
-						WHERE ' . $db->sql_in_set('forum_id', $forum_list);
-					$result = $db->sql_query($sql);
-					$forum_info['forum_topics_approved'] = (int) $db->sql_fetchfield('sum_forum_topics');
-					$db->sql_freeresult($result);
 				}
 				else
 				{
@@ -486,12 +478,10 @@ class mcp_queue
 
 					$result = $db->sql_query_limit($sql, $config['topics_per_page'], $start);
 
-					$i = 0;
 					$post_ids = array();
 					while ($row = $db->sql_fetchrow($result))
 					{
 						$post_ids[] = $row['post_id'];
-						$row_num[$row['post_id']] = $i++;
 					}
 					$db->sql_freeresult($result);
 
@@ -614,10 +604,10 @@ class mcp_queue
 					}
 
 					$post_row = array(
-						'U_TOPIC'			=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . $row['forum_id'] . '&amp;t=' . $row['topic_id']),
+						'U_TOPIC'			=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 't=' . $row['topic_id']),
 						'U_VIEWFORUM'		=> append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $row['forum_id']),
-						'U_VIEWPOST'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . $row['forum_id'] . '&amp;p=' . $row['post_id']) . (($mode == 'unapproved_posts') ? '#p' . $row['post_id'] : ''),
-						'U_VIEW_DETAILS'	=> append_sid("{$phpbb_root_path}mcp.$phpEx", "i=queue&amp;start=$start&amp;mode=approve_details&amp;f={$row['forum_id']}&amp;p={$row['post_id']}" . (($mode == 'unapproved_topics') ? "&amp;t={$row['topic_id']}" : '')),
+						'U_VIEWPOST'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($mode == 'unapproved_posts') ? '#p' . $row['post_id'] : ''),
+						'U_VIEW_DETAILS'	=> append_sid("{$phpbb_root_path}mcp.$phpEx", "i=queue&amp;start=$start&amp;mode=approve_details&amp;p={$row['post_id']}" . (($mode == 'unapproved_topics') ? "&amp;t={$row['topic_id']}" : '')),
 
 						'POST_AUTHOR_FULL'		=> get_username_string('full', $row['poster_id'], $row['username'], $row['user_colour'], $row['post_username']),
 						'POST_AUTHOR_COLOUR'	=> get_username_string('colour', $row['poster_id'], $row['username'], $row['user_colour'], $row['post_username']),
@@ -687,7 +677,7 @@ class mcp_queue
 	* @param $post_id_list	array	IDs of the posts to approve/restore
 	* @param $id			mixed	Category of the current active module
 	* @param $mode			string	Active module
-	* @return null
+	* @return void|never
 	*/
 	public static function approve_posts($action, $post_id_list, $id, $mode)
 	{
@@ -746,7 +736,7 @@ class mcp_queue
 					$topic_info[$topic_id]['last_post'] = true;
 				}
 
-				$post_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f={$post_data['forum_id']}&amp;t={$post_data['topic_id']}&amp;p={$post_data['post_id']}") . '#p' . $post_data['post_id'];
+				$post_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", "p={$post_data['post_id']}") . '#p' . $post_data['post_id'];
 
 				$approve_log[] = array(
 					'forum_id'		=> $post_data['forum_id'],
@@ -810,10 +800,14 @@ class mcp_queue
 							), $post_data);
 						}
 					}
-					$phpbb_notifications->add_notifications(array('notification.type.quote'), $post_data);
+					$phpbb_notifications->add_notifications(array(
+						'notification.type.mention',
+						'notification.type.quote',
+					), $post_data);
 					$phpbb_notifications->delete_notifications('notification.type.post_in_queue', $post_id);
 
 					$phpbb_notifications->mark_notifications(array(
+						'notification.type.mention',
 						'notification.type.quote',
 						'notification.type.bookmark',
 						'notification.type.post',
@@ -943,7 +937,7 @@ class mcp_queue
 	* @param $topic_id_list	array	IDs of the topics to approve/restore
 	* @param $id			mixed	Category of the current active module
 	* @param $mode			string	Active module
-	* @return null
+	* @return void|never
 	*/
 	public static function approve_topics($action, $topic_id_list, $id, $mode)
 	{
@@ -984,7 +978,7 @@ class mcp_queue
 				$phpbb_content_visibility->set_topic_visibility(ITEM_APPROVED, $topic_id, $topic_data['forum_id'], $user->data['user_id'], time(), '');
 				$first_post_ids[$topic_id] = (int) $topic_data['topic_first_post_id'];
 
-				$topic_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", "f={$topic_data['forum_id']}&amp;t={$topic_id}");
+				$topic_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", "t={$topic_id}");
 
 				$approve_log[] = array(
 					'forum_id'		=> $topic_data['forum_id'],
@@ -1045,12 +1039,13 @@ class mcp_queue
 					if ($topic_data['topic_visibility'] == ITEM_UNAPPROVED)
 					{
 						$phpbb_notifications->add_notifications(array(
+							'notification.type.mention',
 							'notification.type.quote',
 							'notification.type.topic',
 						), $topic_data);
 					}
 
-					$phpbb_notifications->mark_notifications('quote', $topic_data['post_id'], $user->data['user_id']);
+					$phpbb_notifications->mark_notifications(array('mention', 'quote'), $topic_data['post_id'], $user->data['user_id']);
 					$phpbb_notifications->mark_notifications('topic', $topic_id, $user->data['user_id']);
 
 					if ($notify_poster)
@@ -1141,7 +1136,7 @@ class mcp_queue
 	* @param $post_id_list	array	IDs of the posts to disapprove/delete
 	* @param $id			mixed	Category of the current active module
 	* @param $mode			string	Active module
-	* @return null
+	* @return void|never
 	*/
 	public static function disapprove_posts($post_id_list, $id, $mode)
 	{
@@ -1430,7 +1425,7 @@ class mcp_queue
 				{
 					// However this is only possible if the topic still exists,
 					// Otherwise we go back to the viewforum page
-					$redirect = append_sid($phpbb_root_path . 'viewforum.' . $phpEx, 'f=' . $request->variable('f', 0));
+					$redirect = append_sid($phpbb_root_path . 'viewforum.' . $phpEx, 'f=' . $post_data['forum_id']);
 				}
 			}
 

@@ -71,29 +71,27 @@ class report_post_closed extends \phpbb\notification\type\post
 	/**
 	* Find the users who want to receive notifications
 	*
-	* @param array $post Data from submit_post
+	* @param array $type_data Data from submit_post
 	* @param array $options Options for finding users for notification
 	*
 	* @return array
 	*/
-	public function find_users_for_notification($post, $options = [])
+	public function find_users_for_notification($type_data, $options = [])
 	{
 		$options = array_merge([
 			'ignore_users'		=> [],
 		], $options);
 
-		if ($post['reporter'] == $this->user->data['user_id'])
+		if ($type_data['reporter'] == $this->user->data['user_id'])
 		{
 			return [];
 		}
 
-		return $this->check_user_notification_options([$post['reporter']], $options);
+		return $this->check_user_notification_options([$type_data['reporter']], $options);
 	}
 
 	/**
-	* Get email template
-	*
-	* @return string|bool
+	* {@inheritdoc}
 	*/
 	public function get_email_template()
 	{
@@ -111,10 +109,10 @@ class report_post_closed extends \phpbb\notification\type\post
 		$closer_username = $this->user_loader->get_username($this->get_data('closer_id'), 'username');
 
 		return [
-			'AUTHOR_NAME'	=> htmlspecialchars_decode($post_username, ENT_COMPAT),
-			'CLOSER_NAME'	=> htmlspecialchars_decode($closer_username, ENT_COMPAT),
-			'POST_SUBJECT'	=> htmlspecialchars_decode(censor_text($this->get_data('post_subject')), ENT_COMPAT),
-			'TOPIC_TITLE'	=> htmlspecialchars_decode(censor_text($this->get_data('topic_title')), ENT_COMPAT),
+			'AUTHOR_NAME'	=> html_entity_decode($post_username, ENT_COMPAT),
+			'CLOSER_NAME'	=> html_entity_decode($closer_username, ENT_COMPAT),
+			'POST_SUBJECT'	=> html_entity_decode(censor_text($this->get_data('post_subject')), ENT_COMPAT),
+			'TOPIC_TITLE'	=> html_entity_decode(censor_text($this->get_data('topic_title')), ENT_COMPAT),
 
 			'U_VIEW_POST'	=> generate_board_url() . "/viewtopic.{$this->php_ext}?p={$this->item_id}#p{$this->item_id}",
 		];
@@ -187,11 +185,11 @@ class report_post_closed extends \phpbb\notification\type\post
 	/**
 	* {@inheritdoc}
 	*/
-	public function create_insert_array($post, $pre_create_data = [])
+	public function create_insert_array($type_data, $pre_create_data = [])
 	{
-		$this->set_data('closer_id', $post['closer_id']);
+		$this->set_data('closer_id', $type_data['closer_id']);
 
-		parent::create_insert_array($post, $pre_create_data);
+		parent::create_insert_array($type_data, $pre_create_data);
 
 		$this->notification_time = time();
 	}

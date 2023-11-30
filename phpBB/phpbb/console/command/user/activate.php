@@ -87,7 +87,7 @@ class activate extends command
 	/**
 	 * Sets the command name and description
 	 *
-	 * @return null
+	 * @return void
 	 */
 	protected function configure()
 	{
@@ -186,7 +186,7 @@ class activate extends command
 	 *
 	 * @param array           $user_row The user data array
 	 * @param InputInterface  $input    The input stream used to get the options
-	 * @return null
+	 * @return void
 	 */
 	protected function send_notification($user_row, InputInterface $input)
 	{
@@ -204,7 +204,7 @@ class activate extends command
 			$messenger->set_addresses($user_row);
 			$messenger->anti_abuse_headers($this->config, $this->user);
 			$messenger->assign_vars(array(
-					'USERNAME'	=> htmlspecialchars_decode($user_row['username'], ENT_COMPAT))
+					'USERNAME'	=> html_entity_decode($user_row['username'], ENT_COMPAT))
 			);
 
 			$messenger->send(NOTIFY_EMAIL);

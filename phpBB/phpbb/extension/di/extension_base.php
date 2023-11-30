@@ -122,6 +122,7 @@ class extension_base extends Extension
 			}
 		}
 
+		return null;
 	}
 
 	/**
@@ -131,7 +132,7 @@ class extension_base extends Extension
 	 *
 	 * @return string The alias
 	 */
-	public function getAlias()
+	public function getAlias(): string
 	{
 		return str_replace('/', '_', $this->extension_name);
 	}

@@ -608,12 +608,19 @@ class p_master
 
 				if (is_dir($module_style_dir))
 				{
-					$template->set_custom_style(array(
-						array(
-							'name' 		=> 'adm',
-							'ext_path' 	=> 'adm/style/',
-						),
-					), array($module_style_dir, $phpbb_admin_path . 'style'));
+					$template->set_custom_style(
+						[
+							[
+								'name' 		=> 'adm',
+								'ext_path' 	=> 'adm/style/',
+							],
+						],
+						[
+							$module_style_dir,
+							$phpbb_admin_path . 'style',
+							$phpbb_root_path . 'styles/all/template/',
+						]
+					);
 				}
 			}
 
@@ -662,7 +669,7 @@ class p_master
 		// Add url_extra parameter to u_action url
 		if (!empty($this->module_ary) && $this->active_module !== false && $this->module_ary[$this->active_module_row_id]['url_extra'])
 		{
-			$this->module->u_action .= $this->module_ary[$this->active_module_row_id]['url_extra'];
+			$this->module->u_action .= '&amp;' . $this->module_ary[$this->active_module_row_id]['url_extra'];
 		}
 
 		// Assign the module path for re-usage
@@ -920,7 +927,7 @@ class p_master
 			}
 
 			// Was not allowed in categories before - /*!$item_ary['cat'] && */
-			$u_title .= (isset($item_ary['url_extra'])) ? $item_ary['url_extra'] : '';
+			$u_title .= (isset($item_ary['url_extra']) && $item_ary['url_extra']) ? '&amp;' . $item_ary['url_extra'] : '';
 
 			// Only output a categories items if it's currently selected
 			if (!$depth || ($depth && (in_array($item_ary['parent'], array_values($this->module_cache['parents'])) || $item_ary['parent'] == $this->p_parent)))

@@ -257,13 +257,6 @@ class phpbb_template_template_test extends phpbb_template_template_test_case
 					. str_repeat("pass\n", 2) . "\n"),
 			),
 			array(
-				'php.html',
-				array(),
-				array(),
-				array(),
-				'',
-			),
-			array(
 				'include.html',
 				array('VARIABLE' => 'value'),
 				array(),
@@ -361,6 +354,21 @@ class phpbb_template_template_test extends phpbb_template_template_test_case
 			),
 			array(
 				'lang.html',
+				array(),
+				array(),
+				array(),
+				"Value'\n1 O'Clock\nValue\\u0027\n1\\u0020O\\u0027Clock",
+				array('VARIABLE' => "Value'", '1_VARIABLE' => "1 O'Clock"),
+			),
+			array(
+				'lang_twig.html',
+				array(),
+				array(),
+				array(),
+				"VARIABLE\n1_VARIABLE\nVARIABLE\n1_VARIABLE",
+			),
+			array(
+				'lang_twig.html',
 				array(),
 				array(),
 				array(),
@@ -520,7 +528,7 @@ class phpbb_template_template_test extends phpbb_template_template_test_case
 		$filename = 'file_not_found.html';
 
 		$this->template->set_filenames(array('test' => $filename));
-		$this->assertFileNotExists($this->template_path . '/' . $filename, 'Testing missing file, file cannot exist');
+		$this->assertFileDoesNotExist($this->template_path . '/' . $filename, 'Testing missing file, file cannot exist');
 
 		$this->expectException(\Twig\Error\LoaderError::class);
 
@@ -627,24 +635,6 @@ class phpbb_template_template_test extends phpbb_template_template_test_case
 		$this->assertEquals(array('POSITION' => 'O2M1'), $this->template->retrieve_block_vars('outer[1].middle[0]', array('POSITION')), 'Retrieve single var from a nested indexed block in the template');
 		$this->assertEquals(array('S_ROW_NUM' => 2), $this->template->retrieve_block_vars('outer.middle', array('S_ROW_NUM')), 'Retrieve automatic var from a block in the template');
 		$this->assertEquals(array('POSITION' => 'O3M2', 'ONE' => true, 'TWO' => 'two', 'THREE' => 3), $this->template->retrieve_block_vars('outer[2].middle[1]', array()), 'Retrieve all vars from a block in the template');
-	}
-
-	public function test_php()
-	{
-		global $phpbb_root_path;
-
-		$template_text = '<!-- PHP -->echo "test";<!-- ENDPHP -->';
-
-		$cache_dir = $phpbb_root_path . 'cache/';
-		$fp = fopen($cache_dir . 'php.html', 'w');
-		fputs($fp, $template_text);
-		fclose($fp);
-
-		$this->setup_engine(array('tpl_allow_php' => true));
-
-		$this->template->set_custom_style('tests', $cache_dir);
-
-		$this->run_template('php.html', array(), array(), array(), 'test');
 	}
 
 	public function alter_block_array_data()
