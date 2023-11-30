@@ -18,6 +18,8 @@ class phpbb_functional_mcp_logs_test extends phpbb_functional_test_case
 {
 	public function test_delete_logs()
 	{
+		$this->markTestSkipped('Deleting logs not supported on area51');
+
 		$this->add_lang(['mcp', 'common']);
 
 		$this->login();
