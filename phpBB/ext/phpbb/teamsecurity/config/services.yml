@@ -3,6 +3,7 @@ services:
         class: phpbb\teamsecurity\event\listener
         arguments:
             - '@config'
+            - '@language'
             - '@log'
             - '@user'
             - '%core.root_path%'

@@ -1,0 +1,7 @@
+Subject: {SITENAME} {LOG_MODE} log deletion attempted
+
+The user "{USERNAME}" recently attempted to delete the following {LOG_MODE} logs on {TIME} from the IP address {IP_ADDRESS} ({HOST_NAME}):
+
+{LOGS_SELECTED}
+
+{EMAIL_SIG}
