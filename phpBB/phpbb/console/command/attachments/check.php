@@ -12,8 +12,7 @@
 */
 namespace phpbb\console\command\attachments;
 
-use phpbb\finder;
-use phpbb\filesystem\filesystem as phpbb_filesystem;
+use phpbb\finder\finder;
 use phpbb\config\config;
 use phpbb\console\command\command;
 use phpbb\mimetype\guesser;
@@ -32,11 +31,6 @@ class check extends command
 	protected $db;
 
 	/**
-	 * @var phpbb_filesystem
-	 */
-	protected $filesystem;
-
-	/**
 	 * @var config
 	 */
 	protected $config;
@@ -44,12 +38,7 @@ class check extends command
 	/**
 	 * @var guesser
 	 */
-	protected $mimetype_guesser;
-	/**
-	 * phpBB root path
-	 * @var string
-	 */
-	protected $phpbb_root_path;
+	protected guesser $mimetype_guesser;
 
 	/**
 	 * Constructor
@@ -57,15 +46,14 @@ class check extends command
 	 * @param \phpbb\user $user The user object (used to get language information)
 	 * @param config $config
 	 * @param driver_interface $db Database connection
-	 * @param phpbb_filesystem $filesystem
 	 * @param string $phpbb_root_path Root path
+	 * @param string $php_ext PHP extension
 	 */
-	public function __construct(\phpbb\user $user, config $config, driver_interface $db, phpbb_filesystem $filesystem, guesser $mimetype_guesser, $phpbb_root_path)
+	public function __construct(\phpbb\user $user, config $config, driver_interface $db, guesser $mimetype_guesser,
+								protected string $phpbb_root_path, protected string $php_ext)
 	{
 		$this->config = $config;
 		$this->db = $db;
-		$this->phpbb_root_path = $phpbb_root_path;
-		$this->filesystem = $filesystem;
 		$this->mimetype_guesser = $mimetype_guesser;
 
 		parent::__construct($user);
@@ -110,7 +98,7 @@ class check extends command
 		$return = 0;
 		$results = array('thumbnails' => array(), 'attachments' => array(), 'attachments_corrupted' => array('size' => array(), 'filetime' => array(), 'mime_type' => array()), 'orphans' => array());
 
-		$finder = new finder($this->filesystem, $this->phpbb_root_path);
+		$finder = new finder(null, false, $this->phpbb_root_path, $this->php_ext);
 		$finder->core_path($this->config['upload_path'] . '/');
 		$files = $finder->get_files(false);
 

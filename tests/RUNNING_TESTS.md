@@ -145,7 +145,7 @@ Slow tests
 
 Certain tests, such as the DNS tests tend to be slow.
 Thus these tests are in the `slow` group, which is excluded by default. You can
-enable slow tests by copying the phpunit.xml.all file to phpunit.xml. If you
+enable slow tests by copying the phpunit.xml.dist file to phpunit.xml. If you
 only want the slow tests, run:
 
     $ phpBB/vendor/bin/phpunit --group slow
@@ -212,5 +212,5 @@ UI tests will take a different form in phpBB 4.
 More Information
 ================
 
-Further information is available on phpbb wiki:
-http://wiki.phpbb.com/Automated_Tests
+Further information is available on phpBB development documentation:
+https://area51.phpbb.com/docs/dev/master/testing/index.html

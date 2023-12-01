@@ -47,13 +47,19 @@ function phpbb_include_updated($path, $phpbb_root_path, $optional = false)
 	}
 }
 
-function installer_msg_handler($errno, $msg_text, $errfile, $errline)
+function installer_msg_handler($errno, $msg_text, $errfile, $errline): bool
 {
-	global $phpbb_installer_container;
+	global $phpbb_installer_container, $msg_long_text;
 
 	if (error_reporting() == 0)
 	{
 		return true;
+	}
+
+	// If the message handler is stripping text, fallback to the long version if available
+	if (!$msg_text && !empty($msg_long_text))
+	{
+		$msg_text = $msg_long_text;
 	}
 
 	switch ($errno)
@@ -82,11 +88,26 @@ function installer_msg_handler($errno, $msg_text, $errfile, $errline)
 				print($msg);
 			}
 
-			return;
+			return false;
 		break;
 		case E_USER_ERROR:
 			$msg = '<b>General Error:</b><br>' . $msg_text . '<br> in file ' . $errfile . ' on line ' . $errline . '<br><br>';
 
+			if (!empty($phpbb_installer_container))
+			{
+				try
+				{
+					/** @var \phpbb\install\helper\iohandler\iohandler_interface $iohandler */
+					$iohandler = $phpbb_installer_container->get('installer.helper.iohandler');
+					$iohandler->add_error_message($msg);
+					$iohandler->send_response(true);
+					exit();
+				}
+				catch (\phpbb\install\helper\iohandler\exception\iohandler_not_implemented_exception $e)
+				{
+					throw new \phpbb\exception\runtime_exception($msg);
+				}
+			}
 			throw new \phpbb\exception\runtime_exception($msg);
 		break;
 		case E_DEPRECATED:
@@ -138,9 +159,9 @@ function installer_shutdown_function($display_errors)
 		installer_class_loader($phpbb_root_path, $phpEx);
 		$supported_error_levels = E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED;
 
-		$cache = new \phpbb\cache\driver\file(__DIR__ . '/../cache/installer');
+		$cache = new \phpbb\cache\driver\file(__DIR__ . '/../cache/installer/');
 		$filesystem = new \phpbb\filesystem\filesystem();
-		if (strpos($error['file'], $filesystem->realpath($cache->cache_dir)) !== false)
+		if (strpos($error['file'], $filesystem->realpath($cache->cache_dir)) !== false && is_writable($cache->cache_dir))
 		{
 			$file_age = @filemtime($error['file']);
 

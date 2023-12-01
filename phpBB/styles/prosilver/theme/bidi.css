@@ -366,6 +366,24 @@
 }
 
 /**
+* mentions.css
+*/
+
+/* Mention block
+---------------------------------------- */
+
+/* Mention dropdown
+---------------------------------------- */
+.rtl .mention-container { /* mention-container */
+	text-align: right;
+}
+
+.rtl .mention-media {
+	margin-right: 0;
+	margin-left: 16px;
+}
+
+/**
 * content.css
 */
 .rtl ul.topiclist dt,
@@ -617,8 +635,6 @@
 .rtl .postprofile {
 	border-width: 0 1px 0 0;
 	float: left;
-
-	/*	text-align: right; */
 }
 
 .rtl .pm .postprofile {

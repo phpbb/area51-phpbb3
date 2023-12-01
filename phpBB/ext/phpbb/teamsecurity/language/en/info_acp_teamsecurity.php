@@ -36,4 +36,7 @@ $lang = array_merge($lang, array(
 
 	// EMAIL
 	'ACP_CONTACT_ADMIN'				=> 'the board administrator or webmaster',
+
+	// EXT
+	'TEAM_SECURITY_DISABLE_MESSAGE'	=> 'Please remove “ext.php” from the filesystem, purge the board cache, and try again.',
 ));

@@ -111,9 +111,9 @@ function phpbb_clean_path($path)
 */
 function tz_select($default = '', $truncate = false)
 {
-	global $template, $user;
+	global $user;
 
-	return phpbb_timezone_select($template, $user, $default, $truncate);
+	return phpbb_timezone_select($user, $default, $truncate);
 }
 
 /**
@@ -122,12 +122,12 @@ function tz_select($default = '', $truncate = false)
 * must be carried through for the moderators table.
 *
 * @deprecated 3.1.0 (To be removed: 4.0.0)
-* @return null
+* @return void
 */
 function cache_moderators()
 {
 	global $db, $cache, $auth;
-	return phpbb_cache_moderators($db, $cache, $auth);
+	phpbb_cache_moderators($db, $cache, $auth);
 }
 
 /**
@@ -136,7 +136,7 @@ function cache_moderators()
 * @deprecated 3.1.0 (To be removed: 4.0.0)
 * @param array|bool $group_id If an array, remove all members of this group from foe lists, or false to ignore
 * @param array|bool $user_id If an array, remove this user from foe lists, or false to ignore
-* @return null
+* @return void
 */
 function update_foes($group_id = false, $user_id = false)
 {
@@ -249,7 +249,7 @@ function add_log()
  *                              if it changes too frequently (true) to be
  *                              efficiently cached.
  *
- * @return null
+ * @return void
  *
  * @deprecated 3.1.0 (To be removed: 4.0.0)
  */
@@ -279,7 +279,7 @@ function set_config($config_name, $config_value, $is_dynamic = false, \phpbb\con
  *                              if it changes too frequently (true) to be
  *                              efficiently cached.
  *
- * @return null
+ * @return void
  *
  * @deprecated 3.1.0 (To be removed: 4.0.0)
  */
@@ -336,7 +336,7 @@ function request_var($var_name, $default, $multibyte = false, $cookie = false, $
 		$static_request = $request;
 		if (empty($var_name))
 		{
-			return;
+			return null;
 		}
 	}
 	else if ($request === false)
@@ -344,7 +344,7 @@ function request_var($var_name, $default, $multibyte = false, $cookie = false, $
 		$static_request = null;
 		if (empty($var_name))
 		{
-			return;
+			return null;
 		}
 	}
 	$tmp_request = $static_request;
@@ -365,10 +365,7 @@ function request_var($var_name, $default, $multibyte = false, $cookie = false, $
  */
 function get_tables($db)
 {
-	$db_tools_factory = new \phpbb\db\tools\factory();
-	$db_tools = $db_tools_factory->get($db);
-
-	return $db_tools->sql_list_tables();
+	throw new BadFunctionCallException('function removed from phpBB core, use db_tools service instead.');
 }
 
 /**
@@ -578,7 +575,7 @@ function upload_attachment($form_name, $forum_id, $local = false, $local_storage
 *						Supported types are: MX (default), A, AAAA, NS, TXT, CNAME
 *						Other types may work or may not work
 *
-* @return mixed		true if entry found,
+* @return bool|null	true if entry found,
 *					false if entry not found,
 *					null if this function is not supported by this environment
 *
@@ -618,7 +615,7 @@ function phpbb_inet_ntop($in_addr)
  *
  * @param string $address	A human readable IPv4 or IPv6 address.
  *
- * @return mixed		false if address is invalid,
+ * @return false|string	false if address is invalid,
  *					in_addr representation of the given address otherwise (string)
  *
  * @deprecated 3.3.0-b2 (To be removed: 4.0.0)
@@ -649,14 +646,10 @@ function phpbb_email_hash($email)
  */
 function phpbb_load_extensions_autoloaders($phpbb_root_path)
 {
-	$iterator = new \RecursiveIteratorIterator(
-		new \phpbb\recursive_dot_prefix_filter_iterator(
-			new \RecursiveDirectoryIterator(
-				$phpbb_root_path . 'ext/',
-				\FilesystemIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS
-			)
-		),
-		\RecursiveIteratorIterator::SELF_FIRST
+	$iterator = new \phpbb\finder\recursive_path_iterator(
+		$phpbb_root_path . 'ext/',
+		\RecursiveIteratorIterator::SELF_FIRST,
+		\FilesystemIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS
 	);
 	$iterator->setMaxDepth(2);
 
@@ -678,7 +671,7 @@ function phpbb_load_extensions_autoloaders($phpbb_root_path)
 *
 * @param array	$param		Parameter array, see $param_defaults array.
 *
-* @return null
+* @return void
 *
 * @deprecated 3.2.10 (To be removed 4.0.0)
 */
@@ -726,7 +719,7 @@ function phpbb_http_login($param)
 	{
 		if ($request->is_set($k, \phpbb\request\request_interface::SERVER))
 		{
-			$username = htmlspecialchars_decode($request->server($k), ENT_COMPAT);
+			$username = html_entity_decode($request->server($k), ENT_COMPAT);
 			break;
 		}
 	}
@@ -736,7 +729,7 @@ function phpbb_http_login($param)
 	{
 		if ($request->is_set($k, \phpbb\request\request_interface::SERVER))
 		{
-			$password = htmlspecialchars_decode($request->server($k), ENT_COMPAT);
+			$password = html_entity_decode($request->server($k), ENT_COMPAT);
 			break;
 		}
 	}
@@ -927,7 +920,7 @@ function parse_cfg_file($filename, $lines = false)
 		}
 		else if (($value[0] == "'" && $value[strlen($value) - 1] == "'") || ($value[0] == '"' && $value[strlen($value) - 1] == '"'))
 		{
-			$value = htmlspecialchars(substr($value, 1, strlen($value)-2), ENT_COMPAT);
+			$value = htmlspecialchars(substr($value, 1, strlen($value) - 2), ENT_COMPAT);
 		}
 		else
 		{
@@ -943,4 +936,28 @@ function parse_cfg_file($filename, $lines = false)
 	}
 
 	return $parsed_items;
+}
+
+/**
+* Wraps an url into a simple html page. Used to display attachments in IE.
+* this is a workaround for now; might be moved to template system later
+* direct any complaints to 1 Microsoft Way, Redmond
+*
+* @deprecated: 3.3.0-dev (To be removed: 4.0.0)
+*/
+function wrap_img_in_html($src, $title)
+{
+	echo '<!DOCTYPE html>';
+	echo '<html>';
+	echo '<head>';
+	echo '<meta charset="utf-8">';
+	echo '<meta http-equiv="X-UA-Compatible" content="IE=edge">';
+	echo '<title>' . $title . '</title>';
+	echo '</head>';
+	echo '<body>';
+	echo '<div>';
+	echo '<img src="' . $src . '" alt="' . $title . '" />';
+	echo '</div>';
+	echo '</body>';
+	echo '</html>';
 }

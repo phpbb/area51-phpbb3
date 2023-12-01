@@ -122,8 +122,8 @@ class topic_form extends form
 
 		$this->message->set_template('email_notify');
 		$this->message->set_template_vars(array(
-			'TOPIC_NAME'	=> htmlspecialchars_decode($this->topic_row['topic_title'], ENT_COMPAT),
-			'U_TOPIC'		=> generate_board_url() . '/viewtopic.' . $this->phpEx . '?f=' . $this->topic_row['forum_id'] . '&t=' . $this->topic_id,
+			'TOPIC_NAME'	=> html_entity_decode($this->topic_row['topic_title'], ENT_COMPAT),
+			'U_TOPIC'		=> generate_board_url() . '/viewtopic.' . $this->phpEx . '?t=' . $this->topic_id,
 		));
 		$this->message->set_body($this->body);
 		$this->message->add_recipient(
@@ -142,7 +142,7 @@ class topic_form extends form
 	*/
 	public function get_return_message()
 	{
-		return sprintf($this->user->lang['RETURN_TOPIC'],  '<a href="' . append_sid($this->phpbb_root_path . 'viewtopic.' . $this->phpEx, 'f=' . $this->topic_row['forum_id'] . '&amp;t=' . $this->topic_id) . '">', '</a>');
+		return sprintf($this->user->lang['RETURN_TOPIC'],  '<a href="' . append_sid($this->phpbb_root_path . 'viewtopic.' . $this->phpEx, 't=' . $this->topic_id) . '">', '</a>');
 	}
 
 	/**
@@ -153,10 +153,17 @@ class topic_form extends form
 		parent::render($template);
 
 		$this->user->add_lang('viewtopic');
+
+		$lang_options = phpbb_language_select($this->db, $this->recipient_lang);
+
 		$template->assign_vars(array(
 			'EMAIL'				=> $this->recipient_address,
 			'NAME'				=> $this->recipient_name,
-			'S_LANG_OPTIONS'	=> language_select($this->recipient_lang),
+			'LANG_OPTIONS'		=> [
+				'id'		=> 'lang',
+				'name'		=> 'lang',
+				'options'	=> $lang_options,
+			],
 			'MESSAGE'			=> $this->body,
 
 			'L_EMAIL_BODY_EXPLAIN'	=> $this->user->lang['EMAIL_TOPIC_EXPLAIN'],

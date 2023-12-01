@@ -24,7 +24,6 @@ namespace phpbb\db\driver;
 */
 class mssql_odbc extends \phpbb\db\driver\mssql_base
 {
-	var $last_query_text = '';
 	var $connect_error = '';
 
 	/**
@@ -112,31 +111,27 @@ class mssql_odbc extends \phpbb\db\driver\mssql_base
 
 		if ($raw)
 		{
-			return $this->sql_server_version;
+			return (string) $this->sql_server_version;
 		}
 
 		return ($this->sql_server_version) ? 'MSSQL (ODBC)<br />' . $this->sql_server_version : 'MSSQL (ODBC)';
 	}
 
 	/**
-	* SQL Transaction
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_transaction($status = 'begin')
+	protected function _sql_transaction(string $status = 'begin'): bool
 	{
 		switch ($status)
 		{
 			case 'begin':
-				return @odbc_exec($this->db_connect_id, 'BEGIN TRANSACTION');
-			break;
+				return (bool) @odbc_exec($this->db_connect_id, 'BEGIN TRANSACTION');
 
 			case 'commit':
-				return @odbc_exec($this->db_connect_id, 'COMMIT TRANSACTION');
-			break;
+				return (bool) @odbc_exec($this->db_connect_id, 'COMMIT TRANSACTION');
 
 			case 'rollback':
-				return @odbc_exec($this->db_connect_id, 'ROLLBACK TRANSACTION');
-			break;
+				return (bool) @odbc_exec($this->db_connect_id, 'ROLLBACK TRANSACTION');
 		}
 
 		return true;
@@ -185,14 +180,16 @@ class mssql_odbc extends \phpbb\db\driver\mssql_base
 					return false;
 				}
 
+				$safe_query_id = $this->clean_query_id($this->query_result);
+
 				if ($cache && $cache_ttl)
 				{
-					$this->open_queries[(int) $this->query_result] = $this->query_result;
+					$this->open_queries[$safe_query_id] = $this->query_result;
 					$this->query_result = $cache->sql_save($this, $query, $this->query_result, $cache_ttl);
 				}
 				else if (strpos($query, 'SELECT') === 0)
 				{
-					$this->open_queries[(int) $this->query_result] = $this->query_result;
+					$this->open_queries[$safe_query_id] = $this->query_result;
 				}
 			}
 			else if ($this->debug_sql_explain)
@@ -209,9 +206,9 @@ class mssql_odbc extends \phpbb\db\driver\mssql_base
 	}
 
 	/**
-	* Build LIMIT query
-	*/
-	function _sql_query_limit($query, $total, $offset = 0, $cache_ttl = 0)
+	 * {@inheritDoc}
+	 */
+	protected function _sql_query_limit(string $query, int $total, int $offset = 0, int $cache_ttl = 0)
 	{
 		$this->query_result = false;
 
@@ -260,18 +257,19 @@ class mssql_odbc extends \phpbb\db\driver\mssql_base
 			$query_id = $this->query_result;
 		}
 
-		if ($cache && $cache->sql_exists($query_id))
+		$safe_query_id = $this->clean_query_id($query_id);
+		if ($cache && $cache->sql_exists($safe_query_id))
 		{
-			return $cache->sql_fetchrow($query_id);
+			return $cache->sql_fetchrow($safe_query_id);
 		}
 
 		return ($query_id) ? odbc_fetch_array($query_id) : false;
 	}
 
 	/**
-	* {@inheritDoc}
-	*/
-	function sql_nextid()
+	 * {@inheritdoc}
+	 */
+	public function sql_last_inserted_id()
 	{
 		$result_id = @odbc_exec($this->db_connect_id, 'SELECT @@IDENTITY');
 
@@ -301,25 +299,22 @@ class mssql_odbc extends \phpbb\db\driver\mssql_base
 			$query_id = $this->query_result;
 		}
 
-		if ($cache && !is_object($query_id) && $cache->sql_exists($query_id))
+		$safe_query_id = $this->clean_query_id($query_id);
+		if ($cache && $cache->sql_exists($safe_query_id))
 		{
-			return $cache->sql_freeresult($query_id);
+			$cache->sql_freeresult($safe_query_id);
 		}
-
-		if (isset($this->open_queries[(int) $query_id]))
+		else if (isset($this->open_queries[$safe_query_id]))
 		{
-			unset($this->open_queries[(int) $query_id]);
-			return odbc_free_result($query_id);
+			unset($this->open_queries[$safe_query_id]);
+			odbc_free_result($query_id);
 		}
-
-		return false;
 	}
 
 	/**
-	* return sql error array
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_error()
+	protected function _sql_error(): array
 	{
 		if (function_exists('odbc_errormsg'))
 		{
@@ -340,19 +335,18 @@ class mssql_odbc extends \phpbb\db\driver\mssql_base
 	}
 
 	/**
-	* Close sql connection
-	* @access private
-	*/
-	function _sql_close()
+	 * {@inheritDoc}
+	 */
+	protected function _sql_close(): bool
 	{
-		return @odbc_close($this->db_connect_id);
+		@odbc_close($this->db_connect_id);
+		return true;
 	}
 
 	/**
-	* Build db-specific report
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_report($mode, $query = '')
+	protected function _sql_report(string $mode, string $query = ''): void
 	{
 		switch ($mode)
 		{

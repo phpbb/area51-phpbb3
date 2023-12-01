@@ -23,9 +23,11 @@ namespace phpbb\db\driver;
 class mssqlnative extends \phpbb\db\driver\mssql_base
 {
 	var $m_insert_id = null;
-	var $last_query_text = '';
 	var $query_options = array();
 	var $connect_error = '';
+
+	/** @var string|false Last error result or false if no last error set */
+	private $last_error_result = false;
 
 	/**
 	* {@inheritDoc}
@@ -92,24 +94,20 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	}
 
 	/**
-	* SQL Transaction
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_transaction($status = 'begin')
+	protected function _sql_transaction(string $status = 'begin'): bool
 	{
 		switch ($status)
 		{
 			case 'begin':
 				return sqlsrv_begin_transaction($this->db_connect_id);
-			break;
 
 			case 'commit':
 				return sqlsrv_commit($this->db_connect_id);
-			break;
 
 			case 'rollback':
 				return sqlsrv_rollback($this->db_connect_id);
-			break;
 		}
 		return true;
 	}
@@ -159,14 +157,16 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 					return false;
 				}
 
+				$safe_query_id = $this->clean_query_id($this->query_result);
+
 				if ($cache && $cache_ttl)
 				{
-					$this->open_queries[(int) $this->query_result] = $this->query_result;
+					$this->open_queries[$safe_query_id] = $this->query_result;
 					$this->query_result = $cache->sql_save($this, $query, $this->query_result, $cache_ttl);
 				}
 				else if (strpos($query, 'SELECT') === 0)
 				{
-					$this->open_queries[(int) $this->query_result] = $this->query_result;
+					$this->open_queries[$safe_query_id] = $this->query_result;
 				}
 			}
 			else if ($this->debug_sql_explain)
@@ -182,9 +182,9 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	}
 
 	/**
-	* Build LIMIT query
-	*/
-	function _sql_query_limit($query, $total, $offset = 0, $cache_ttl = 0)
+	 * {@inheritDoc}
+	 */
+	protected function _sql_query_limit(string $query, int $total, int $offset = 0, int $cache_ttl = 0)
 	{
 		$this->query_result = false;
 
@@ -242,9 +242,10 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 			$query_id = $this->query_result;
 		}
 
-		if ($cache && $cache->sql_exists($query_id))
+		$safe_query_id = $this->clean_query_id($query_id);
+		if ($cache && $cache->sql_exists($safe_query_id))
 		{
-			return $cache->sql_fetchrow($query_id);
+			return $cache->sql_fetchrow($safe_query_id);
 		}
 
 		if (!$query_id)
@@ -271,16 +272,16 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	}
 
 	/**
-	* {@inheritDoc}
-	*/
-	function sql_nextid()
+	 * {@inheritdoc}
+	 */
+	public function sql_last_inserted_id()
 	{
 		$result_id = @sqlsrv_query($this->db_connect_id, 'SELECT @@IDENTITY');
 
 		if ($result_id)
 		{
 			$row = sqlsrv_fetch_array($result_id);
-			$id = $row[0];
+			$id = isset($row[0]) ? (int) $row[0] : false;
 			sqlsrv_free_stmt($result_id);
 			return $id;
 		}
@@ -302,25 +303,22 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 			$query_id = $this->query_result;
 		}
 
-		if ($cache && !is_object($query_id) && $cache->sql_exists($query_id))
+		$safe_query_id = $this->clean_query_id($query_id);
+		if ($cache && $cache->sql_exists($safe_query_id))
 		{
-			return $cache->sql_freeresult($query_id);
+			$cache->sql_freeresult($safe_query_id);
 		}
-
-		if (isset($this->open_queries[(int) $query_id]))
+		else if (isset($this->open_queries[$safe_query_id]))
 		{
-			unset($this->open_queries[(int) $query_id]);
-			return sqlsrv_free_stmt($query_id);
+			unset($this->open_queries[$safe_query_id]);
+			sqlsrv_free_stmt($query_id);
 		}
-
-		return false;
 	}
 
 	/**
-	* return sql error array
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_error()
+	protected function _sql_error(): array
 	{
 		if (function_exists('sqlsrv_errors'))
 		{
@@ -342,7 +340,7 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 			}
 			else
 			{
-				$error = (isset($this->last_error_result) && $this->last_error_result) ? $this->last_error_result : array();
+				$error = $this->last_error_result ?: '';
 			}
 
 			$error = array(
@@ -362,19 +360,17 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	}
 
 	/**
-	* Close sql connection
-	* @access private
-	*/
-	function _sql_close()
+	 * {@inheritDoc}
+	 */
+	protected function _sql_close(): bool
 	{
 		return @sqlsrv_close($this->db_connect_id);
 	}
 
 	/**
-	* Build db-specific report
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_report($mode, $query = '')
+	protected function _sql_report(string $mode, string $query = ''): void
 	{
 		switch ($mode)
 		{

@@ -13,6 +13,8 @@
 
 namespace phpbb\template\twig;
 
+use Twig\Error\RuntimeError;
+
 class extension extends \Twig\Extension\AbstractExtension
 {
 	/** @var \phpbb\template\context */
@@ -51,7 +53,7 @@ class extension extends \Twig\Extension\AbstractExtension
 	/**
 	* Returns the token parser instance to add to the existing list.
 	*
-	* @return array An array of \Twig\TokenParser\AbstractTokenParser instances
+	* @return \Twig\TokenParser\TokenParserInterface[] An array of \Twig\TokenParser\AbstractTokenParser instances
 	*/
 	public function getTokenParsers()
 	{
@@ -61,15 +63,13 @@ class extension extends \Twig\Extension\AbstractExtension
 			new \phpbb\template\twig\tokenparser\includejs,
 			new \phpbb\template\twig\tokenparser\includecss,
 			new \phpbb\template\twig\tokenparser\event($this->environment),
-			new \phpbb\template\twig\tokenparser\includephp($this->environment),
-			new \phpbb\template\twig\tokenparser\php($this->environment),
 		);
 	}
 
 	/**
 	* Returns a list of filters to add to the existing list.
 	*
-	* @return array An array of filters
+	* @return \Twig\TwigFilter[] An array of filters
 	*/
 	public function getFilters()
 	{
@@ -77,19 +77,22 @@ class extension extends \Twig\Extension\AbstractExtension
 			new \Twig\TwigFilter('subset', array($this, 'loop_subset'), array('needs_environment' => true)),
 			// @deprecated 3.2.0 Uses twig's JS escape method instead of addslashes
 			new \Twig\TwigFilter('addslashes', 'addslashes'),
+			new \Twig\TwigFilter('int', 'intval'),
+			new \Twig\TwigFilter('float', 'floatval'),
 		);
 	}
 
 	/**
 	* Returns a list of global functions to add to the existing list.
 	*
-	* @return array An array of global functions
+	* @return \Twig\TwigFunction[] An array of global functions
 	*/
 	public function getFunctions()
 	{
 		return array(
 			new \Twig\TwigFunction('lang', array($this, 'lang')),
 			new \Twig\TwigFunction('lang_defined', array($this, 'lang_defined')),
+			new \Twig\TwigFunction('lang_js', [$this, 'lang_js']),
 			new \Twig\TwigFunction('get_class', 'get_class'),
 		);
 	}
@@ -97,7 +100,8 @@ class extension extends \Twig\Extension\AbstractExtension
 	/**
 	* Returns a list of operators to add to the existing list.
 	*
-	* @return array An array of operators
+	* @return array[] An array of operators
+	* @psalm-suppress LessSpecificImplementedReturnType
 	*/
 	public function getOperators()
 	{
@@ -197,5 +201,17 @@ class extension extends \Twig\Extension\AbstractExtension
 	public function lang_defined($key)
 	{
 		return call_user_func_array([$this->language, 'is_set'], [$key]);
+	}
+
+	/**
+	 * Get output for language variable in JS code
+	 *
+	 * @throws RuntimeError When data passed to twig_escape_filter is not a UTF8 string
+	 */
+	public function lang_js(): string
+	{
+		$args = func_get_args();
+
+		return twig_escape_filter($this->environment, call_user_func_array([$this, 'lang'], $args), 'js');
 	}
 }

@@ -21,6 +21,7 @@ use phpbb\language\language;
 use phpbb\passwords\manager;
 use phpbb\user;
 use Symfony\Component\Console\Command\Command as symfony_command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -85,7 +86,7 @@ class add extends command
 	/**
 	 * Sets the command name and description
 	 *
-	 * @return null
+	 * @return void
 	 */
 	protected function configure()
 	{
@@ -184,6 +185,10 @@ class add extends command
 	protected function interact(InputInterface $input, OutputInterface $output)
 	{
 		$helper = $this->getHelper('question');
+		if (!$helper instanceof QuestionHelper)
+		{
+			return;
+		}
 
 		$this->data = array(
 			'username'     => $input->getOption('username'),
@@ -226,7 +231,7 @@ class add extends command
 	 * Validate the submitted user data
 	 *
 	 * @throws runtime_exception if any data fails validation
-	 * @return null
+	 * @return void
 	 */
 	protected function validate_user_data()
 	{
@@ -283,7 +288,7 @@ class add extends command
 	 * Send account activation email
 	 *
 	 * @param int   $user_id The new user's id
-	 * @return null
+	 * @return void
 	 */
 	protected function send_activation_email($user_id)
 	{
@@ -313,9 +318,9 @@ class add extends command
 		$messenger->to($this->data['email'], $this->data['username']);
 		$messenger->anti_abuse_headers($this->config, $this->user);
 		$messenger->assign_vars(array(
-			'WELCOME_MSG' => htmlspecialchars_decode($this->language->lang('WELCOME_SUBJECT', $this->config['sitename']), ENT_COMPAT),
-			'USERNAME'    => htmlspecialchars_decode($this->data['username'], ENT_COMPAT),
-			'PASSWORD'    => htmlspecialchars_decode($this->data['new_password'], ENT_COMPAT),
+			'WELCOME_MSG' => html_entity_decode($this->language->lang('WELCOME_SUBJECT', $this->config['sitename']), ENT_COMPAT),
+			'USERNAME'    => html_entity_decode($this->data['username'], ENT_COMPAT),
+			'PASSWORD'    => html_entity_decode($this->data['new_password'], ENT_COMPAT),
 			'U_ACTIVATE'  => generate_board_url() . "/ucp.{$this->php_ext}?mode=activate&u=$user_id&k=$user_actkey")
 		);
 

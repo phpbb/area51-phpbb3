@@ -64,29 +64,27 @@ class report_pm_closed extends \phpbb\notification\type\pm
 	/**
 	* Find the users who want to receive notifications
 	*
-	* @param array $pm Data from submit_pm
+	* @param array $type_data Data from submit_pm
 	* @param array $options Options for finding users for notification
 	*
 	* @return array
 	*/
-	public function find_users_for_notification($pm, $options = [])
+	public function find_users_for_notification($type_data, $options = [])
 	{
 		$options = array_merge([
 			'ignore_users'		=> [],
 		], $options);
 
-		if ($pm['reporter'] == $this->user->data['user_id'])
+		if ($type_data['reporter'] == $this->user->data['user_id'])
 		{
 			return [];
 		}
 
-		return $this->check_user_notification_options([$pm['reporter']], $options);
+		return $this->check_user_notification_options([$type_data['reporter']], $options);
 	}
 
 	/**
-	* Get email template
-	*
-	* @return string|bool
+	* {@inheritdoc}
 	*/
 	public function get_email_template()
 	{
@@ -104,9 +102,9 @@ class report_pm_closed extends \phpbb\notification\type\pm
 		$closer_username = $this->user_loader->get_username($this->get_data('closer_id'), 'username');
 
 		return [
-			'AUTHOR_NAME'	=> htmlspecialchars_decode($sender_username, ENT_COMPAT),
-			'CLOSER_NAME'	=> htmlspecialchars_decode($closer_username, ENT_COMPAT),
-			'SUBJECT'		=> htmlspecialchars_decode(censor_text($this->get_data('message_subject')), ENT_COMPAT),
+			'AUTHOR_NAME'	=> html_entity_decode($sender_username, ENT_COMPAT),
+			'CLOSER_NAME'	=> html_entity_decode($closer_username, ENT_COMPAT),
+			'SUBJECT'		=> html_entity_decode(censor_text($this->get_data('message_subject')), ENT_COMPAT),
 
 			'U_VIEW_MESSAGE'=> generate_board_url() . "/ucp.{$this->php_ext}?i=pm&amp;mode=view&amp;p={$this->item_id}",
 		];
@@ -161,11 +159,11 @@ class report_pm_closed extends \phpbb\notification\type\pm
 	/**
 	* {@inheritdoc}
 	*/
-	public function create_insert_array($pm, $pre_create_data = [])
+	public function create_insert_array($type_data, $pre_create_data = [])
 	{
-		$this->set_data('closer_id', $pm['closer_id']);
+		$this->set_data('closer_id', $type_data['closer_id']);
 
-		parent::create_insert_array($pm, $pre_create_data);
+		parent::create_insert_array($type_data, $pre_create_data);
 
 		$this->notification_time = time();
 	}

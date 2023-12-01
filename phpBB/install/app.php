@@ -16,16 +16,13 @@
  */
 define('IN_PHPBB', true);
 define('IN_INSTALL', true);
-if (!defined('PHPBB_ENVIRONMENT'))
-{
-	define('PHPBB_ENVIRONMENT', 'production');
-}
+
 $phpbb_root_path = '../';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
 
-if (version_compare(PHP_VERSION, '7.1.3', '<'))
+if (version_compare(PHP_VERSION, '7.2.0', '<'))
 {
-	die('You are running an unsupported PHP version. Please upgrade to PHP 7.1.3 or higher before trying to install or update to phpBB 3.3');
+	die('You are running an unsupported PHP version (' . PHP_VERSION . '). Please upgrade to PHP 7.2.0 or higher before trying to install or update to phpBB 3.3');
 }
 
 $startup_new_path = $phpbb_root_path . 'install/update/update/new/install/startup.' . $phpEx;
@@ -50,7 +47,7 @@ $template->set_custom_style(array(
 ), $paths);
 
 /** @var $phpbb_dispatcher \phpbb\event\dispatcher */
-$phpbb_dispatcher = $phpbb_installer_container->get('dispatcher');
+$phpbb_dispatcher = $phpbb_installer_container->get('event_dispatcher');
 
 /** @var \phpbb\language\language $language */
 $language = $phpbb_installer_container->get('language');

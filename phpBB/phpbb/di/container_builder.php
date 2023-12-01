@@ -46,14 +46,9 @@ class container_builder
 	/**
 	 * The container under construction
 	 *
-	 * @var ContainerBuilder
+	 * @var \phpbb_cache_container|ContainerBuilder
 	 */
 	protected $container;
-
-	/**
-	 * @var \phpbb\db\driver\driver_interface
-	 */
-	protected $dbal_connection = null;
 
 	/**
 	 * Indicates whether extensions should be used (default to true).
@@ -122,6 +117,11 @@ class container_builder
 	private $env_parameters = [];
 
 	/**
+	 * @var \phpbb\db\driver\driver_interface
+	 */
+	protected $dbal_connection = null;
+
+	/**
 	 * Constructor
 	 *
 	 * @param string $phpbb_root_path Path to the phpbb includes directory.
@@ -143,6 +143,7 @@ class container_builder
 	 * Build and return a new Container respecting the current configuration
 	 *
 	 * @return \phpbb_cache_container|ContainerBuilder
+	 * @throws \Exception
 	 */
 	public function get_container()
 	{
@@ -204,11 +205,11 @@ class container_builder
 				// Mark all services public
 				$this->container->addCompilerPass(new pass\markpublic_pass());
 
-				// Event listeners "phpBB style"
-				$this->container->addCompilerPass(new RegisterListenersPass('dispatcher', 'event.listener_listener', 'event.listener'));
+				// Convert old event dispatcher syntax
+				$this->container->addCompilerPass(new pass\convert_events());
 
-				// Event listeners "Symfony style"
-				$this->container->addCompilerPass(new RegisterListenersPass('dispatcher'));
+				// Event listeners
+				$this->container->addCompilerPass(new RegisterListenersPass());
 
 				if ($this->use_extensions)
 				{
@@ -231,7 +232,7 @@ class container_builder
 				}
 			}
 
-			if ($this->compile_container && $this->config_php_file)
+			if ($this->config_php_file)
 			{
 				$this->container->set('config.php', $this->config_php_file);
 			}
@@ -422,7 +423,7 @@ class container_builder
 	 *
 	 * @return string Path to the cache directory.
 	 */
-	protected function get_cache_dir()
+	public function get_cache_dir()
 	{
 		return $this->cache_dir ?: $this->phpbb_root_path . 'cache/' . $this->get_environment() . '/';
 	}
@@ -449,6 +450,7 @@ class container_builder
 			$ext_container->register('cache.driver', '\\phpbb\\cache\\driver\\dummy');
 			$ext_container->compile();
 
+			/** @var \phpbb\config\config $config */
 			$config = $ext_container->get('config');
 			if (@is_file($this->phpbb_root_path . $config['exts_composer_vendor_dir'] . '/autoload.php'))
 			{

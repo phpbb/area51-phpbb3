@@ -1,5 +1,5 @@
 Subject: {SITENAME} Admin Control Panel Login
 
-The user "{USERNAME}" recently logged into the Admin Control Panel on {LOGIN_TIME} from the IP address {IP_ADDRESS}.
+The user "{USERNAME}" recently logged into the Admin Control Panel on {LOGIN_TIME} from the IP address {IP_ADDRESS} ({HOST_NAME}).
 
 {EMAIL_SIG}

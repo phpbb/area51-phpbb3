@@ -40,6 +40,8 @@ abstract class profilefield_base_migration extends container_aware_migration
 
 	protected $user_column_name;
 
+	private $profile_row;
+
 	public function effectively_installed()
 	{
 		return $this->db_tools->sql_column_exists($this->table_prefix . 'profile_fields_data', 'pf_' . $this->profilefield_name);
@@ -183,8 +185,8 @@ abstract class profilefield_base_migration extends container_aware_migration
 	}
 
 	/**
-	* @param int			$start		Start of staggering step
-	* @return		mixed		int start of the next step, null if the end was reached
+	* @param	int			$start		Start of staggering step
+	* @return	int|null	int start of the next step, null if the end was reached
 	*/
 	public function convert_user_field_to_custom_field($start)
 	{
@@ -226,7 +228,7 @@ abstract class profilefield_base_migration extends container_aware_migration
 		if ($converted_users < $limit)
 		{
 			// No more users left, we are done...
-			return;
+			return null;
 		}
 
 		return $start + $limit;
@@ -234,15 +236,13 @@ abstract class profilefield_base_migration extends container_aware_migration
 
 	protected function get_insert_sql_array()
 	{
-		static $profile_row;
-
-		if ($profile_row === null)
+		if ($this->profile_row === null)
 		{
 			/* @var $manager \phpbb\profilefields\manager */
 			$manager = $this->container->get('profilefields.manager');
-			$profile_row = $manager->build_insert_sql_array(array());
+			$this->profile_row = $manager->build_insert_sql_array(array());
 		}
 
-		return $profile_row;
+		return $this->profile_row;
 	}
 }

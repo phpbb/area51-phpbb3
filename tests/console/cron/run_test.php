@@ -24,7 +24,6 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 	protected $lock;
 	protected $user;
 	protected $cron_manager;
-	protected $command_name;
 	protected $task;
 
 	public function getDataSet()
@@ -75,9 +74,10 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		);
 
 		$mock_container = new phpbb_mock_container_builder();
-		$mock_container->set('cron.task_collection', []);
+		$task_collection = new \phpbb\di\service_collection($mock_container);
+		$mock_container->set('cron.task_collection', $task_collection);
 
-		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx);
+		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx, null);
 		$this->cron_manager->load_tasks($tasks);
 
 		$this->assertSame('0', $config['cron_lock']);
@@ -86,7 +86,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 	public function test_normal_use()
 	{
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name));
+		$exit_status = $command_tester->execute([]);
 
 		$this->assertSame('', $command_tester->getDisplay());
 		$this->assertSame(true, $this->task->executed);
@@ -97,7 +97,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 	public function test_verbose_mode()
 	{
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name, '--verbose' => true));
+		$exit_status = $command_tester->execute(array('--verbose' => true));
 
 		$this->assertStringContainsString('RUNNING_TASK', $command_tester->getDisplay());
 		$this->assertSame(true, $this->task->executed);
@@ -112,7 +112,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 
 		$this->lock->acquire();
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name));
+		$exit_status = $command_tester->execute([]);
 
 		$this->assertStringContainsString('CRON_LOCK_ERROR', $command_tester->getDisplay());
 		$this->assertSame(false, $this->task->executed);
@@ -153,13 +153,14 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		);
 
 		$mock_container = new phpbb_mock_container_builder();
-		$mock_container->set('cron.task_collection', []);
+		$task_collection = new \phpbb\di\service_collection($mock_container);
+		$mock_container->set('cron.task_collection', $task_collection);
 
-		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx);
+		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx, null);
 		$this->cron_manager->load_tasks($tasks);
 
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name));
+		$exit_status = $command_tester->execute([]);
 
 		$this->assertSame('', $command_tester->getDisplay());
 		$this->assertSame(0, $exit_status);
@@ -200,13 +201,14 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		);
 
 		$mock_container = new phpbb_mock_container_builder();
-		$mock_container->set('cron.task_collection', []);
+		$task_collection = new \phpbb\di\service_collection($mock_container);
+		$mock_container->set('cron.task_collection', $task_collection);
 
-		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx);
+		$this->cron_manager = new \phpbb\cron\manager($mock_container, $routing_helper, $phpbb_root_path, $phpEx, null);
 		$this->cron_manager->load_tasks($tasks);
 
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name, '--verbose' => true));
+		$exit_status = $command_tester->execute(array('--verbose' => true));
 
 		$this->assertStringContainsString('CRON_NO_TASK', $command_tester->getDisplay());
 		$this->assertSame(0, $exit_status);
@@ -216,7 +218,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 	public function test_arg_valid()
 	{
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name, 'name' => 'phpbb_cron_task_simple'));
+		$exit_status = $command_tester->execute(array('name' => 'phpbb_cron_task_simple'));
 
 		$this->assertSame('', $command_tester->getDisplay());
 		$this->assertSame(true, $this->task->executed);
@@ -230,7 +232,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		$this->expectExceptionMessage('CRON_NO_SUCH_TASK');
 
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name, 'name' => 'foo'));
+		$exit_status = $command_tester->execute(array('name' => 'foo'));
 
 		$this->assertStringContainsString('CRON_NO_SUCH_TASK', $command_tester->getDisplay());
 		$this->assertSame(false, $this->task->executed);
@@ -241,7 +243,7 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 	public function test_arg_valid_verbose()
 	{
 		$command_tester = $this->get_command_tester();
-		$exit_status = $command_tester->execute(array('command' => $this->command_name, 'name' => 'phpbb_cron_task_simple', '--verbose' => true));
+		$exit_status = $command_tester->execute(array('name' => 'phpbb_cron_task_simple', '--verbose' => true));
 
 		$this->assertStringContainsString('RUNNING_TASK', $command_tester->getDisplay());
 		$this->assertSame(true, $this->task->executed);
@@ -255,7 +257,6 @@ class phpbb_console_command_cron_run_test extends phpbb_database_test_case
 		$application->add(new run($this->user, $this->cron_manager, $this->lock));
 
 		$command = $application->find('cron:run');
-		$this->command_name = $command->getName();
 		return new CommandTester($command);
 	}
 }

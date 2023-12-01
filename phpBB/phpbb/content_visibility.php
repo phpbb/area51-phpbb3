@@ -521,11 +521,15 @@ class content_visibility
 			$postcounts[$num_posts][] = $poster_id;
 		}
 
+		$postcount_change = 0;
+
 		// Update users postcounts
 		foreach ($postcounts as $num_posts => $poster_ids)
 		{
 			if (in_array($visibility, array(ITEM_REAPPROVE, ITEM_DELETED)))
 			{
+				$postcount_change -= $num_posts;
+
 				$sql = 'UPDATE ' . $this->users_table . '
 					SET user_posts = 0
 					WHERE ' . $this->db->sql_in_set('user_id', $poster_ids) . '
@@ -540,11 +544,18 @@ class content_visibility
 			}
 			else
 			{
+				$postcount_change += $num_posts;
+
 				$sql = 'UPDATE ' . $this->users_table . '
 					SET user_posts = user_posts + ' . $num_posts . '
 					WHERE ' . $this->db->sql_in_set('user_id', $poster_ids);
 				$this->db->sql_query($sql);
 			}
+		}
+
+		if ($postcount_change != 0)
+		{
+			$this->config->increment('num_posts', $postcount_change, false);
 		}
 
 		$update_topic_postcount = true;
@@ -839,7 +850,7 @@ class content_visibility
 	*
 	* @param $data			array	Contains information from the topics table about given topic
 	* @param $sql_data		array	Populated with the SQL changes, may be empty at call time (by reference)
-	* @return null
+	* @return void
 	*/
 	public function add_post_to_statistic($data, &$sql_data)
 	{
@@ -860,7 +871,7 @@ class content_visibility
 	*
 	* @param $data			array	Contains information from the topics table about given topic
 	* @param $sql_data		array	Populated with the SQL changes, may be empty at call time (by reference)
-	* @return null
+	* @return void
 	*/
 	public function remove_post_from_statistic($data, &$sql_data)
 	{
@@ -893,7 +904,7 @@ class content_visibility
 	*
 	* @param $data			array	Post and topic data
 	* @param $sql_data		array	Populated with the SQL changes, may be empty at call time (by reference)
-	* @return null
+	* @return void
 	*/
 	public function remove_topic_from_statistic($data, &$sql_data)
 	{

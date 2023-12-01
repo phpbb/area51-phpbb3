@@ -6,7 +6,7 @@ services:
             - '@notification.method_collection'
             - '@service_container'
             - '@user_loader'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '@dbal.conn'
             - '@cache'
             - '@language'
@@ -92,6 +92,15 @@ services:
         class: phpbb\notification\type\group_request_approved
         shared: false
         parent: notification.type.base
+        tags:
+            - { name: notification.type }
+
+    notification.type.mention:
+        class: phpbb\notification\type\mention
+        shared: false
+        parent: notification.type.post
+        calls:
+            - [set_helper, ['@text_formatter.s9e.mention_helper']]
         tags:
             - { name: notification.type }
 

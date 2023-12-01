@@ -18,6 +18,11 @@
 /**
 * @ignore
 */
+
+use phpbb\config\config;
+use phpbb\language\language;
+use phpbb\user;
+
 if (!defined('IN_PHPBB'))
 {
 	exit;
@@ -28,16 +33,26 @@ class acp_board
 	var $u_action;
 	var $new_config;
 
+	/** @var config */
+	protected $config;
+
+	/** @var language */
+	protected $language;
+
+	/** @var user */
+	protected $user;
+
 	function main($id, $mode)
 	{
 		global $user, $template, $request, $language;
 		global $config, $phpbb_root_path, $phpEx;
 		global $cache, $phpbb_container, $phpbb_dispatcher, $phpbb_log;
 
-		/** @var \phpbb\language\language $language Language object */
-		$language = $phpbb_container->get('language');
+		$this->config = $config;
+		$this->language = $language;
+		$this->user = $user;
 
-		$user->add_lang('acp/board');
+		$this->language->add_lang('acp/board');
 
 		$submit = (isset($_POST['submit']) || isset($_POST['allow_quick_reply_enable'])) ? true : false;
 
@@ -64,7 +79,7 @@ class acp_board
 						'board_index_text'		=> array('lang' => 'BOARD_INDEX_TEXT',		'validate' => 'string',	'type' => 'text:40:255', 'explain' => true),
 						'board_disable'			=> array('lang' => 'DISABLE_BOARD',			'validate' => 'bool',	'type' => 'custom', 'method' => 'board_disable', 'explain' => true),
 						'board_disable_msg'		=> false,
-						'default_lang'			=> array('lang' => 'DEFAULT_LANGUAGE',		'validate' => 'lang',	'type' => 'select', 'function' => 'language_select', 'params' => array('{CONFIG_VALUE}'), 'explain' => false),
+						'default_lang'			=> array('lang' => 'DEFAULT_LANGUAGE',		'validate' => 'lang',	'type' => 'select', 'method' => 'language_select', 'params' => array('{CONFIG_VALUE}'), 'explain' => false),
 						'default_dateformat'	=> array('lang' => 'DEFAULT_DATE_FORMAT',	'validate' => 'string',	'type' => 'custom', 'method' => 'dateformat_select', 'explain' => true),
 						'board_timezone'		=> array('lang' => 'SYSTEM_TIMEZONE',		'validate' => 'timezone',	'type' => 'custom', 'method' => 'timezone_select', 'explain' => true),
 
@@ -174,7 +189,6 @@ class acp_board
 						'print_pm'				=> array('lang' => 'ALLOW_PRINT_PM',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'forward_pm'			=> array('lang' => 'ALLOW_FORWARD_PM',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'auth_img_pm'			=> array('lang' => 'ALLOW_IMG_PM',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
-						'auth_flash_pm'			=> array('lang' => 'ALLOW_FLASH_PM',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'enable_pm_icons'		=> array('lang' => 'ENABLE_PM_ICONS',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 
 						'legend3'				=> 'ACP_SUBMIT_CHANGES',
@@ -190,7 +204,6 @@ class acp_board
 						'allow_topic_notify'	=> array('lang' => 'ALLOW_TOPIC_NOTIFY',	'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_forum_notify'	=> array('lang' => 'ALLOW_FORUM_NOTIFY',	'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_bbcode'			=> array('lang' => 'ALLOW_BBCODE',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
-						'allow_post_flash'		=> array('lang' => 'ALLOW_POST_FLASH',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'allow_smilies'			=> array('lang' => 'ALLOW_SMILIES',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_post_links'		=> array('lang' => 'ALLOW_POST_LINKS',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'allowed_schemes_links'	=> array('lang' => 'ALLOWED_SCHEMES_LINKS',	'validate' => 'csv',	'type' => 'text:0:255', 'explain' => true),
@@ -217,10 +230,13 @@ class acp_board
 						'max_post_urls'			=> array('lang' => 'MAX_POST_URLS',			'validate' => 'int:0:9999',		'type' => 'number:0:9999', 'explain' => true),
 						'max_post_font_size'	=> array('lang' => 'MAX_POST_FONT_SIZE',	'validate' => 'int:0:9999',		'type' => 'number:0:9999', 'explain' => true, 'append' => ' %'),
 						'max_quote_depth'		=> array('lang' => 'QUOTE_DEPTH_LIMIT',		'validate' => 'int:0:9999',		'type' => 'number:0:9999', 'explain' => true),
-						'max_post_img_width'	=> array('lang' => 'MAX_POST_IMG_WIDTH',	'validate' => 'int:0:9999',		'type' => 'number:0:9999', 'explain' => true, 'append' => ' ' . $user->lang['PIXEL']),
-						'max_post_img_height'	=> array('lang' => 'MAX_POST_IMG_HEIGHT',	'validate' => 'int:0:9999',		'type' => 'number:0:9999', 'explain' => true, 'append' => ' ' . $user->lang['PIXEL']),
 
-						'legend3'				=> 'ACP_SUBMIT_CHANGES',
+						'legend3'				=> 'MENTIONS',
+						'allow_mentions'		=> array('lang' => 'ALLOW_MENTIONS',	'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
+						'mention_names_limit'	=> array('lang' => 'MENTION_NAMES_LIMIT',	'validate' => 'int:1:9999',		'type' => 'number:1:9999', 'explain' => false),
+						'mention_batch_size'	=> array('lang' => 'MENTION_BATCH_SIZE',	'validate' => 'int:1:9999',		'type' => 'number:1:9999', 'explain' => true),
+
+						'legend4'				=> 'ACP_SUBMIT_CHANGES',
 					)
 				);
 			break;
@@ -233,7 +249,6 @@ class acp_board
 						'allow_sig'				=> array('lang' => 'ALLOW_SIG',				'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_sig_bbcode'		=> array('lang' => 'ALLOW_SIG_BBCODE',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_sig_img'			=> array('lang' => 'ALLOW_SIG_IMG',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
-						'allow_sig_flash'		=> array('lang' => 'ALLOW_SIG_FLASH',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_sig_smilies'		=> array('lang' => 'ALLOW_SIG_SMILIES',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => false),
 						'allow_sig_links'		=> array('lang' => 'ALLOW_SIG_LINKS',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 
@@ -419,7 +434,6 @@ class acp_board
 						'browser_check'			=> array('lang' => 'BROWSER_VALID',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'forwarded_for_check'	=> array('lang' => 'FORWARDED_FOR_VALID',	'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'referer_validation'	=> array('lang' => 'REFERRER_VALID',		'validate' => 'int:0:3','type' => 'custom', 'method' => 'select_ref_check', 'explain' => true),
-						'remote_upload_verify'	=> array('lang' => 'UPLOAD_CERT_VALID',	'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'check_dnsbl'			=> array('lang' => 'CHECK_DNSBL',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'email_check_mx'		=> array('lang' => 'EMAIL_CHECK_MX',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'min_pass_chars'		=> array('lang' => 'PASSWORD_LENGTH',	'validate' => 'int:1',	'type' => 'custom', 'method' => 'password_length', 'explain' => true),
@@ -429,7 +443,6 @@ class acp_board
 						'ip_login_limit_max'	=> array('lang' => 'IP_LOGIN_LIMIT_MAX',	'validate' => 'int:0:999',	'type' => 'number:0:999', 'explain' => true),
 						'ip_login_limit_time'	=> array('lang' => 'IP_LOGIN_LIMIT_TIME',	'validate' => 'int:0:99999',	'type' => 'number:0:99999', 'explain' => true, 'append' => ' ' . $user->lang['SECONDS']),
 						'ip_login_limit_use_forwarded'	=> array('lang' => 'IP_LOGIN_LIMIT_USE_FORWARDED',	'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
-						'tpl_allow_php'			=> array('lang' => 'TPL_ALLOW_PHP',			'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'form_token_lifetime'	=> array('lang' => 'FORM_TIME_MAX',			'validate' => 'int:-1:99999',	'type' => 'number:-1:99999', 'explain' => true, 'append' => ' ' . $user->lang['SECONDS']),
 						'form_token_sid_guests'	=> array('lang' => 'FORM_SID_GUESTS',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 
@@ -505,7 +518,7 @@ class acp_board
 			{
 				if (!preg_match('#^[a-z][a-z0-9+\\-.]*$#Di', $scheme))
 				{
-					$error[] = $language->lang('URL_SCHEME_INVALID', $language->lang('ALLOWED_SCHEMES_LINKS'), $scheme);
+					$error[] = $this->language->lang('URL_SCHEME_INVALID', $this->language->lang('ALLOWED_SCHEMES_LINKS'), $scheme);
 				}
 			}
 		}
@@ -566,6 +579,7 @@ class acp_board
 					'site_home_text',
 					'board_index_text',
 					'board_disable_msg',
+					'board_email_sig',
 				];
 
 				/**
@@ -696,8 +710,8 @@ class acp_board
 				$messenger->set_addresses($user->data);
 				$messenger->anti_abuse_headers($config, $user);
 				$messenger->assign_vars(array(
-					'USERNAME'	=> htmlspecialchars_decode($user->data['username'], ENT_COMPAT),
-					'MESSAGE'	=> htmlspecialchars_decode($request->variable('send_test_email_text', '', true), ENT_COMPAT),
+					'USERNAME'	=> html_entity_decode($user->data['username'], ENT_COMPAT),
+					'MESSAGE'	=> html_entity_decode($request->variable('send_test_email_text', '', true), ENT_COMPAT),
 				));
 				$messenger->send(NOTIFY_EMAIL);
 
@@ -977,19 +991,50 @@ class acp_board
 	/**
 	* Select bump interval
 	*/
-	function bump_interval($value, $key)
+	public function bump_interval($value, $key): array
 	{
-		global $user;
-
-		$s_bump_type = '';
+		$bump_type_options = [];
 		$types = array('m' => 'MINUTES', 'h' => 'HOURS', 'd' => 'DAYS');
 		foreach ($types as $type => $lang)
 		{
-			$selected = ($this->new_config['bump_type'] == $type) ? ' selected="selected"' : '';
-			$s_bump_type .= '<option value="' . $type . '"' . $selected . '>' . $user->lang[$lang] . '</option>';
+			$bump_type_options[] = [
+				'value'		=> $type,
+				'selected'	=> $this->new_config['bump_type'] == $type,
+				'label'		=> $this->language->lang($lang),
+			];
 		}
 
-		return '<input id="' . $key . '" type="text" size="3" maxlength="4" name="config[bump_interval]" value="' . $value . '" />&nbsp;<select name="config[bump_type]">' . $s_bump_type . '</select>';
+		return [
+			[
+				'tag'		=> 'input',
+				'id'		=> $key,
+				'type'		=> 'text',
+				'size'		=> 3,
+				'maxlength'	=> 4,
+				'name'		=> 'config[bump_interval]',
+				'value'		=> $value,
+			],
+			[
+				'tag'		=> 'select',
+				'name'		=> 'config[bump_type]',
+				'options'	=> $bump_type_options,
+			],
+		];
+	}
+
+	/**
+	 * Wrapper function for phpbb_language_select()
+	 *
+	 * @param string $default
+	 * @param array $langdata
+	 *
+	 * @return array
+	 */
+	public function language_select(string $default = '', array $langdata = []): array
+	{
+		global $db;
+
+		return phpbb_language_select($db, $default, $langdata);
 	}
 
 	/**
@@ -1020,11 +1065,13 @@ class acp_board
 	*/
 	function timezone_select($value, $key)
 	{
-		global $template, $user;
+		$timezone_select = phpbb_timezone_select($this->user, $value, true);
 
-		$timezone_select = phpbb_timezone_select($template, $user, $value, true);
-
-		return '<select name="config[' . $key . ']" id="' . $key . '">' . $timezone_select . '</select>';
+		return [
+			'tag'			=> 'select',
+			'name'			=> 'config[' . $key . ']',
+			'options'		=> $timezone_select,
+		];
 	}
 
 	/**
@@ -1061,81 +1108,132 @@ class acp_board
 	}
 
 	/**
-	* Select default dateformat
-	*/
-	function dateformat_select($value, $key)
+	 * Create select for default date format
+	 *
+	 * @param string $value Current date format value
+	 * @param string $key Date format key
+	 *
+	 * @return array Date format select data
+	 */
+	public function dateformat_select(string $value, string $key): array
 	{
-		global $user, $config;
-
 		// Let the format_date function operate with the acp values
-		$old_tz = $user->timezone;
+		$old_tz = $this->user->timezone;
 		try
 		{
-			$user->timezone = new DateTimeZone($config['board_timezone']);
+			$this->user->timezone = new DateTimeZone($this->config['board_timezone']);
 		}
 		catch (\Exception $e)
 		{
 			// If the board timezone is invalid, we just use the users timezone.
 		}
 
-		$dateformat_options = '';
+		$dateformat_options = [];
 
-		foreach ($user->lang['dateformats'] as $format => $null)
+		$dateformats = $this->language->lang_raw('dateformats');
+		if (!is_array($dateformats))
 		{
-			$dateformat_options .= '<option value="' . $format . '"' . (($format == $value) ? ' selected="selected"' : '') . '>';
-			$dateformat_options .= $user->format_date(time(), $format, false) . ((strpos($format, '|') !== false) ? $user->lang['VARIANT_DATE_SEPARATOR'] . $user->format_date(time(), $format, true) : '');
-			$dateformat_options .= '</option>';
+			$dateformats = [];
 		}
 
-		$dateformat_options .= '<option value="custom"';
-		if (!isset($user->lang['dateformats'][$value]))
+		foreach ($dateformats as $format => $null)
 		{
-			$dateformat_options .= ' selected="selected"';
+			$dateformat_options[] = [
+				'value'			=> $format,
+				'selected'		=> $format == $value,
+				'label'			=> $this->user->format_date(time(), $format, false) . ((strpos($format, '|') !== false) ? $this->language->lang('VARIANT_DATE_SEPARATOR') . $this->user->format_date(time(), $format, true) : '')
+			];
 		}
-		$dateformat_options .= '>' . $user->lang['CUSTOM_DATEFORMAT'] . '</option>';
+
+		// Add custom entry
+		$dateformat_options[] = [
+			'value'			=> 'custom',
+			'selected'		=> !isset($dateformats[$value]),
+			'label'			=> $this->language->lang('CUSTOM_DATEFORMAT'),
+		];
 
 		// Reset users date options
-		$user->timezone = $old_tz;
+		$this->user->timezone = $old_tz;
 
-		return "<select name=\"dateoptions\" id=\"dateoptions\" onchange=\"if (this.value == 'custom') { document.getElementById('" . addslashes($key) . "').value = '" . addslashes($value) . "'; } else { document.getElementById('" . addslashes($key) . "').value = this.value; }\">$dateformat_options</select>
-		<input type=\"text\" name=\"config[$key]\" id=\"$key\" value=\"$value\" maxlength=\"64\" />";
+		return [
+			[
+				'tag'		=> 'select',
+				'name'		=> 'dateoptions',
+				'id'		=> 'dateoptions',
+				'options'	=> $dateformat_options,
+				'data'		=> [
+					'dateoption'			=> $key,
+					'dateoption-default'	=> $value,
+				]
+			],
+			[
+				'tag'		=> 'input',
+				'type'		=> 'text',
+				'name'		=> "config[$key]",
+				'id'		=> $key,
+				'value'		=> $value,
+				'maxlength'	=> 64,
+			]
+		];
 	}
 
 	/**
-	* Select multiple forums
-	*/
-	function select_news_forums($value, $key)
+	 * Select for multiple forums
+	 *
+	 * @param mixed $value Config value, unused
+	 * @param string $key Config key
+	 *
+	 * @return array Forum select data
+	 */
+	public function select_news_forums($value, string $key)
 	{
-		$forum_list = make_forum_select(false, false, true, true, true, false, true);
-
-		// Build forum options
-		$s_forum_options = '<select id="' . $key . '" name="' . $key . '[]" multiple="multiple">';
-		foreach ($forum_list as $f_id => $f_row)
-		{
-			$f_row['selected'] = phpbb_optionget(FORUM_OPTION_FEED_NEWS, $f_row['forum_options']);
-
-			$s_forum_options .= '<option value="' . $f_id . '"' . (($f_row['selected']) ? ' selected="selected"' : '') . (($f_row['disabled']) ? ' disabled="disabled" class="disabled-option"' : '') . '>' . $f_row['padding'] . $f_row['forum_name'] . '</option>';
-		}
-		$s_forum_options .= '</select>';
-
-		return $s_forum_options;
+		return $this->get_forum_select($key);
 	}
 
-	function select_exclude_forums($value, $key)
+	/**
+	 * Select for multiple forums to exclude
+	 *
+	 * @param mixed $value Config value, unused
+	 * @param string $key Config key
+	 *
+	 * @return array Forum select data
+	 */
+	public function select_exclude_forums($value, string $key): array
+	{
+		return $this->get_forum_select($key, FORUM_OPTION_FEED_EXCLUDE);
+	}
+
+	/**
+	 * Get forum select data for specified key and option
+	 *
+	 * @param string $key Config key
+	 * @param int $forum_option Forum option bit
+	 *
+	 * @return array Forum select data
+	 */
+	protected function get_forum_select(string $key, int $forum_option = FORUM_OPTION_FEED_NEWS): array
 	{
 		$forum_list = make_forum_select(false, false, true, true, true, false, true);
 
 		// Build forum options
-		$s_forum_options = '<select id="' . $key . '" name="' . $key . '[]" multiple="multiple">';
+		$forum_options = [];
 		foreach ($forum_list as $f_id => $f_row)
 		{
-			$f_row['selected'] = phpbb_optionget(FORUM_OPTION_FEED_EXCLUDE, $f_row['forum_options']);
-
-			$s_forum_options .= '<option value="' . $f_id . '"' . (($f_row['selected']) ? ' selected="selected"' : '') . (($f_row['disabled']) ? ' disabled="disabled" class="disabled-option"' : '') . '>' . $f_row['padding'] . $f_row['forum_name'] . '</option>';
+			$forum_options[] = [
+				'value'		=> $f_id,
+				'selected'	=> phpbb_optionget($forum_option, $f_row['forum_options']),
+				'disabled'	=> $f_row['disabled'],
+				'label'		=> $f_row['padding'] . $f_row['forum_name'],
+			];
 		}
-		$s_forum_options .= '</select>';
 
-		return $s_forum_options;
+		return [
+			'tag'		=> 'select',
+			'id'		=> $key,
+			'name'		=> $key . '[]',
+			'multiple'	=> true,
+			'options'	=> $forum_options,
+		];
 	}
 
 	function store_feed_forums($option, $key)

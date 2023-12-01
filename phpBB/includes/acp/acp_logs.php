@@ -21,7 +21,7 @@ if (!defined('IN_PHPBB'))
 
 class acp_logs
 {
-	var $u_action;
+	public $u_action;
 
 	function main($id, $mode)
 	{
@@ -45,7 +45,6 @@ class acp_logs
 		$sort_dir	= $request->variable('sd', 'd');
 
 		$this->tpl_name = 'acp_logs';
-		$this->log_type = constant('LOG_' . strtoupper($mode));
 
 		/* @var $pagination \phpbb\pagination */
 		$pagination = $phpbb_container->get('pagination');
@@ -109,7 +108,7 @@ class acp_logs
 		$sql_sort = $sort_by_sql[$sort_key] . ' ' . (($sort_dir == 'd') ? 'DESC' : 'ASC');
 
 		$keywords = $request->variable('keywords', '', true);
-		$keywords_param = !empty($keywords) ? '&amp;keywords=' . urlencode(htmlspecialchars_decode($keywords, ENT_COMPAT)) : '';
+		$keywords_param = !empty($keywords) ? '&amp;keywords=' . urlencode(html_entity_decode($keywords, ENT_COMPAT)) : '';
 
 		$l_title = $user->lang['ACP_' . strtoupper($mode) . '_LOGS'];
 		$l_title_explain = $user->lang['ACP_' . strtoupper($mode) . '_LOGS_EXPLAIN'];

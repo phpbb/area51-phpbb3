@@ -70,6 +70,8 @@ abstract class phpbb_notification_submit_post_base extends phpbb_database_test_c
 				array('f_noapprove', 1, true),
 				array('f_postcount', 1, true),
 				array('m_edit', 1, false),
+				array('f_mention', 1, true),
+				array('u_mention', 0, true),
 			)));
 
 		// Config
@@ -77,19 +79,22 @@ abstract class phpbb_notification_submit_post_base extends phpbb_database_test_c
 			'num_topics' => 1,
 			'num_posts' => 1,
 			'allow_board_notifications'	=> true,
+			'allow_mentions' => true,
+			'board_startdate' => 1692429414,
 		));
+
+		// Event dispatcher
+		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 
 		$cache_driver = new \phpbb\cache\driver\dummy();
 		$cache = new \phpbb\cache\service(
 			$cache_driver,
 			$config,
 			$db,
+			$phpbb_dispatcher,
 			$phpbb_root_path,
 			$phpEx
 		);
-
-		// Event dispatcher
-		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 
 		// Language
 		$lang = new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx));
@@ -109,8 +114,7 @@ abstract class phpbb_notification_submit_post_base extends phpbb_database_test_c
 		);
 
 		// Request
-		$type_cast_helper = $this->createMock('\phpbb\request\type_cast_helper_interface');
-		$request = $this->createMock('\phpbb\request\request');
+		$request = new phpbb_mock_request();
 
 		$avatar_helper = $this->getMockBuilder('\phpbb\avatar\helper')
 			->disableOriginalConstructor()
@@ -132,7 +136,17 @@ abstract class phpbb_notification_submit_post_base extends phpbb_database_test_c
 		$phpbb_container->set('cache.driver', $cache_driver);
 		$phpbb_container->set('cache', $cache);
 		$phpbb_container->set('text_formatter.utils', new \phpbb\textformatter\s9e\utils());
-		$phpbb_container->set('dispatcher', $phpbb_dispatcher);
+		$phpbb_container->set(
+			'text_formatter.s9e.mention_helper',
+			new \phpbb\textformatter\s9e\mention_helper(
+				$this->db,
+				$auth,
+				$user,
+				$phpbb_root_path,
+				$phpEx
+			)
+		);
+		$phpbb_container->set('event_dispatcher', $phpbb_dispatcher);
 		$phpbb_container->set('storage.attachment', $storage);
 		$phpbb_container->setParameter('core.root_path', $phpbb_root_path);
 		$phpbb_container->setParameter('core.php_ext', $phpEx);
@@ -145,7 +159,7 @@ abstract class phpbb_notification_submit_post_base extends phpbb_database_test_c
 		$phpbb_container->compile();
 
 		// Notification Types
-		$notification_types = array('quote', 'bookmark', 'post', 'post_in_queue', 'topic', 'topic_in_queue', 'approve_topic', 'approve_post', 'forum');
+		$notification_types = array('quote', 'mention', 'bookmark', 'post', 'post_in_queue', 'topic', 'topic_in_queue', 'approve_topic', 'approve_post', 'forum');
 		$notification_types_array = array();
 		foreach ($notification_types as $type)
 		{

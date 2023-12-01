@@ -61,16 +61,16 @@ class notification_method_email_test extends phpbb_tests_notification_base
 		$this->user = $user;
 		$this->user_loader = new \phpbb\user_loader($avatar_helper, $this->db, $phpbb_root_path, $phpEx, 'phpbb_users');
 		$auth = $this->auth = new phpbb_mock_notifications_auth();
+		$this->phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 		$cache_driver = new \phpbb\cache\driver\dummy();
 		$cache = $this->cache = new \phpbb\cache\service(
 			$cache_driver,
 			$this->config,
 			$this->db,
+			$this->phpbb_dispatcher,
 			$phpbb_root_path,
 			$phpEx
 		);
-
-		$this->phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 
 		$phpbb_container = $this->container = new ContainerBuilder();
 		$loader     = new YamlFileLoader($phpbb_container, new FileLocator(__DIR__ . '/fixtures'));
@@ -84,13 +84,23 @@ class notification_method_email_test extends phpbb_tests_notification_base
 		$phpbb_container->set('cache.driver', $cache_driver);
 		$phpbb_container->set('cache', $cache);
 		$phpbb_container->set('text_formatter.utils', new \phpbb\textformatter\s9e\utils());
-		$phpbb_container->set('dispatcher', $this->phpbb_dispatcher);
+		$phpbb_container->set('event_dispatcher', $this->phpbb_dispatcher);
 		$phpbb_container->setParameter('core.root_path', $phpbb_root_path);
 		$phpbb_container->setParameter('core.php_ext', $phpEx);
 		$phpbb_container->setParameter('tables.notifications', 'phpbb_notifications');
 		$phpbb_container->setParameter('tables.user_notifications', 'phpbb_user_notifications');
 		$phpbb_container->setParameter('tables.notification_types', 'phpbb_notification_types');
 		$phpbb_container->setParameter('tables.notification_emails', 'phpbb_notification_emails');
+		$phpbb_container->set(
+			'text_formatter.s9e.mention_helper',
+			new \phpbb\textformatter\s9e\mention_helper(
+				$this->db,
+				$auth,
+				$this->user,
+				$phpbb_root_path,
+				$phpEx
+			)
+		);
 
 		$this->notification_method_email = $this->getMockBuilder('\phpbb\notification\method\email')
 			->setConstructorArgs([

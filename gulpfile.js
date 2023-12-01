@@ -1,49 +1,57 @@
 'use strict';
 
-const del = require('del');
 const gulp = require('gulp');
-const autoprefixer = require('gulp-autoprefixer');
-// const sass = require('gulp-sass');
 const rename = require('gulp-rename');
 const sourcemaps = require('gulp-sourcemaps');
-const cssnano = require('cssnano');
+const concat = require('gulp-concat-css');
 const postcss = require('gulp-postcss');
+const autoprefixer = require('autoprefixer');
+const cssnano = require('cssnano');
 const sorting = require('postcss-sorting');
-const atimport = require('postcss-import');
-// const torem = require('postcss-pxtorem');
 const sortOrder = require('./.postcss-sorting.json');
-// const pkg = require('./package.json');
 
 // Config
-const build = {
-	css: './phpBB/styles/prosilver/theme/',
+const paths = {
+	styles: {
+		src: './phpBB/styles/prosilver/theme/*.css',
+		css: './phpBB/styles/prosilver/theme/',
+	},
 };
 
-gulp.task('css', () => {
-	const css = gulp
-		.src(build.css + '*.css')
-		.pipe(autoprefixer())
-		.pipe(
-			postcss([
-				sorting(sortOrder),
-			]),
-		)
-		.pipe(gulp.dest(build.css));
-
-	return css;
-});
-
-gulp.task('clean', () => {
-	del([ 'dist' ]);
-});
-
-gulp.task('minify', () => {
-	const css = gulp
-		.src(build.css + '/bidi.css')
+function styles() {
+	return gulp.src(paths.styles.src)
 		.pipe(sourcemaps.init())
 		.pipe(
 			postcss([
-				atimport(),
+				autoprefixer(),
+				sorting(sortOrder),
+			]),
+		)
+		.pipe(sourcemaps.write('./'))
+		.pipe(gulp.dest(paths.styles.css));
+}
+
+function minify() {
+	return gulp.src([
+		paths.styles.css + 'normalize.css',
+		paths.styles.css + 'base.css',
+		paths.styles.css + 'utilities.css',
+		paths.styles.css + 'icons.css',
+		paths.styles.css + 'common.css',
+		paths.styles.css + 'buttons.css',
+		paths.styles.css + 'links.css',
+		paths.styles.css + 'mentions.css',
+		paths.styles.css + 'content.css',
+		paths.styles.css + 'cp.css',
+		paths.styles.css + 'forms.css',
+		paths.styles.css + 'colours.css',
+		paths.styles.css + 'responsive.css',
+		paths.styles.css + 'bidi.css',
+	])
+		.pipe(sourcemaps.init())
+		.pipe(concat('stylesheet.css'))
+		.pipe(
+			postcss([
 				cssnano(),
 			]),
 		)
@@ -52,13 +60,15 @@ gulp.task('minify', () => {
 			extname: '.css',
 		}))
 		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest(build.css));
+		.pipe(gulp.dest(paths.styles.css));
+}
 
-	return css;
-});
+function watch() {
+	gulp.watch(paths.styles.src, styles);
+}
 
-gulp.task('watch', () => {
-	gulp.watch('phpBB/styles/prosilver/theme/*.css', [ 'css' ]);
-});
+exports.style = styles;
+exports.minify = minify;
+exports.watch = watch;
 
-gulp.task('default', [ 'css', 'watch' ]);
+exports.default = gulp.series(styles, minify, watch);

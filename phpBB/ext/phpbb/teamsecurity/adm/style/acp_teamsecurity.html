@@ -1,74 +1,74 @@
-<!-- INCLUDE overall_header.html -->
+{% INCLUDE 'overall_header.html' %}
 
-<h1>{L_ACP_TEAM_SECURITY_SETTINGS}</h1>
+<h1>{{ lang('ACP_TEAM_SECURITY_SETTINGS') }}</h1>
 
-<p>{L_ACP_TEAM_SECURITY_SETTINGS_EXPLAIN}</p>
+<p>{{ lang('ACP_TEAM_SECURITY_SETTINGS_EXPLAIN') }}</p>
 
-<form id="acp_teamsecurity" method="post" action="{U_ACTION}">
+<form id="acp_teamsecurity" method="post" action="{{ U_ACTION }}">
 	<fieldset>
-		<legend>{L_GENERAL_OPTIONS}</legend>
+		<legend>{{ lang('GENERAL_OPTIONS') }}</legend>
 		<dl>
-			<dt><label for="sec_login_email">{L_ACP_LOGIN_EMAIL}{L_COLON}</label><br /><span>{L_ACP_LOGIN_EMAIL_EXPLAIN}</span></dt>
+			<dt><label for="sec_login_email">{{ lang('ACP_LOGIN_EMAIL') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_LOGIN_EMAIL_EXPLAIN') }}</span></dt>
 			<dd>
-				<label><input type="radio" class="radio" id="sec_login_email" name="sec_login_email" value="1"<!-- IF S_ACP_LOGIN_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
-				<label><input type="radio" class="radio" name="sec_login_email" value="0"<!-- IF not S_ACP_LOGIN_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+				<label><input type="radio" class="radio" id="sec_login_email" name="sec_login_email" value="1"{% if S_ACP_LOGIN_EMAIL %} checked="checked"{% endif %} /> {{ lang('YES') }}</label>
+				<label><input type="radio" class="radio" name="sec_login_email" value="0"{% if not S_ACP_LOGIN_EMAIL %} checked="checked"{% endif %} /> {{ lang('NO') }}</label>
 			</dd>
 		</dl>
 		<dl>
-			<dt><label for="sec_contact">{L_ACP_CONTACT_EMAIL}{L_COLON}</label><br /><span>{L_ACP_CONTACT_EMAIL_EXPLAIN}</span></dt>
-			<dd><input type="text" id="sec_contact" name="sec_contact" value="{ACP_CONTACT_EMAIL}" size="40" maxlength="255" /></dd>
+			<dt><label for="sec_contact">{{ lang('ACP_CONTACT_EMAIL') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_CONTACT_EMAIL_EXPLAIN') }}</span></dt>
+			<dd><input type="text" id="sec_contact" name="sec_contact" value="{{ ACP_CONTACT_EMAIL }}" size="40" maxlength="255" /></dd>
 		</dl>
 		<dl>
-			<dt><label for="sec_contact_name">{L_ACP_CONTACT_NAME}{L_COLON}</label><br /><span>{L_ACP_CONTACT_NAME_EXPLAIN}</span></dt>
-			<dd><input type="text" id="sec_contact_name" name="sec_contact_name" value="{ACP_CONTACT_NAME}" size="40" maxlength="255" /></dd>
+			<dt><label for="sec_contact_name">{{ lang('ACP_CONTACT_NAME') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_CONTACT_NAME_EXPLAIN') }}</span></dt>
+			<dd><input type="text" id="sec_contact_name" name="sec_contact_name" value="{{ ACP_CONTACT_NAME }}" size="40" maxlength="255" /></dd>
 		</dl>
 	</fieldset>
 
 	<fieldset>
-		<legend>{L_ACP_GROUP_SECURITY_OPTIONS}</legend>
+		<legend>{{ lang('ACP_GROUP_SECURITY_OPTIONS') }}</legend>
 		<dl>
-			<dt><label for="sec_login_attempts">{L_ACP_LOGIN_ATTEMPTS}{L_COLON}</label><br /><span>{L_ACP_LOGIN_ATTEMPTS_EXPLAIN}</span></dt>
+			<dt><label for="sec_login_attempts">{{ lang('ACP_LOGIN_ATTEMPTS') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_LOGIN_ATTEMPTS_EXPLAIN') }}</span></dt>
 			<dd>
-				<label><input type="radio" class="radio" id="sec_login_attempts" name="sec_login_attempts" value="1"<!-- IF S_ACP_LOGIN_ATTEMPTS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
-				<label><input type="radio" class="radio" name="sec_login_attempts" value="0"<!-- IF not S_ACP_LOGIN_ATTEMPTS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+				<label><input type="radio" class="radio" id="sec_login_attempts" name="sec_login_attempts" value="1"{% if S_ACP_LOGIN_ATTEMPTS %} checked="checked"{% endif %} /> {{ lang('YES') }}</label>
+				<label><input type="radio" class="radio" name="sec_login_attempts" value="0"{% if not S_ACP_LOGIN_ATTEMPTS %} checked="checked"{% endif %} /> {{ lang('NO') }}</label>
 			</dd>
 		</dl>
 		<dl>
-			<dt><label for="sec_email_changes">{L_ACP_EMAIL_CHANGES}{L_COLON}</label><br /><span>{L_ACP_EMAIL_CHANGES_EXPLAIN}</span></dt>
+			<dt><label for="sec_email_changes">{{ lang('ACP_EMAIL_CHANGES') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_EMAIL_CHANGES_EXPLAIN') }}</span></dt>
 			<dd>
-				<label><input type="radio" class="radio" id="sec_email_changes" name="sec_email_changes" value="1"<!-- IF S_ACP_EMAIL_CHANGES --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
-				<label><input type="radio" class="radio" name="sec_email_changes" value="0"<!-- IF not S_ACP_EMAIL_CHANGES --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+				<label><input type="radio" class="radio" id="sec_email_changes" name="sec_email_changes" value="1"{% if S_ACP_EMAIL_CHANGES %} checked="checked"{% endif %} /> {{ lang('YES') }}</label>
+				<label><input type="radio" class="radio" name="sec_email_changes" value="0"{% if not S_ACP_EMAIL_CHANGES %} checked="checked"{% endif %} /> {{ lang('NO') }}</label>
 			</dd>
 		</dl>
 		<dl>
-			<dt><label for="sec_strong_pass">{L_ACP_STRONG_PASS}{L_COLON}</label><br /><span>{L_ACP_STRONG_PASS_EXPLAIN}</span></dt>
+			<dt><label for="sec_strong_pass">{{ lang('ACP_STRONG_PASS') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_STRONG_PASS_EXPLAIN') }}</span></dt>
 			<dd>
-				<label><input type="radio" class="radio" id="sec_strong_pass" name="sec_strong_pass" value="1"<!-- IF S_ACP_STRONG_PASS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
-				<label><input type="radio" class="radio" name="sec_strong_pass" value="0"<!-- IF not S_ACP_STRONG_PASS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+				<label><input type="radio" class="radio" id="sec_strong_pass" name="sec_strong_pass" value="1"{% if S_ACP_STRONG_PASS %} checked="checked"{% endif %} /> {{ lang('YES') }}</label>
+				<label><input type="radio" class="radio" name="sec_strong_pass" value="0"{% if not S_ACP_STRONG_PASS %} checked="checked"{% endif %} /> {{ lang('NO') }}</label>
 			</dd>
 		</dl>
 		<dl>
-			<dt><label for="sec_min_pass_chars">{L_ACP_MIN_PASS_CHARS}{L_COLON}</label><br /><span>{L_ACP_MIN_PASS_CHARS_EXPLAIN}</span></dt>
-			<dd><input type="number" id="sec_min_pass_chars" name="sec_min_pass_chars" value="{ACP_MIN_PASS_CHARS}" size="3" maxlength="3" min="0" max="999" /> {L_CHARS}</dd>
+			<dt><label for="sec_min_pass_chars">{{ lang('ACP_MIN_PASS_CHARS') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_MIN_PASS_CHARS_EXPLAIN') }}</span></dt>
+			<dd><input type="number" id="sec_min_pass_chars" name="sec_min_pass_chars" value="{{ ACP_MIN_PASS_CHARS }}" size="3" maxlength="3" min="0" max="999" /> {{ lang('CHARS') }}</dd>
 		</dl>
 		<dl>
-			<dt><label for="sec_usergroups">{L_ACP_GROUPS}{L_COLON}</label><br /><span>{L_ACP_GROUPS_EXPLAIN}</span></dt>
+			<dt><label for="sec_usergroups">{{ lang('ACP_GROUPS') ~ lang('COLON') }}</label><br /><span>{{ lang('ACP_GROUPS_EXPLAIN') }}</span></dt>
 			<dd><select name="sec_usergroups[]" id="sec_usergroups" size="10" multiple="multiple">
-				<!-- BEGIN group_options -->
-					<option value="{group_options.VALUE}"<!-- IF group_options.S_SELECTED --> selected="selected"<!-- ENDIF -->>{group_options.LABEL}</option>
-				<!-- END group_options -->
+				{% for group_options in loops.group_options %}
+					<option value="{{ group_options.VALUE }}"{% if group_options.S_SELECTED %} selected="selected"{% endif %}>{{ group_options.LABEL }}</option>
+				{% endfor %}
 			</select></dd>
 		</dl>
 	</fieldset>
 
 	<fieldset>
-		<legend>{L_ACP_SUBMIT_CHANGES}</legend>
+		<legend>{{ lang('ACP_SUBMIT_CHANGES') }}</legend>
 		<p class="submit-buttons">
-			<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
-			<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+			<input class="button1" type="submit" id="submit" name="submit" value="{{ lang('SUBMIT') }}" />&nbsp;
+			<input class="button2" type="reset" id="reset" name="reset" value="{{ lang('RESET') }}" />
 		</p>
-		{S_FORM_TOKEN}
+		{{ S_FORM_TOKEN }}
 	</fieldset>
 </form>
 
-<!-- INCLUDE overall_footer.html -->
+{% INCLUDE 'overall_footer.html' %}

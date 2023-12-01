@@ -95,7 +95,7 @@ interface driver_interface
 	*
 	* @param string $query			SQL query
 	*
-	* @return int|bool				Query ID (integer) if cache contains a rowset
+	* @return string|false			Query ID (md5 of query) if cache contains a rowset
 	*								for the specified query.
 	*								False otherwise.
 	*/
@@ -164,4 +164,13 @@ interface driver_interface
 	* @return bool
 	*/
 	public function sql_freeresult($query_id);
+
+	/**
+	 * Ensure query ID can be used by cache
+	 *
+	 * @param object|resource|int|string $query_id Mixed type query id
+	 *
+	 * @return int|string Query id in string or integer format
+	 */
+	public function clean_query_id($query_id);
 }

@@ -66,10 +66,10 @@ th a:hover {
 
 /* Links for forum/topic lists */
 a.forumtitle,
-a.topictitle {
+a.topictitle,
+span.topictitle {
 	font-family: "Trebuchet MS", Helvetica, Arial, sans-serif;
 	font-size: 13px;
-	font-weight: bold;
 	text-decoration: none;
 }
 
@@ -79,6 +79,10 @@ a.forumtitle:hover {
 
 a.topictitle {
 	display: inline;
+}
+
+a.unread {
+	font-weight: bold;
 }
 
 a.topictitle:hover {
@@ -98,10 +102,12 @@ a.lastsubject:hover {
 	text-decoration: none;
 }
 
+.row-item .forumtitle:hover,
 .row-item .topictitle:hover,
+.row-item .lastsubject:hover,
 .row-item .subforum:hover,
-.row-item .username:hover,
-.row-item .username-coloured:hover {
+.row-item a.username:hover,
+.row-item a.username-coloured:hover {
 	text-decoration: underline;
 }
 

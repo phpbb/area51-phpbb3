@@ -30,7 +30,7 @@ class file_downloader
 	 * @param int		$port			Port to connect to; default: 80
 	 * @param int		$timeout		Connection timeout in seconds; default: 6
 	 *
-	 * @return mixed File data as string if file can be read and there is no
+	 * @return false|string File data as string if file can be read and there is no
 	 *			timeout, false if there were errors or the connection timed out
 	 *
 	 * @throws \phpbb\exception\runtime_exception If data can't be retrieved and no error
@@ -42,7 +42,9 @@ class file_downloader
 		$this->error_number = 0;
 		$this->error_string = '';
 
-		if ($socket = @fsockopen(($port == 443 ? 'ssl://' : '') . $host, $port, $this->error_number, $this->error_string, $timeout))
+		if (function_exists('fsockopen') &&
+			$socket = @fsockopen(($port == 443 ? 'ssl://' : '') . $host, $port, $this->error_number, $this->error_string, $timeout)
+		)
 		{
 			@fputs($socket, "GET $directory/$filename HTTP/1.0\r\n");
 			@fputs($socket, "HOST: $host\r\n");
@@ -75,7 +77,7 @@ class file_downloader
 
 				$stream_meta_data = stream_get_meta_data($socket);
 
-				if (!empty($stream_meta_data['timed_out']) || time() >= $timer_stop)
+				if ($stream_meta_data['timed_out'] || time() >= $timer_stop)
 				{
 					throw new \phpbb\exception\runtime_exception('FSOCK_TIMEOUT');
 				}

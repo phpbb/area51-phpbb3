@@ -43,14 +43,21 @@ require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
 $phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
 $phpbb_class_loader->register();
 
-$finder = new \phpbb\finder($phpbb_root_path);
+$finder = new \phpbb\finder\finder(null, false, $phpbb_root_path, $phpEx);
 $classes = $finder->core_path('phpbb/')
 	->directory('/db/migration/data')
 	->get_classes();
 
 $db = new \phpbb\db\driver\sqlite3();
+
+// The database is not used by db\tools when we generate the schema but it requires a doctrine DBAL object
+// which always tries to connect to the database in the constructor. Which means if we want a valid doctrine
+// Connection object that is not connected to any database we have to do that.
+$ref = new ReflectionClass(\Doctrine\DBAL\Connection::class);
+$db_doctrine = $ref->newInstanceWithoutConstructor();
+
 $factory = new \phpbb\db\tools\factory();
-$db_tools = $factory->get($db, true);
+$db_tools = $factory->get($db_doctrine, true);
 
 $tables_data = \Symfony\Component\Yaml\Yaml::parseFile($phpbb_root_path . '/config/default/container/tables.yml');
 $tables = [];

@@ -160,20 +160,23 @@ function make_forum_select($select_id = false, $ignore_id = false, $ignore_acl =
 */
 function size_select_options($size_compare)
 {
-	global $user;
+	global $language;
 
-	$size_types_text = array($user->lang['BYTES'], $user->lang['KIB'], $user->lang['MIB']);
+	$size_types_text = array($language->lang('BYTES'), $language->lang('KIB'), $language->lang('MIB'));
 	$size_types = array('b', 'kb', 'mb');
 
-	$s_size_options = '';
+	$size_options = [];
 
 	for ($i = 0, $size = count($size_types_text); $i < $size; $i++)
 	{
-		$selected = ($size_compare == $size_types[$i]) ? ' selected="selected"' : '';
-		$s_size_options .= '<option value="' . $size_types[$i] . '"' . $selected . '>' . $size_types_text[$i] . '</option>';
+		$size_options[] = [
+			'value'		=> $size_types[$i],
+			'selected'	=> $size_compare == $size_types[$i],
+			'label'		=> $size_types_text[$i],
+		];
 	}
 
-	return $s_size_options;
+	return $size_options;
 }
 
 /**
@@ -479,7 +482,7 @@ function copy_forum_permissions($src_forum_id, $dest_forum_ids, $clear_dest_perm
 /**
 * Get physical file listing
 */
-function filelist($rootdir, $dir = '', $type = 'gif|jpg|jpeg|png')
+function filelist($rootdir, $dir = '', $type = 'gif|jpg|jpeg|png|svg|webp')
 {
 	$matches = array($dir => array());
 
@@ -761,6 +764,7 @@ function move_posts($post_ids, $topic_id, $auto_sync = true)
 
 /**
 * Remove topic(s)
+* @return array with topics and posts affected
 */
 function delete_topics($where_type, $where_ids, $auto_sync = true, $post_count_sync = true, $call_delete_posts = true)
 {
@@ -890,11 +894,11 @@ function delete_topics($where_type, $where_ids, $auto_sync = true, $post_count_s
 	/* @var $phpbb_notifications \phpbb\notification\manager */
 	$phpbb_notifications = $phpbb_container->get('notification_manager');
 
-	$phpbb_notifications->delete_notifications(array(
+	$phpbb_notifications->delete_notifications_by_types([
 		'notification.type.topic',
 		'notification.type.approve_topic',
 		'notification.type.topic_in_queue',
-	), $topic_ids);
+	], $topic_ids);
 
 	return $return;
 }
@@ -908,6 +912,7 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 
 	// Notifications types to delete
 	$delete_notifications_types = array(
+		'notification.type.mention',
 		'notification.type.quote',
 		'notification.type.approve_post',
 		'notification.type.post_in_queue',
@@ -1091,16 +1096,9 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 		$search_backend_factory = $phpbb_container->get('search.backend_factory');
 		$search = $search_backend_factory->get_active();
 	}
-	catch (RuntimeException $e)
+	catch (\phpbb\search\exception\no_search_backend_found_exception $e)
 	{
-		if (strpos($e->getMessage(), 'No service found') === 0)
-		{
-			trigger_error('NO_SUCH_SEARCH_MODULE');
-		}
-		else
-		{
-			throw $e;
-		}
+		trigger_error('NO_SUCH_SEARCH_MODULE');
 	}
 
 	$search->index_remove($post_ids, $poster_ids, $forum_ids);
@@ -1187,7 +1185,7 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 	/* @var $phpbb_notifications \phpbb\notification\manager */
 	$phpbb_notifications = $phpbb_container->get('notification_manager');
 
-	$phpbb_notifications->delete_notifications($delete_notifications_types, $post_ids);
+	$phpbb_notifications->delete_notifications_by_types($delete_notifications_types, $post_ids);
 
 	return count($post_ids);
 }
@@ -1208,7 +1206,7 @@ function delete_topic_shadows($forum_id, $sql_more = '', $auto_sync = true)
 	if (!$forum_id)
 	{
 		// Nothing to do.
-		return;
+		return [];
 	}
 
 	// Set of affected forums we have to resync
@@ -1326,7 +1324,7 @@ function update_posted_info(&$topic_ids)
 */
 function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false, $sync_extra = false)
 {
-	global $db;
+	global $db, $phpbb_dispatcher;
 
 	if (is_array($where_ids))
 	{
@@ -1828,11 +1826,26 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 			// 5: Retrieve last_post infos
 			if (count($post_ids))
 			{
-				$sql = 'SELECT p.post_id, p.poster_id, p.post_subject, p.post_time, p.post_username, u.username, u.user_colour
-					FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
-					WHERE ' . $db->sql_in_set('p.post_id', $post_ids) . '
-						AND p.poster_id = u.user_id';
-				$result = $db->sql_query($sql);
+				$sql_ary = array(
+					'SELECT'	=> 'p.post_id, p.poster_id, p.post_subject, p.post_time, p.post_username, u.username, u.user_colour',
+					'FROM'		=> array(
+						POSTS_TABLE	=> 'p',
+						USERS_TABLE => 'u',
+					),
+					'WHERE'		=> $db->sql_in_set('p.post_id', $post_ids) . '
+						AND p.poster_id = u.user_id',
+				);
+
+				/**
+				* Event to modify the SQL array to get the post and user data from all forums' last posts
+				*
+				* @event core.sync_forum_last_post_info_sql
+				* @var	array	sql_ary		SQL array with some post and user data from the last posts list
+				* @since 3.3.5-RC1
+				*/
+				$vars = ['sql_ary'];
+				extract($phpbb_dispatcher->trigger_event('core.sync_forum_last_post_info_sql', compact($vars)));
+				$result = $db->sql_query($db->sql_build_query('SELECT', $sql_ary));
 
 				while ($row = $db->sql_fetchrow($result))
 				{
@@ -1864,7 +1877,6 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 						}
 					}
 				}
-				unset($post_info);
 			}
 
 			// 6: Now do that thing
@@ -1874,6 +1886,23 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 			{
 				array_push($fieldnames, 'posts_approved', 'posts_unapproved', 'posts_softdeleted', 'topics_approved', 'topics_unapproved', 'topics_softdeleted');
 			}
+
+			/**
+			* Event to modify the SQL array to get the post and user data from all forums' last posts
+			*
+			* @event core.sync_modify_forum_data
+			* @var	array	forum_data		Array with data to update for all forum ids
+			* @var	array	post_info		Array with some post and user data from the last posts list
+			* @var	array	fieldnames		Array with the partial column names that are being updated
+			* @since 3.3.5-RC1
+			*/
+			$vars = [
+				'forum_data',
+				'post_info',
+				'fieldnames',
+			];
+			extract($phpbb_dispatcher->trigger_event('core.sync_modify_forum_data', compact($vars)));
+			unset($post_info);
 
 			foreach ($forum_data as $forum_id => $row)
 			{
@@ -2043,11 +2072,31 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 				unset($delete_topics, $delete_topic_ids);
 			}
 
-			$sql = 'SELECT p.post_id, p.topic_id, p.post_visibility, p.poster_id, p.post_subject, p.post_username, p.post_time, u.username, u.user_colour
-				FROM ' . POSTS_TABLE . ' p, ' . USERS_TABLE . ' u
-				WHERE ' . $db->sql_in_set('p.post_id', $post_ids) . '
-					AND u.user_id = p.poster_id';
-			$result = $db->sql_query($sql);
+			$sql_ary = array(
+				'SELECT'	=> 'p.post_id, p.topic_id, p.post_visibility, p.poster_id, p.post_subject, p.post_username, p.post_time, u.username, u.user_colour',
+				'FROM'		=> array(
+					POSTS_TABLE	=> 'p',
+					USERS_TABLE => 'u',
+				),
+				'WHERE'		=> $db->sql_in_set('p.post_id', $post_ids) . '
+					AND u.user_id = p.poster_id',
+			);
+
+			$custom_fieldnames = [];
+			/**
+			* Event to modify the SQL array to get the post and user data from all topics' last posts
+			*
+			* @event core.sync_topic_last_post_info_sql
+			* @var	array	sql_ary					SQL array with some post and user data from the last posts list
+			* @var	array	custom_fieldnames		Empty array for custom fieldnames to update the topics_table with
+			* @since 3.3.5-RC1
+			*/
+			$vars = [
+				'sql_ary',
+				'custom_fieldnames',
+			];
+			extract($phpbb_dispatcher->trigger_event('core.sync_topic_last_post_info_sql', compact($vars)));
+			$result = $db->sql_query($db->sql_build_query('SELECT', $sql_ary));
 
 			while ($row = $db->sql_fetchrow($result))
 			{
@@ -2069,6 +2118,22 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 					$topic_data[$topic_id]['last_poster_name'] = ($row['poster_id'] == ANONYMOUS) ? $row['post_username'] : $row['username'];
 					$topic_data[$topic_id]['last_poster_colour'] = $row['user_colour'];
 				}
+
+				/**
+				* Event to modify the topic_data when syncing topics
+				*
+				* @event core.sync_modify_topic_data
+				* @var	array	topic_data		Array with the topics' data we are syncing
+				* @var	array	row				Array with some of the current user and post data
+				* @var	int		topic_id		The current topic_id of $row
+				* @since 3.3.5-RC1
+				*/
+				$vars = [
+					'topic_data',
+					'row',
+					'topic_id',
+				];
+				extract($phpbb_dispatcher->trigger_event('core.sync_modify_topic_data', compact($vars)));
 			}
 			$db->sql_freeresult($result);
 
@@ -2184,6 +2249,10 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 			// These are fields that will be synchronised
 			$fieldnames = array('time', 'visibility', 'posts_approved', 'posts_unapproved', 'posts_softdeleted', 'poster', 'first_post_id', 'first_poster_name', 'first_poster_colour', 'last_post_id', 'last_post_subject', 'last_post_time', 'last_poster_id', 'last_poster_name', 'last_poster_colour');
 
+			// Add custom fieldnames
+			$fieldnames = array_merge($fieldnames, $custom_fieldnames);
+			unset($custom_fieldnames);
+
 			if ($sync_extra)
 			{
 				// This routine assumes that post_reported values are correct
@@ -2260,6 +2329,7 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 
 /**
 * Prune function
+* @return array with topics and posts affected
 */
 function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync = true, $prune_limit = 0)
 {
@@ -2272,7 +2342,7 @@ function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync
 
 	if (!count($forum_id))
 	{
-		return;
+		return ['topics' => 0, 'posts' => 0];
 	}
 
 	$sql_and = '';
@@ -2422,7 +2492,7 @@ function auto_prune($forum_id, $prune_mode, $prune_flags, $prune_days, $prune_fr
 * @param \phpbb\db\driver\driver_interface $db Database connection
 * @param \phpbb\cache\driver\driver_interface $cache Cache driver
 * @param \phpbb\auth\auth $auth Authentication object
-* @return null
+* @return void
 */
 function phpbb_cache_moderators($db, $cache, $auth)
 {
@@ -2632,7 +2702,7 @@ function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id 
 * @param \phpbb\auth\auth $auth Authentication object
 * @param array|bool $group_id If an array, remove all members of this group from foe lists, or false to ignore
 * @param array|bool $user_id If an array, remove this user from foe lists, or false to ignore
-* @return null
+* @return void
 */
 function phpbb_update_foes($db, $auth, $group_id = false, $user_id = false)
 {
@@ -3051,7 +3121,7 @@ function add_permission_language()
  * @param int		$flag			The binary flag which is OR-ed with the current column value
  * @param string	$sql_more		This string is attached to the sql query generated to update the table.
  *
- * @return null
+ * @return void
  */
 function enable_bitfield_column_flag($table_name, $column_name, $flag, $sql_more = '')
 {
@@ -3086,109 +3156,68 @@ function display_ban_end_options()
 */
 function display_ban_options($mode)
 {
-	global $user, $db, $template;
+	global $language, $user, $template, $phpbb_container;
 
-	switch ($mode)
+	/** @var \phpbb\ban\manager $ban_manager */
+	$ban_manager = $phpbb_container->get('ban.manager');
+	$ban_rows = $ban_manager->get_bans($mode);
+
+	$banned_options = [];
+
+	foreach ($ban_rows as $ban_row)
 	{
-		case 'user':
+		$banned_options[] = [
+			'value'		=> $ban_row['ban_id'],
+			'label'		=> $ban_row['label'] ?? $ban_row['ban_item'],
+		];
 
-			$field = 'username';
-
-			$sql = 'SELECT b.*, u.user_id, u.username, u.username_clean
-				FROM ' . BANLIST_TABLE . ' b, ' . USERS_TABLE . ' u
-				WHERE (b.ban_end >= ' . time() . '
-						OR b.ban_end = 0)
-					AND u.user_id = b.ban_userid
-				ORDER BY u.username_clean ASC';
-		break;
-
-		case 'ip':
-
-			$field = 'ban_ip';
-
-			$sql = 'SELECT *
-				FROM ' . BANLIST_TABLE . '
-				WHERE (ban_end >= ' . time() . "
-						OR ban_end = 0)
-					AND ban_ip <> ''
-				ORDER BY ban_ip";
-		break;
-
-		case 'email':
-
-			$field = 'ban_email';
-
-			$sql = 'SELECT *
-				FROM ' . BANLIST_TABLE . '
-				WHERE (ban_end >= ' . time() . "
-						OR ban_end = 0)
-					AND ban_email <> ''
-				ORDER BY ban_email";
-		break;
-	}
-	$result = $db->sql_query($sql);
-
-	$banned_options = $excluded_options = array();
-	while ($row = $db->sql_fetchrow($result))
-	{
-		$option = '<option value="' . $row['ban_id'] . '">' . $row[$field] . '</option>';
-
-		if ($row['ban_exclude'])
-		{
-			$excluded_options[] = $option;
-		}
-		else
-		{
-			$banned_options[] = $option;
-		}
-
-		$time_length = ($row['ban_end']) ? ($row['ban_end'] - $row['ban_start']) / 60 : 0;
+		$time_length = ($ban_row['ban_end']) ? ($ban_row['ban_end'] - $ban_row['ban_start']) / 60 : 0;
 
 		if ($time_length == 0)
 		{
 			// Banned permanently
-			$ban_length = $user->lang['PERMANENT'];
+			$ban_length = $language->lang('PERMANENT');
 		}
 		else if (isset($ban_end_text[$time_length]))
 		{
 			// Banned for a given duration
-			$ban_length = $user->lang('BANNED_UNTIL_DURATION', $ban_end_text[$time_length], $user->format_date($row['ban_end'], false, true));
+			$ban_length = $language->lang('BANNED_UNTIL_DURATION', $ban_end_text[$time_length], $user->format_date($ban_row['ban_end'], false, true));
 		}
 		else
 		{
 			// Banned until given date
-			$ban_length = $user->lang('BANNED_UNTIL_DATE', $user->format_date($row['ban_end'], false, true));
+			$ban_length = $language->lang('BANNED_UNTIL_DATE', $user->format_date($ban_row['ban_end'], false, true));
 		}
 
 		$template->assign_block_vars('bans', array(
-			'BAN_ID'		=> (int) $row['ban_id'],
+			'BAN_ID'		=> (int) $ban_row['ban_id'],
 			'LENGTH'		=> $ban_length,
 			'A_LENGTH'		=> addslashes($ban_length),
-			'REASON'		=> $row['ban_reason'],
-			'A_REASON'		=> addslashes($row['ban_reason']),
-			'GIVE_REASON'	=> $row['ban_give_reason'],
-			'A_GIVE_REASON'	=> addslashes($row['ban_give_reason']),
+			'REASON'		=> $ban_row['ban_reason'],
+			'A_REASON'		=> addslashes($ban_row['ban_reason']),
+			'GIVE_REASON'	=> $ban_row['ban_reason_display'],
+			'A_GIVE_REASON'	=> addslashes($ban_row['ban_reason_display']),
 		));
 	}
-	$db->sql_freeresult($result);
 
-	$options = '';
-	if ($excluded_options)
+	if (count($banned_options))
 	{
-		$options .= '<optgroup label="' . $user->lang['OPTIONS_EXCLUDED'] . '">';
-		$options .= implode('', $excluded_options);
-		$options .= '</optgroup>';
-	}
+		$banned_select = [
+			'tag'		=> 'select',
+			'name'		=> 'unban[]',
+			'id'		=> 'unban',
+			'class'		=> 'w-50',
+			'multiple'	=> true,
+			'size'		=> 10,
+			'data'		=> [
+				'onchange'	=> 'display_details',
+			],
+			'options'	=> [[
+				'label'		=> $language->lang('OPTIONS_BANNED'),
+				'options'	=> $banned_options,
+			]],
+		];
 
-	if ($banned_options)
-	{
-		$options .= '<optgroup label="' . $user->lang['OPTIONS_BANNED'] . '">';
-		$options .= implode('', $banned_options);
-		$options .= '</optgroup>';
+		$template->assign_vars(['BANNED_SELECT' => $banned_select]);
 	}
-
-	$template->assign_vars(array(
-		'S_BANNED_OPTIONS'	=> ($banned_options || $excluded_options) ? true : false,
-		'BANNED_OPTIONS'	=> $options,
-	));
 }

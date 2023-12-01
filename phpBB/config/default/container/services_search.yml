@@ -1,14 +1,21 @@
 services:
 
+    search.state_helper:
+        class: phpbb\search\state_helper
+        arguments:
+            - '@config'
+            - '@search.backend_factory'
+
 # Search backends
     search.fulltext.mysql:
         class: phpbb\search\backend\fulltext_mysql
         arguments:
             - '@config'
             - '@dbal.conn'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '@language'
             - '@user'
+            - '%tables.search_results%'
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
@@ -19,9 +26,12 @@ services:
         arguments:
             - '@config'
             - '@dbal.conn'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '@language'
             - '@user'
+            - '%tables.search_results%'
+            - '%tables.search_wordlist%'
+            - '%tables.search_wordmatch%'
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
@@ -32,9 +42,10 @@ services:
         arguments:
             - '@config'
             - '@dbal.conn'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '@language'
             - '@user'
+            - '%tables.search_results%'
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
@@ -47,7 +58,7 @@ services:
             - '@config'
             - '@dbal.conn'
             - '@dbal.tools'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '@language'
             - '@log'
             - '@user'

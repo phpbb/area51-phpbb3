@@ -11,8 +11,8 @@
 /* stylelint-disable selector-max-id */
 /* stylelint-disable selector-max-compound-selectors */
 /* stylelint-disable selector-no-qualifying-type */
-/* stylelint-disable declaration-property-unit-blacklist */
-/* stylelint-disable declaration-property-unit-whitelist */
+/* stylelint-disable declaration-property-unit-disallowed-list */
+/* stylelint-disable declaration-property-unit-allowed-list */
 
 /* General markup styles
 ---------------------------------------- */
@@ -286,6 +286,10 @@ li {
 	min-width: 0;
 	padding: 0;
 	padding-right: 10px;
+}
+
+.w-50 {
+	width: 50%;
 }
 
 @media only screen and (max-width: 700px), only screen and (max-device-width: 700px) {
@@ -1708,6 +1712,7 @@ input.autowidth {
 
 /* Form button styles
 ---------------------------------------- */
+.button,
 a.button1,
 input.button1,
 a.button2,
@@ -1721,6 +1726,7 @@ input.button2 {
 	cursor: pointer;
 }
 
+.button,
 a.button1,
 input.button1 {
 	font-weight: bold;
@@ -1734,6 +1740,10 @@ input.button2 {
 }
 
 /* <a> button in the style of the form buttons */
+.button,
+.button:link,
+.button:visited,
+.button:active,
 a.button1,
 a.button1:link,
 a.button1:visited,
@@ -1748,6 +1758,7 @@ a.button2:active {
 }
 
 /* Hover states */
+.button:hover,
 a.button1:hover,
 input.button1:hover,
 a.button2:hover,
@@ -1766,6 +1777,37 @@ input.disabled {
 input.button1:focus,
 input.button2:focus {
 	outline-style: none;
+}
+
+/* Avatar cropper */
+.avatar-cropper-buttons {
+	text-align: center;
+	display: none;
+}
+
+/** Button groups */
+.button-group {
+	display: inline-block;
+}
+
+.button-group + .button-group {
+	margin-left: 8px;
+}
+
+.button-group > .button:first-child {
+	border-radius: 4px 0 0 4px;
+}
+
+.button-group > .button:last-child {
+	border-radius: 0 4px 4px 0;
+}
+
+.button-group > .button:not(:first-child):not(:last-child) {
+	border-radius: 0;
+}
+
+.avatar-cropper-buttons > .button-group {
+	margin: 4px;
 }
 
 /* jQuery popups
@@ -3021,8 +3063,8 @@ fieldset.permissions .permissions-switch {
 /* stylelint-enable selector-max-id */
 /* stylelint-enable selector-max-compound-selectors */
 /* stylelint-enable selector-no-qualifying-type */
-/* stylelint-enable declaration-property-unit-blacklist */
-/* stylelint-enable declaration-property-unit-whitelist */
+/* stylelint-enable declaration-property-unit-disallowed-list */
+/* stylelint-enable declaration-property-unit-allowed-list */
 
 .acp-icon-move-up,
 .acp-icon-move-down {

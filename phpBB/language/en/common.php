@@ -42,15 +42,8 @@ if (empty($lang) || !is_array($lang))
 
 $lang = array_merge($lang, array(
 	'TRANSLATION_INFO'	=> '',
-	'DIRECTION'			=> 'ltr',
 	'DATE_FORMAT'		=> '|d M Y|',	// 01 Jan 2007 (with Relative days enabled)
 	'DATETIME_FORMAT'	=> '|d M Y, H:i|',	// 01 Jan 2007, 13:37 (with Relative days enabled)
-	'USER_LANG'			=> 'en-gb',
-
-	// You can define different rules for the determination of plural forms here.
-	// See https://area51.phpbb.com/docs/dev/3.3.x/language/plurals.html for more information
-	// or ask the translation manager for help.
-	'PLURAL_RULE'		=> 1,
 
 	'1_DAY'			=> '1 day',
 	'1_MONTH'		=> '1 month',
@@ -105,7 +98,6 @@ $lang = array_merge($lang, array(
 	'AUTH_PROVIDER_OAUTH_TOKEN_ERROR_INCORRECTLY_STORED'	=> 'OAuth token incorrectly stored.',
 	'AVATAR_DISALLOWED_CONTENT'		=> 'The upload was rejected because the uploaded file was identified as a possible attack vector.',
 	'AVATAR_DISALLOWED_EXTENSION'	=> 'This file cannot be displayed because the extension <strong>%s</strong> is not allowed.',
-	'AVATAR_EMPTY_REMOTE_DATA'		=> 'The specified avatar could not be uploaded because the remote data appears to be invalid or corrupted.',
 	'AVATAR_EMPTY_FILEUPLOAD'		=> 'The uploaded avatar file is empty.',
 	'AVATAR_INVALID_FILENAME'		=> '%s is an invalid filename.',
 	'AVATAR_NOT_UPLOADED'			=> 'Avatar could not be uploaded.',
@@ -114,7 +106,6 @@ $lang = array_merge($lang, array(
 	'AVATAR_PARTIAL_UPLOAD'			=> 'The specified file was only partially uploaded.',
 	'AVATAR_PHP_SIZE_NA'			=> 'The avatar’s filesize is too large.<br />The maximum allowed filesize set in php.ini could not be determined.',
 	'AVATAR_PHP_SIZE_OVERRUN'		=> 'The avatar’s filesize is too large. The maximum allowed upload size is %1$d %2$s.<br />Please note this is set in php.ini and cannot be overridden.',
-	'AVATAR_REMOTE_UPLOAD_TIMEOUT'		=> 'The specified avatar could not be uploaded because the request timed out.',
 	'AVATAR_PHP_UPLOAD_STOPPED'		=> 'A PHP extension has stopped the file upload.',
 	'AVATAR_URL_INVALID'			=> 'The URL you specified is invalid.',
 	'AVATAR_URL_NOT_FOUND'			=> 'The file specified could not be found.',
@@ -129,9 +120,9 @@ $lang = array_merge($lang, array(
 	'BBCODE_GUIDE'			=> 'BBCode guide',
 	'BCC'					=> 'BCC',
 	'BIRTHDAYS'				=> 'Birthdays',
-	'BOARD_BAN_PERM'		=> 'You have been <strong>permanently</strong> banned from this board.<br /><br />Please contact the %2$sBoard Administrator%3$s for more information.',
+	'BOARD_BAN_PERM'		=> 'You have been <strong>permanently</strong> banned from this board.<br><br>Please contact the %2$sBoard Administrator%3$s for more information.',
 	'BOARD_BAN_REASON'		=> 'Reason given for ban: <strong>%s</strong>',
-	'BOARD_BAN_TIME'		=> 'You have been banned from this board until <strong>%1$s</strong>.<br /><br />Please contact the %2$sBoard Administrator%3$s for more information.',
+	'BOARD_BAN_TIME'		=> 'You have been banned from this board until <strong>%1$s</strong>.<br><br>Please contact the %2$sBoard Administrator%3$s for more information.',
 	'BOARD_DISABLE'			=> 'Sorry but this board is currently unavailable.',
 	'BOARD_DISABLED'		=> 'This board is currently disabled.',
 	'BOARD_UNAVAILABLE'		=> 'Sorry but the board is temporarily unavailable, please try again in a few minutes.',
@@ -164,6 +155,11 @@ $lang = array_merge($lang, array(
 	'CHANGING_PREFERENCES'	=> 'Changing board preferences',
 	'CHANGING_PROFILE'		=> 'Changing profile settings',
 	'CHARACTERS'			=> array(
+		1	=> '%d character',
+		2	=> '%d characters',
+	),
+	// Special version to be used when describing ranges e.g. "min x characters and max y characters"
+	'CHARACTERS_XY'			=> array(
 		1	=> '%d character',
 		2	=> '%d characters',
 	),
@@ -216,6 +212,9 @@ $lang = array_merge($lang, array(
 		1	=> 'Downloaded %d time',
 		2	=> 'Downloaded %d times',
 	),
+
+	'DI_SERVICE_NOT_FOUND'				=> 'Service for class "%1$s" not found in collection.',
+	'DI_MULTIPLE_SERVICE_DEFINITIONS'	=> 'More than one service definitions found for class "%1$s" in collection.',
 
 	'EDIT_POST'							=> 'Edit post',
 	'ELLIPSIS'							=>	'…',
@@ -431,6 +430,7 @@ $lang = array_merge($lang, array(
 	'MESSAGE'				=> 'Message',
 	'MESSAGES'				=> 'Messages',
 	'MESSAGES_COUNT'		=> array(
+		0	=> 'unlimited messages',
 		1	=> '%d message',
 		2	=> '%d messages',
 	),
@@ -477,6 +477,9 @@ $lang = array_merge($lang, array(
 	'NOTIFICATION_FORUM'				=> '<em>Forum:</em> %1$s',
 	'NOTIFICATION_GROUP_REQUEST'		=> '<strong>Group request</strong> from %1$s to join the group %2$s.',
 	'NOTIFICATION_GROUP_REQUEST_APPROVED'	=> '<strong>Group request approved</strong> to join the group %1$s.',
+	'NOTIFICATION_MENTION'				=> array(
+		1	=> '<strong>Mentioned</strong> by %1$s in:',
+	),
 	'NOTIFICATION_METHOD_INVALID'		=> 'The method "%s" does not refer to a valid notification method.',
 	'NOTIFICATION_PM'					=> '<strong>Private Message</strong> from %1$s:',
 	'NOTIFICATION_POST'					=> array(
@@ -602,7 +605,7 @@ $lang = array_merge($lang, array(
 	'POSTS_UNAPPROVED_FORUM'=> 'At least one post in this forum has not been approved.',
 	'POST_BY_AUTHOR'		=> 'by',
 	'POST_BY_FOE'			=> '<strong>%1$s</strong>, who is currently on your ignore list, made this post.',
-	'POST_DISPLAY'			=> '%1$sDisplay this post%2$s.',
+	'POST_DISPLAY'			=> 'Display this post',
 	'POST_DAY'				=> '%.2f posts per day',
 	'POST_DELETED_ACTION'	=> 'Deleted post:',
 	'POST_DELETED'			=> 'This post has been deleted.',
@@ -676,6 +679,10 @@ $lang = array_merge($lang, array(
 	'RETURN_TOPIC'				=> '%sReturn to the topic last visited%s',
 	'RETURN_TO'					=> 'Return to “%s”',
 	'RETURN_TO_INDEX'			=> 'Return to Board Index',
+
+	'ROUTE_NOT_FOUND'				=> 'The requested route “%s” could not be found.',
+	'ROUTE_INVALID_MISSING_PARAMS'	=> 'Invalid or missing parameters passed for route “%s”.',
+
 	'FEED'						=> 'Feed',
 	'FEED_NEWS'					=> 'News',
 	'FEED_TOPICS_ACTIVE'		=> 'Active Topics',
@@ -713,6 +720,7 @@ $lang = array_merge($lang, array(
 	'SEARCH_UNANSWERED'			=> 'Unanswered topics',
 	'SEARCH_UNREAD'				=> 'Unread posts',
 	'SEARCH_USER_POSTS'			=> 'Search user’s posts',
+	'SEARCH_BACKEND_NOT_FOUND'	=> 'No search backend could be found.',
 	'SECONDS'					=> 'Seconds',
 	'SEE_ALL'					=> 'See All',
 	'SELECT'					=> 'Select',

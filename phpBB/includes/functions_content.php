@@ -14,6 +14,9 @@
 /**
 * @ignore
 */
+
+use phpbb\attachment\attachment_category;
+
 if (!defined('IN_PHPBB'))
 {
 	exit;
@@ -141,8 +144,6 @@ function gen_sort_selects(&$limit_days, &$sort_by_text, &$sort_days, &$sort_key,
 		'sorts',
 	);
 	extract($phpbb_dispatcher->trigger_event('core.gen_sort_selects_after', compact($vars)));
-
-	return;
 }
 
 /**
@@ -280,8 +281,6 @@ function make_jumpbox($action, $forum_id = false, $select_all = false, $acl_list
 		'S_JUMPBOX_ACTION'			=> $action,
 		'HIDDEN_FIELDS_FOR_JUMPBOX'	=> build_hidden_fields($url_parts['params']),
 	));
-
-	return;
 }
 
 /**
@@ -438,6 +437,8 @@ function get_context($text, $words, $length = 400)
 	{
 		return str_replace($characters, $entities, ((utf8_strlen($text) >= $length + 3) ? utf8_substr($text, 0, $length) . '...' : $text));
 	}
+
+	return '';
 }
 
 /**
@@ -465,7 +466,7 @@ function phpbb_clean_search_string($search_string)
 *
 * @param string &$message Original message, passed by reference
 * @param string $bbcode_uid BBCode UID
-* @return null
+* @return void
 */
 function decode_message(&$message, $bbcode_uid = '')
 {
@@ -666,14 +667,13 @@ function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text 
 * @param bool $allow_urls If urls is allowed
 * @param bool $allow_smilies If smilies are allowed
 * @param bool $allow_img_bbcode
-* @param bool $allow_flash_bbcode
 * @param bool $allow_quote_bbcode
 * @param bool $allow_url_bbcode
 * @param string $mode Mode to parse text as, e.g. post or sig
 *
 * @return array	An array of string with the errors that occurred while parsing
 */
-function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bbcode = false, $allow_urls = false, $allow_smilies = false, $allow_img_bbcode = true, $allow_flash_bbcode = true, $allow_quote_bbcode = true, $allow_url_bbcode = true, $mode = 'post')
+function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bbcode = false, $allow_urls = false, $allow_smilies = false, $allow_img_bbcode = true, $allow_quote_bbcode = true, $allow_url_bbcode = true, $mode = 'post')
 {
 	global $phpbb_root_path, $phpEx, $phpbb_dispatcher;
 
@@ -689,12 +689,12 @@ function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bb
 	* @var bool		allow_urls		Whether or not to parse URLs
 	* @var bool		allow_smilies	Whether or not to parse Smilies
 	* @var bool		allow_img_bbcode	Whether or not to parse the [img] BBCode
-	* @var bool		allow_flash_bbcode	Whether or not to parse the [flash] BBCode
 	* @var bool		allow_quote_bbcode	Whether or not to parse the [quote] BBCode
 	* @var bool		allow_url_bbcode	Whether or not to parse the [url] BBCode
 	* @var string	mode				Mode to parse text as, e.g. post or sig
 	* @since 3.1.0-a1
 	* @changed 3.2.0-a1 Added mode
+	* @changed 4.0.0-a1 Removed allow_flash_bbcode
 	*/
 	$vars = array(
 		'text',
@@ -705,7 +705,6 @@ function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bb
 		'allow_urls',
 		'allow_smilies',
 		'allow_img_bbcode',
-		'allow_flash_bbcode',
 		'allow_quote_bbcode',
 		'allow_url_bbcode',
 		'mode',
@@ -721,7 +720,7 @@ function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bb
 	}
 
 	$message_parser = new parse_message($text);
-	$message_parser->parse($allow_bbcode, $allow_urls, $allow_smilies, $allow_img_bbcode, $allow_flash_bbcode, $allow_quote_bbcode, $allow_url_bbcode, true, $mode);
+	$message_parser->parse($allow_bbcode, $allow_urls, $allow_smilies, $allow_img_bbcode, $allow_quote_bbcode, $allow_url_bbcode, true, $mode);
 
 	$text = $message_parser->message;
 	$uid = $message_parser->bbcode_uid;
@@ -803,8 +802,8 @@ function make_clickable_callback($type, $whitespace, $url, $relative_url, $class
 	$orig_url		= $url;
 	$orig_relative	= $relative_url;
 	$append			= '';
-	$url			= htmlspecialchars_decode($url, ENT_COMPAT);
-	$relative_url	= htmlspecialchars_decode($relative_url, ENT_COMPAT);
+	$url			= html_entity_decode($url, ENT_COMPAT);
+	$relative_url	= html_entity_decode($relative_url, ENT_COMPAT);
 
 	// make sure no HTML entities were matched
 	$chars = array('<', '>', '"');
@@ -960,7 +959,6 @@ function make_clickable($text, $server_url = false, string $class = 'postlink')
 					if ($value == $static_class)
 					{
 						$element_exists = true;
-						return;
 					}
 				}
 			);
@@ -1087,7 +1085,7 @@ function smiley_text($text, $force_option = false)
 	}
 	else
 	{
-		$root_path = (defined('PHPBB_USE_BOARD_URL_PATH') && PHPBB_USE_BOARD_URL_PATH) ? generate_board_url() . '/' : $phpbb_path_helper->get_web_root_path();
+		$root_path = $phpbb_path_helper->get_web_root_path();
 
 		/**
 		* Event to override the root_path for smilies
@@ -1123,6 +1121,9 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 	global $phpbb_container;
 
 	$storage_attachment = $phpbb_container->get('storage.attachment');
+
+	/** @var \phpbb\controller\helper */
+	$controller_helper = $phpbb_container->get('controller.helper');
 
 	//
 	$compiled_attachments = array();
@@ -1225,6 +1226,7 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 		$block_array += array(
 			'UPLOAD_ICON'		=> $upload_icon,
 			'FILESIZE'			=> $filesize['value'],
+			'MIMETYPE'			=> $attachment['mimetype'],
 			'SIZE_LANG'			=> $filesize['unit'],
 			'DOWNLOAD_NAME'		=> utf8_basename($attachment['real_filename']),
 			'COMMENT'			=> $comment,
@@ -1246,11 +1248,11 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 		{
 			$display_cat = $extensions[$attachment['extension']]['display_cat'];
 
-			if ($display_cat == ATTACHMENT_CATEGORY_IMAGE)
+			if ($display_cat == attachment_category::IMAGE)
 			{
 				if ($attachment['thumbnail'])
 				{
-					$display_cat = ATTACHMENT_CATEGORY_THUMB;
+					$display_cat = attachment_category::THUMB;
 				}
 				else
 				{
@@ -1262,36 +1264,47 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 							{
 								$file_info = $storage_attachment->file_info($filename);
 
-								$display_cat = ($file_info->image_width <= $config['img_link_width'] && $file_info->image_height <= $config['img_link_height']) ? ATTACHMENT_CATEGORY_IMAGE : ATTACHMENT_CATEGORY_NONE;
+								$display_cat = ($file_info->image_width <= $config['img_link_width'] && $file_info->image_height <= $config['img_link_height']) ? attachment_category::IMAGE : attachment_category::NONE;
 							}
 							catch (\Exception $e)
 							{
-								$display_cat = ATTACHMENT_CATEGORY_NONE;
+								$display_cat = attachment_category::NONE;
 							}
 						}
 					}
 					else
 					{
-						$display_cat = ATTACHMENT_CATEGORY_NONE;
+						$display_cat = attachment_category::NONE;
 					}
 				}
 			}
 
 			// Make some descisions based on user options being set.
-			if (($display_cat == ATTACHMENT_CATEGORY_IMAGE || $display_cat == ATTACHMENT_CATEGORY_THUMB) && !$user->optionget('viewimg'))
+			if (($display_cat == attachment_category::IMAGE || $display_cat == attachment_category::THUMB) && !$user->optionget('viewimg'))
 			{
-				$display_cat = ATTACHMENT_CATEGORY_NONE;
+				$display_cat = attachment_category::NONE;
 			}
 
-			$download_link = append_sid("{$phpbb_root_path}download/file.$phpEx", 'id=' . $attachment['attach_id']);
+			$download_link = $controller_helper->route(
+				'phpbb_storage_attachment',
+				[
+					'id'		=> (int) $attachment['attach_id'],
+					'filename'	=> $attachment['real_filename'],
+				]
+			);
 			$l_downloaded_viewed = 'VIEWED_COUNTS';
 
 			switch ($display_cat)
 			{
 				// Images
-				case ATTACHMENT_CATEGORY_IMAGE:
-					$inline_link = append_sid("{$phpbb_root_path}download/file.$phpEx", 'id=' . $attachment['attach_id']);
-					$download_link .= '&amp;mode=view';
+				case attachment_category::IMAGE:
+					$inline_link = $controller_helper->route(
+						'phpbb_storage_attachment',
+						[
+							'id'		=> (int) $attachment['attach_id'],
+							'filename'	=> $attachment['real_filename'],
+						]
+					);
 
 					$block_array += array(
 						'S_IMAGE'		=> true,
@@ -1302,14 +1315,38 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 				break;
 
 				// Images, but display Thumbnail
-				case ATTACHMENT_CATEGORY_THUMB:
-					$thumbnail_link = append_sid("{$phpbb_root_path}download/file.$phpEx", 'id=' . $attachment['attach_id'] . '&amp;t=1');
-					$download_link .= '&amp;mode=view';
+				case attachment_category::THUMB:
+					$thumbnail_link = $controller_helper->route(
+						'phpbb_storage_attachment',
+						[
+							'id'		=> (int) $attachment['attach_id'],
+							'filename'	=> $attachment['real_filename'],
+							't'			=> 1,
+						]
+					);
 
 					$block_array += array(
 						'S_THUMBNAIL'		=> true,
 						'THUMB_IMAGE'		=> $thumbnail_link,
 					);
+
+					$update_count_ary[] = $attachment['attach_id'];
+				break;
+
+				// Audio files
+				case attachment_category::AUDIO:
+					$block_array += [
+						'S_AUDIO_FILE'			=> true,
+					];
+
+					$update_count_ary[] = $attachment['attach_id'];
+				break;
+
+				// Video files
+				case attachment_category::VIDEO:
+					$block_array += [
+						'S_VIDEO_FILE'			=> true,
+					];
 
 					$update_count_ary[] = $attachment['attach_id'];
 				break;
@@ -1457,7 +1494,7 @@ function truncate_string($string, $max_length = 60, $max_store_length = 255, $al
 		$string = substr($string, 4);
 	}
 
-	$_chars = utf8_str_split(htmlspecialchars_decode($string, ENT_COMPAT));
+	$_chars = utf8_str_split(html_entity_decode($string, ENT_COMPAT));
 	$chars = array_map('utf8_htmlspecialchars', $_chars);
 
 	// Now check the length ;)
@@ -1472,7 +1509,7 @@ function truncate_string($string, $max_length = 60, $max_store_length = 255, $al
 	if (utf8_strlen($string) > $max_store_length)
 	{
 		// let's split again, we do not want half-baked strings where entities are split
-		$_chars = utf8_str_split(htmlspecialchars_decode($string, ENT_COMPAT));
+		$_chars = utf8_str_split(html_entity_decode($string, ENT_COMPAT));
 		$chars = array_map('utf8_htmlspecialchars', $_chars);
 
 		do
@@ -1506,8 +1543,8 @@ function truncate_string($string, $max_length = 60, $max_store_length = 255, $al
 * @param int $user_id The users id
 * @param string $username The users name
 * @param string $username_colour The users colour
-* @param string $guest_username optional parameter to specify the guest username. It will be used in favor of the GUEST language variable then.
-* @param string $custom_profile_url optional parameter to specify a profile url. The user id get appended to this url as &amp;u={user_id}
+* @param string|false $guest_username optional parameter to specify the guest username. It will be used in favor of the GUEST language variable then.
+* @param string|false $custom_profile_url optional parameter to specify a profile url. The user id get appended to this url as &amp;u={user_id}
 *
 * @return string A string consisting of what is wanted based on $mode.
 */

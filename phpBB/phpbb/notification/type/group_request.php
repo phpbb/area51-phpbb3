@@ -58,24 +58,24 @@ class group_request extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	public static function get_item_id($group)
+	public static function get_item_id($type_data)
 	{
-		return (int) $group['user_id'];
+		return (int) $type_data['user_id'];
 	}
 
 	/**
 	* {@inheritdoc}
 	*/
-	public static function get_item_parent_id($group)
+	public static function get_item_parent_id($type_data)
 	{
 		// Group id is the parent
-		return (int) $group['group_id'];
+		return (int) $type_data['group_id'];
 	}
 
 	/**
 	* {@inheritdoc}
 	*/
-	public function find_users_for_notification($group, $options = array())
+	public function find_users_for_notification($type_data, $options = array())
 	{
 		$options = array_merge(array(
 			'ignore_users'		=> array(),
@@ -84,7 +84,7 @@ class group_request extends \phpbb\notification\type\base
 		$sql = 'SELECT user_id
 			FROM ' . USER_GROUP_TABLE . '
 			WHERE group_leader = 1
-				AND group_id = ' . (int) $group['group_id'];
+				AND group_id = ' . (int) $type_data['group_id'];
 		$result = $this->db->sql_query($sql);
 
 		$user_ids = array();
@@ -133,8 +133,8 @@ class group_request extends \phpbb\notification\type\base
 		$user_data = $this->user_loader->get_user($this->item_id);
 
 		return array(
-			'GROUP_NAME'		   		=> htmlspecialchars_decode($this->get_data('group_name'), ENT_COMPAT),
-			'REQUEST_USERNAME' 	   		=> htmlspecialchars_decode($user_data['username'], ENT_COMPAT),
+			'GROUP_NAME'		   		=> html_entity_decode($this->get_data('group_name'), ENT_COMPAT),
+			'REQUEST_USERNAME' 	   		=> html_entity_decode($user_data['username'], ENT_COMPAT),
 
 			'U_PENDING'			  		=> generate_board_url() . "/ucp.{$this->php_ext}?i=groups&mode=manage&action=list&g={$this->item_parent_id}",
 			'U_GROUP'					=> generate_board_url() . "/memberlist.{$this->php_ext}?mode=group&g={$this->item_parent_id}",
@@ -160,10 +160,10 @@ class group_request extends \phpbb\notification\type\base
 	/**
 	* {@inheritdoc}
 	*/
-	public function create_insert_array($group, $pre_create_data = array())
+	public function create_insert_array($type_data, $pre_create_data = array())
 	{
-		$this->set_data('group_name', $group['group_name']);
+		$this->set_data('group_name', $type_data['group_name']);
 
-		parent::create_insert_array($group, $pre_create_data);
+		parent::create_insert_array($type_data, $pre_create_data);
 	}
 }
