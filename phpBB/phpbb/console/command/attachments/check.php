@@ -13,7 +13,6 @@
 namespace phpbb\console\command\attachments;
 
 use phpbb\finder\finder;
-use phpbb\filesystem\filesystem as phpbb_filesystem;
 use phpbb\config\config;
 use phpbb\console\command\command;
 use phpbb\mimetype\guesser;
