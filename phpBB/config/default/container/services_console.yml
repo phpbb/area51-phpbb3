@@ -373,9 +373,9 @@ services:
             - '@user'
             - '@config'
             - '@dbal.conn'
-            - '@filesystem'
             - '@mimetype.guesser'
             - '%core.root_path%'
+            - '%core.php_ext%'
         tags:
             - { name: console.command }
 
