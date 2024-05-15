@@ -136,7 +136,6 @@ class data_access
 			'list'  => 9,
 			'*'     => 9,
 			'email' => 10,
-			'flash' => 11,
 			'attachment' => 12,
 		);
 
@@ -227,7 +226,7 @@ class data_access
 		{
 			foreach ($columns as $column)
 			{
-				$row[$column] = htmlspecialchars_decode($row[$column], ENT_COMPAT);
+				$row[$column] = html_entity_decode($row[$column], ENT_COMPAT);
 			}
 		}
 

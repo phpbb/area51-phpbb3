@@ -106,7 +106,7 @@ class ucp_register
 		/* @var $cp \phpbb\profilefields\manager */
 		$cp = $phpbb_container->get('profilefields.manager');
 
-		$error = $cp_data = $cp_error = array();
+		$error = $cp_data = array();
 		$s_hidden_fields = array();
 
 		// Handle login_link data added to $_hidden_fields
@@ -150,16 +150,14 @@ class ucp_register
 			}
 
 			// Checking amount of available languages
-			$sql = 'SELECT lang_id
-				FROM ' . LANG_TABLE;
+			$sql = 'SELECT lang_iso, lang_local_name
+				FROM ' . LANG_TABLE . '
+				ORDER BY lang_english_name';
 			$result = $db->sql_query($sql);
-
-			$lang_row = array();
-			while ($row = $db->sql_fetchrow($result))
-			{
-				$lang_row[] = $row;
-			}
+			$lang_row = (array) $db->sql_fetchrowset($result);
 			$db->sql_freeresult($result);
+
+			$lang_options = phpbb_language_select($db, $user_lang, $lang_row);
 
 			if ($coppa === false && $config['coppa_enable'])
 			{
@@ -171,7 +169,11 @@ class ucp_register
 				unset($now);
 
 				$template_vars = array(
-					'S_LANG_OPTIONS'	=> (count($lang_row) > 1) ? language_select($user_lang) : '',
+					'LANG_OPTIONS'		=> [
+						'id'		=> 'lang',
+						'name'		=> 'lang',
+						'options'	=> $lang_options,
+					],
 					'L_COPPA_NO'		=> $user->lang('UCP_COPPA_BEFORE', $coppa_birthday),
 					'L_COPPA_YES'		=> $user->lang('UCP_COPPA_ON_AFTER', $coppa_birthday),
 
@@ -186,7 +188,11 @@ class ucp_register
 			else
 			{
 				$template_vars = array(
-					'S_LANG_OPTIONS'	=> (count($lang_row) > 1) ? language_select($user_lang) : '',
+					'LANG_OPTIONS'		=> [
+						'id'		=> 'lang',
+						'name'		=> 'lang',
+						'options'	=> $lang_options,
+					],
 					'L_TERMS_OF_USE'	=> sprintf($user->lang['TERMS_OF_USE_CONTENT'], $config['sitename'], generate_board_url()),
 
 					'S_SHOW_COPPA'		=> false,
@@ -293,7 +299,7 @@ class ucp_register
 
 				if ($config['max_reg_attempts'] && $captcha->get_attempt_count() > $config['max_reg_attempts'])
 				{
-					$error[] = $user->lang['TOO_MANY_REGISTERS'];
+					trigger_error('TOO_MANY_REGISTERS');
 				}
 			}
 
@@ -356,7 +362,7 @@ class ucp_register
 					$config['require_activation'] == USER_ACTIVATION_SELF ||
 					$config['require_activation'] == USER_ACTIVATION_ADMIN) && $config['email_enable'])
 				{
-					$user_actkey = gen_rand_string(mt_rand(6, 10));
+					$user_actkey = strtolower(gen_rand_string(32));
 					$user_type = USER_INACTIVE;
 					$user_inactive_reason = INACTIVE_REGISTER;
 					$user_inactive_time = time();
@@ -461,9 +467,9 @@ class ucp_register
 					$messenger->anti_abuse_headers($config, $user);
 
 					$messenger->assign_vars(array(
-						'WELCOME_MSG'	=> htmlspecialchars_decode(sprintf($user->lang['WELCOME_SUBJECT'], $config['sitename']), ENT_COMPAT),
-						'USERNAME'		=> htmlspecialchars_decode($data['username'], ENT_COMPAT),
-						'PASSWORD'		=> htmlspecialchars_decode($data['new_password'], ENT_COMPAT),
+						'WELCOME_MSG'	=> html_entity_decode(sprintf($user->lang['WELCOME_SUBJECT'], $config['sitename']), ENT_COMPAT),
+						'USERNAME'		=> html_entity_decode($data['username'], ENT_COMPAT),
+						'PASSWORD'		=> html_entity_decode($data['new_password'], ENT_COMPAT),
 						'U_ACTIVATE'	=> "$server_url/ucp.$phpEx?mode=activate&u=$user_id&k=$user_actkey")
 					);
 
@@ -620,7 +626,17 @@ class ucp_register
 		}
 
 		// Assign template vars for timezone select
-		phpbb_timezone_select($template, $user, $data['tz'], true);
+		$timezone_select = phpbb_timezone_select($user, $data['tz'], true);
+
+		// Checking amount of available languages
+		$sql = 'SELECT lang_iso, lang_local_name
+			FROM ' . LANG_TABLE . '
+			ORDER BY lang_english_name';
+		$result = $db->sql_query($sql);
+		$lang_row = (array) $db->sql_fetchrowset($result);
+		$db->sql_freeresult($result);
+
+		$lang_options = phpbb_language_select($db, $data['lang'], $lang_row);
 
 		$template_vars = array(
 			'USERNAME'			=> $data['username'],
@@ -629,10 +645,19 @@ class ucp_register
 			'EMAIL'				=> $data['email'],
 
 			'L_REG_COND'				=> $l_reg_cond,
-			'L_USERNAME_EXPLAIN'		=> $user->lang($config['allow_name_chars'] . '_EXPLAIN', $user->lang('CHARACTERS', (int) $config['min_name_chars']), $user->lang('CHARACTERS', (int) $config['max_name_chars'])),
-			'L_PASSWORD_EXPLAIN'		=> $user->lang($config['pass_complex'] . '_EXPLAIN', $user->lang('CHARACTERS', (int) $config['min_pass_chars'])),
+			'L_USERNAME_EXPLAIN'		=> $user->lang($config['allow_name_chars'] . '_EXPLAIN', $user->lang('CHARACTERS_XY', (int) $config['min_name_chars']), $user->lang('CHARACTERS_XY', (int) $config['max_name_chars'])),
+			'L_PASSWORD_EXPLAIN'		=> $user->lang($config['pass_complex'] . '_EXPLAIN', $user->lang('CHARACTERS_XY', (int) $config['min_pass_chars'])),
 
-			'S_LANG_OPTIONS'	=> language_select($data['lang']),
+			'LANG_OPTIONS'		=> [
+				'id'		=> 'lang',
+				'name'		=> 'lang',
+				'options'	=> $lang_options,
+			],
+			'TIMEZONE_OPTIONS'	=> [
+				'tag'		=> 'select',
+				'name'		=> 'tz',
+				'options'	=> $timezone_select,
+			],
 			'S_TZ_PRESELECT'	=> !$submit,
 			'S_CONFIRM_REFRESH'	=> ($config['enable_confirm'] && $config['confirm_refresh']) ? true : false,
 			'S_REGISTRATION'	=> true,

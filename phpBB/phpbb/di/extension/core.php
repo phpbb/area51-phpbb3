@@ -62,7 +62,7 @@ class core extends Extension
 
 		if ($config['require_dev_dependencies'])
 		{
-			if (!class_exists('Goutte\Client', true))
+			if (!class_exists('Symfony\Component\BrowserKit\HttpBrowser'))
 			{
 				trigger_error(
 					'Composer development dependencies have not been set up for the ' . $container->getParameter('core.environment') . ' environment yet, run ' .
@@ -118,6 +118,12 @@ class core extends Extension
 		{
 			$container->setParameter('session.' . $name, $value);
 		}
+
+		// Set the finder options
+		foreach ($config['finder'] as $name => $value)
+		{
+			$container->setParameter('finder.' . $name, $value);
+		}
 	}
 
 	/**
@@ -138,7 +144,7 @@ class core extends Extension
 	 *
 	 * @return string The alias
 	 */
-	public function getAlias()
+	public function getAlias(): string
 	{
 		return 'core';
 	}

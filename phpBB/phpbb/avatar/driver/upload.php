@@ -14,25 +14,36 @@
 namespace phpbb\avatar\driver;
 
 use bantu\IniGetWrapper\IniGetWrapper;
+use phpbb\config\config;
+use phpbb\controller\helper;
+use phpbb\event\dispatcher_interface;
+use phpbb\files\factory;
+use phpbb\path_helper;
 use phpbb\storage\exception\exception as storage_exception;
+use phpbb\storage\storage;
 
 /**
-* Handles avatars uploaded to the board
+* Handles avatars uploaded to the board.
 */
 class upload extends \phpbb\avatar\driver\driver
 {
 	/**
-	 * @var \phpbb\storage\storage
+	 * @var helper
+	 */
+	private $controller_helper;
+
+	/**
+	 * @var storage
 	 */
 	protected $storage;
 
 	/**
-	* @var \phpbb\event\dispatcher_interface
+	* @var dispatcher_interface
 	*/
 	protected $dispatcher;
 
 	/**
-	 * @var \phpbb\files\factory
+	 * @var factory
 	 */
 	protected $files_factory;
 
@@ -42,20 +53,22 @@ class upload extends \phpbb\avatar\driver\driver
 	protected $php_ini;
 
 	/**
-	* Construct a driver object
-	*
-	* @param \phpbb\config\config $config phpBB configuration
-	* @param string $phpbb_root_path Path to the phpBB root
-	* @param string $php_ext PHP file extension
-	* @param \phpbb\storage\storage phpBB avatar storage
-	* @param \phpbb\path_helper $path_helper phpBB path helper
-	* @param \phpbb\event\dispatcher_interface $dispatcher phpBB Event dispatcher object
-	* @param \phpbb\files\factory $files_factory File classes factory
-	* @param IniGetWrapper		$php_ini	ini_get() wrapper
-	*/
-	public function __construct(\phpbb\config\config $config, $phpbb_root_path, $php_ext, \phpbb\storage\storage $storage, \phpbb\path_helper $path_helper, \phpbb\event\dispatcher_interface $dispatcher, \phpbb\files\factory $files_factory, IniGetWrapper $php_ini)
+	 * Construct a driver object
+	 *
+	 * @param config $config phpBB configuration
+	 * @param helper $controller_helper
+	 * @param string $phpbb_root_path Path to the phpBB root
+	 * @param string $php_ext PHP file extension
+	 * @param storage $storage phpBB avatar storage
+	 * @param path_helper $path_helper phpBB path helper
+	 * @param dispatcher_interface $dispatcher phpBB Event dispatcher object
+	 * @param factory $files_factory File classes factory
+	 * @param IniGetWrapper $php_ini ini_get() wrapper
+	 */
+	public function __construct(config $config, helper $controller_helper, string $phpbb_root_path, string $php_ext, storage $storage, path_helper $path_helper, dispatcher_interface $dispatcher, factory $files_factory, IniGetWrapper $php_ini)
 	{
 		$this->config = $config;
+		$this->controller_helper = $controller_helper;
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
 		$this->storage = $storage;
@@ -70,10 +83,8 @@ class upload extends \phpbb\avatar\driver\driver
 	*/
 	public function get_data($row)
 	{
-		$root_path = (defined('PHPBB_USE_BOARD_URL_PATH') && PHPBB_USE_BOARD_URL_PATH) ? generate_board_url() . '/' : $this->path_helper->get_web_root_path();
-
 		return array(
-			'src' => $root_path . 'download/file.' . $this->php_ext . '?avatar=' . $row['avatar'],
+			'src' => $this->controller_helper->route('phpbb_storage_avatar', ['file' => $row['avatar']]),
 			'width' => $row['avatar_width'],
 			'height' => $row['avatar_height'],
 		);
@@ -89,11 +100,13 @@ class upload extends \phpbb\avatar\driver\driver
 			return false;
 		}
 
-		$template->assign_vars(array(
-			'S_UPLOAD_AVATAR_URL' => ($this->config['allow_avatar_remote_upload']) ? true : false,
-			'AVATAR_UPLOAD_SIZE' => $this->config['avatar_filesize'],
+		$web_path = $this->path_helper->get_web_root_path();
+
+		$template->assign_vars([
 			'AVATAR_ALLOWED_EXTENSIONS' => implode(',', preg_replace('/^/', '.', $this->allowed_extensions)),
-		));
+			'AVATAR_UPLOAD_SIZE'		=> $this->config['avatar_filesize'],
+			'T_ASSETS_PATH'				=> $web_path . '/assets',
+		]);
 
 		return true;
 	}
@@ -120,58 +133,15 @@ class upload extends \phpbb\avatar\driver\driver
 				$this->config['avatar_max_height'])
 			->set_disallowed_content((isset($this->config['mime_triggers']) ? explode('|', $this->config['mime_triggers']) : false));
 
-		$url = $request->variable('avatar_upload_url', '');
 		$upload_file = $request->file('avatar_upload_file');
 
-		if (!empty($upload_file['name']))
-		{
-			$file = $upload->handle_upload('files.types.form_storage', 'avatar_upload_file');
-		}
-		else if (!empty($this->config['allow_avatar_remote_upload']) && !empty($url))
-		{
-			if (!preg_match('#^(http|https|ftp)://#i', $url))
-			{
-				$url = 'http://' . $url;
-			}
-
-			if (!function_exists('validate_data'))
-			{
-				require($this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext);
-			}
-
-			$validate_array = validate_data(
-				array(
-					'url' => $url,
-				),
-				array(
-					'url' => array('string', true, 5, 255),
-				)
-			);
-
-			$error = array_merge($error, $validate_array);
-
-			if (!empty($error))
-			{
-				return false;
-			}
-
-			// Do not allow specifying the port (see RFC 3986) or IP addresses
-			// remote_upload() will do its own check for allowed filetypes
-			if (!preg_match('#^(http|https|ftp)://(?:(.*?\.)*?[a-z0-9\-]+?\.[a-z]{2,4}|(?:\d{1,3}\.){3,5}\d{1,3}):?([0-9]*?).*?\.('. implode('|', $this->allowed_extensions) . ')$#i', $url) ||
-				preg_match('@^(http|https|ftp)://[^/:?#]+:[0-9]+[/:?#]@i', $url) ||
-				preg_match('#^(http|https|ftp)://(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])#i', $url) ||
-				preg_match('#^(http|https|ftp)://(?:(?:(?:[\dA-F]{1,4}:){6}(?:[\dA-F]{1,4}:[\dA-F]{1,4}|(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])))|(?:::(?:[\dA-F]{1,4}:){0,5}(?:[\dA-F]{1,4}(?::[\dA-F]{1,4})?|(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])))|(?:(?:[\dA-F]{1,4}:):(?:[\dA-F]{1,4}:){4}(?:[\dA-F]{1,4}:[\dA-F]{1,4}|(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])))|(?:(?:[\dA-F]{1,4}:){1,2}:(?:[\dA-F]{1,4}:){3}(?:[\dA-F]{1,4}:[\dA-F]{1,4}|(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])))|(?:(?:[\dA-F]{1,4}:){1,3}:(?:[\dA-F]{1,4}:){2}(?:[\dA-F]{1,4}:[\dA-F]{1,4}|(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])))|(?:(?:[\dA-F]{1,4}:){1,4}:(?:[\dA-F]{1,4}:)(?:[\dA-F]{1,4}:[\dA-F]{1,4}|(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])))|(?:(?:[\dA-F]{1,4}:){1,5}:(?:[\dA-F]{1,4}:[\dA-F]{1,4}|(?:(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d{1,2}|1\d\d|2[0-4]\d|25[0-5])))|(?:(?:[\dA-F]{1,4}:){1,6}:[\dA-F]{1,4})|(?:(?:[\dA-F]{1,4}:){1,7}:)|(?:::))#i', $url))
-			{
-				$error[] = 'AVATAR_URL_INVALID';
-				return false;
-			}
-
-			$file = $upload->handle_upload('files.types.remote_storage', $url);
-		}
-		else
+		if (empty($upload_file['name']))
 		{
 			return false;
 		}
+
+		/** @var \phpbb\files\filespec_storage $file */
+		$file = $upload->handle_upload('files.types.form_storage', 'avatar_upload_file');
 
 		$prefix = $this->config['avatar_salt'] . '_';
 		$file->clean_filename('avatar', $prefix, $row['id']);
@@ -251,7 +221,6 @@ class upload extends \phpbb\avatar\driver\driver
 	public function prepare_form_acp($user)
 	{
 		return array(
-			'allow_avatar_remote_upload'=> array('lang' => 'ALLOW_REMOTE_UPLOAD', 'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 			'avatar_filesize'		=> array('lang' => 'MAX_FILESIZE',			'validate' => 'int:0',	'type' => 'number:0', 'explain' => true, 'append' => ' ' . $user->lang['BYTES']),
 		);
 	}
@@ -261,7 +230,6 @@ class upload extends \phpbb\avatar\driver\driver
 	*/
 	public function delete($row)
 	{
-
 		$error = array();
 		$prefix = $this->config['avatar_salt'] . '_';
 		$ext = substr(strrchr($row['avatar'], '.'), 1);
@@ -315,6 +283,6 @@ class upload extends \phpbb\avatar\driver\driver
 	*/
 	protected function can_upload()
 	{
-		return $this->php_ini->getBool('file_uploads');
+		return (bool) $this->php_ini->getBool('file_uploads');
 	}
 }

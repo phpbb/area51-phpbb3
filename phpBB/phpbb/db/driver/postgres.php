@@ -20,7 +20,6 @@ namespace phpbb\db\driver;
 class postgres extends \phpbb\db\driver\driver
 {
 	var $multi_insert = true;
-	var $last_query_text = '';
 	var $connect_error = '';
 
 	/**
@@ -137,28 +136,24 @@ class postgres extends \phpbb\db\driver\driver
 			}
 		}
 
-		return ($raw) ? $this->sql_server_version : 'PostgreSQL ' . $this->sql_server_version;
+		return ($raw) ? (string) $this->sql_server_version : 'PostgreSQL ' . $this->sql_server_version;
 	}
 
 	/**
-	* SQL Transaction
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_transaction($status = 'begin')
+	protected function _sql_transaction(string $status = 'begin'): bool
 	{
 		switch ($status)
 		{
 			case 'begin':
-				return @pg_query($this->db_connect_id, 'BEGIN');
-			break;
+				return @pg_query($this->db_connect_id, 'BEGIN') !== false;
 
 			case 'commit':
-				return @pg_query($this->db_connect_id, 'COMMIT');
-			break;
+				return @pg_query($this->db_connect_id, 'COMMIT') !== false;
 
 			case 'rollback':
-				return @pg_query($this->db_connect_id, 'ROLLBACK');
-			break;
+				return @pg_query($this->db_connect_id, 'ROLLBACK') !== false;
 		}
 
 		return true;
@@ -207,14 +202,16 @@ class postgres extends \phpbb\db\driver\driver
 					return false;
 				}
 
+				$safe_query_id = $this->clean_query_id($this->query_result);
+
 				if ($cache && $cache_ttl)
 				{
-					$this->open_queries[(int) $this->query_result] = $this->query_result;
+					$this->open_queries[$safe_query_id] = $this->query_result;
 					$this->query_result = $cache->sql_save($this, $query, $this->query_result, $cache_ttl);
 				}
 				else if (strpos($query, 'SELECT') === 0)
 				{
-					$this->open_queries[(int) $this->query_result] = $this->query_result;
+					$this->open_queries[$safe_query_id] = $this->query_result;
 				}
 			}
 			else if ($this->debug_sql_explain)
@@ -231,18 +228,9 @@ class postgres extends \phpbb\db\driver\driver
 	}
 
 	/**
-	* Build db-specific query data
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_custom_build($stage, $data)
-	{
-		return $data;
-	}
-
-	/**
-	* Build LIMIT query
-	*/
-	function _sql_query_limit($query, $total, $offset = 0, $cache_ttl = 0)
+	protected function _sql_query_limit(string $query, int $total, int $offset = 0, int $cache_ttl = 0)
 	{
 		$this->query_result = false;
 
@@ -277,9 +265,10 @@ class postgres extends \phpbb\db\driver\driver
 			$query_id = $this->query_result;
 		}
 
-		if ($cache && $cache->sql_exists($query_id))
+		$safe_query_id = $this->clean_query_id($query_id);
+		if ($cache && $cache->sql_exists($safe_query_id))
 		{
-			return $cache->sql_fetchrow($query_id);
+			return $cache->sql_fetchrow($safe_query_id);
 		}
 
 		return ($query_id) ? pg_fetch_assoc($query_id, null) : false;
@@ -297,18 +286,51 @@ class postgres extends \phpbb\db\driver\driver
 			$query_id = $this->query_result;
 		}
 
-		if ($cache && $cache->sql_exists($query_id))
+		$safe_query_id = $this->clean_query_id($query_id);
+		if ($cache && $cache->sql_exists($safe_query_id))
 		{
-			return $cache->sql_rowseek($rownum, $query_id);
+			return $cache->sql_rowseek($rownum, $safe_query_id);
 		}
 
 		return ($query_id) ? @pg_result_seek($query_id, $rownum) : false;
 	}
 
 	/**
-	* {@inheritDoc}
-	*/
-	function sql_nextid()
+	 * {@inheritDoc}
+	 */
+	function sql_fetchfield($field, $rownum = false, &$query_id = false)
+	{
+		global $cache;
+
+		if ($query_id === false)
+		{
+			$query_id = $this->query_result;
+		}
+
+		if ($query_id)
+		{
+			if ($rownum !== false)
+			{
+				$this->sql_rowseek($rownum, $query_id);
+			}
+
+			$safe_query_id = $this->clean_query_id($query_id);
+			if ($cache && !is_object($query_id) && $cache->sql_exists($safe_query_id))
+			{
+				return $cache->sql_fetchfield($safe_query_id, $field);
+			}
+
+			$row = $this->sql_fetchrow($query_id);
+			return (isset($row[$field])) ? $row[$field] : false;
+		}
+
+		return false;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function sql_last_inserted_id()
 	{
 		$query_id = $this->query_result;
 
@@ -346,18 +368,16 @@ class postgres extends \phpbb\db\driver\driver
 			$query_id = $this->query_result;
 		}
 
-		if ($cache && !is_object($query_id) && $cache->sql_exists($query_id))
+		$safe_query_id = $this->clean_query_id($query_id);
+		if ($cache && !is_object($query_id) && $cache->sql_exists($safe_query_id))
 		{
-			return $cache->sql_freeresult($query_id);
+			$cache->sql_freeresult($safe_query_id);
 		}
-
-		if (isset($this->open_queries[(int) $query_id]))
+		else if (isset($this->open_queries[$safe_query_id]))
 		{
-			unset($this->open_queries[(int) $query_id]);
-			return pg_free_result($query_id);
+			unset($this->open_queries[$safe_query_id]);
+			pg_free_result($query_id);
 		}
-
-		return false;
 	}
 
 	/**
@@ -366,24 +386,6 @@ class postgres extends \phpbb\db\driver\driver
 	function sql_escape($msg)
 	{
 		return @pg_escape_string($msg);
-	}
-
-	/**
-	* Build LIKE expression
-	* @access private
-	*/
-	function _sql_like_expression($expression)
-	{
-		return $expression;
-	}
-
-	/**
-	* Build NOT LIKE expression
-	* @access private
-	*/
-	function _sql_not_like_expression($expression)
-	{
-		return $expression;
 	}
 
 	/**
@@ -403,10 +405,9 @@ class postgres extends \phpbb\db\driver\driver
 	}
 
 	/**
-	* return sql error array
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_error()
+	protected function _sql_error(): array
 	{
 		// pg_last_error only works when there is an established connection.
 		// Connection errors have to be tracked by us manually.
@@ -426,19 +427,22 @@ class postgres extends \phpbb\db\driver\driver
 	}
 
 	/**
-	* Close sql connection
-	* @access private
-	*/
-	function _sql_close()
+	 * {@inheritDoc}
+	 */
+	protected function _sql_close(): bool
 	{
-		return @pg_close($this->db_connect_id);
+		// Skip if connection is already closed or not persistent
+		if (!$this->persistency || !$this->db_connect_id instanceof \PgSql\Connection)
+		{
+			return true;
+		}
+		return pg_close($this->db_connect_id);
 	}
 
 	/**
-	* Build db-specific report
-	* @access private
+	* {@inheritDoc}
 	*/
-	function _sql_report($mode, $query = '')
+	protected function _sql_report(string $mode, string $query = ''): void
 	{
 		switch ($mode)
 		{

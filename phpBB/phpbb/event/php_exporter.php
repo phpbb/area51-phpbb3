@@ -84,7 +84,7 @@ class php_exporter
 	*
 	* @param string	$name	Name of the current event (used for error messages)
 	* @param int	$line	Line where the current event is placed in
-	* @return null
+	* @return void
 	*/
 	public function set_current_event($name, $line)
 	{
@@ -96,7 +96,7 @@ class php_exporter
 	* Set the content of this file
 	*
 	* @param array $content		Array with the lines of the file
-	* @return null
+	* @return void
 	*/
 	public function set_content($content)
 	{
@@ -148,8 +148,9 @@ class php_exporter
 		$files = array();
 		foreach ($iterator as $file_info)
 		{
-			/** @var \RecursiveDirectoryIterator $file_info */
-			$relative_path = $iterator->getInnerIterator()->getSubPathname();
+			/** @var \RecursiveDirectoryIterator $inner_iterator */
+			$inner_iterator = $iterator->getInnerIterator();
+			$relative_path = $inner_iterator->getSubPathname();
 			$files[] = str_replace(DIRECTORY_SEPARATOR, '/', $relative_path);
 		}
 
@@ -205,6 +206,37 @@ class php_exporter
 		$rst_exporter->generate_events_table($this->events);
 
 		return $rst_exporter->get_rst_output();
+	}
+
+	/**
+	 * Format the PHP events as a BBCode list
+	 *
+	 * @param string $action
+	 * @return string
+	 */
+	public function export_events_for_bbcode(string $action = ''): string
+	{
+		if ($action === 'diff')
+		{
+			$bbcode_text = '[size=150]PHP Events[/size]' . "\n";
+		}
+		else
+		{
+			$bbcode_text = '[size=200]PHP Events[/size]' . "\n";
+		}
+
+		foreach ($this->events as $event)
+		{
+			$bbcode_text .= "[list]\n";
+			$bbcode_text .= "[*][b]{$event['event']}[/b]\n";
+			$bbcode_text .= "Placement: {$event['file']}\n";
+			$bbcode_text .= 'Arguments: ' . implode(', ', $event['arguments']) . "\n";
+			$bbcode_text .= "Added in Release: {$event['since']}\n";
+			$bbcode_text .= "Explanation: {$event['description']}\n";
+			$bbcode_text .= "[/list]\n";
+		}
+
+		return $bbcode_text;
 	}
 
 	/**
@@ -758,7 +790,7 @@ class php_exporter
 	*
 	* @param array $vars_array		Variables found in the array line
 	* @param array $vars_docblock	Variables found in the doc block
-	* @return null
+	* @return void
 	* @throws \LogicException
 	*/
 	public function validate_vars_docblock_array($vars_array, $vars_docblock)

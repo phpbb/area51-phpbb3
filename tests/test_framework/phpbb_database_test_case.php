@@ -29,15 +29,16 @@ abstract class phpbb_database_test_case extends TestCase
 
 	protected static $install_schema_file;
 
-	protected static $phpunit_version;
+	/**
+	 * @var \Doctrine\DBAL\Connection[]
+	 */
+	private $db_connections_doctrine;
 
 	public function __construct($name = NULL, array $data = [], $dataName = '')
 	{
 		parent::__construct($name, $data, $dataName);
 
-		self::$phpunit_version = PHPUnit\Runner\Version::id();
-
-		$backupStaticAttributesBlacklist = [
+		$this->backupStaticAttributesExcludeList += [
 			'SebastianBergmann\CodeCoverage\CodeCoverage' => ['instance'],
 			'SebastianBergmann\CodeCoverage\Filter' => ['instance'],
 			'SebastianBergmann\CodeCoverage\Util' => ['ignoredLines', 'templateMethods'],
@@ -48,16 +49,8 @@ abstract class phpbb_database_test_case extends TestCase
 			'phpbb_database_test_case' => ['already_connected'],
 		];
 
-		if (version_compare(self::$phpunit_version, '9.0', '>='))
-		{
-			$this->backupStaticAttributesExcludeList += $backupStaticAttributesBlacklist;
-		}
-		else
-		{
-			$this->backupStaticAttributesBlacklist += $backupStaticAttributesBlacklist;
-		}
-
 		$this->db_connections = [];
+		$this->db_connections_doctrine = [];
 	}
 
 	/**
@@ -74,7 +67,7 @@ abstract class phpbb_database_test_case extends TestCase
 
 		$setup_extensions = static::setup_extensions();
 
-		$finder = new \phpbb\finder($phpbb_root_path, null, $phpEx);
+		$finder = new \phpbb\finder\finder(null, false, $phpbb_root_path, $phpEx);
 		$finder->core_path('phpbb/db/migration/data/');
 		if (!empty($setup_extensions))
 		{
@@ -92,8 +85,9 @@ abstract class phpbb_database_test_case extends TestCase
 			global $table_prefix;
 
 			$db = new \phpbb\db\driver\sqlite3();
+			$doctrine = \phpbb\db\doctrine\connection_factory::get_connection(new phpbb_mock_config_php_file());
 			$factory = new \phpbb\db\tools\factory();
-			$db_tools = $factory->get($db, true);
+			$db_tools = $factory->get($doctrine, true);
 
 			$schema_generator = new \phpbb\db\migration\schema_generator($classes, new \phpbb\config\config(array()), $db, $db_tools, $phpbb_root_path, $phpEx, $table_prefix, self::get_core_tables());
 			file_put_contents(self::$schema_file, json_encode($schema_generator->get_schema()));
@@ -124,6 +118,14 @@ abstract class phpbb_database_test_case extends TestCase
 			foreach ($this->db_connections as $db)
 			{
 				$db->sql_close();
+			}
+		}
+
+		if (!empty($this->db_connections_doctrine))
+		{
+			foreach ($this->db_connections_doctrine as $db)
+			{
+				$db->close();
 			}
 		}
 	}
@@ -277,7 +279,7 @@ abstract class phpbb_database_test_case extends TestCase
 
 		if (!self::$already_connected)
 		{
-			$manager->load_schema($this->new_dbal());
+			$manager->load_schema($this->new_dbal(), $this->new_doctrine_dbal());
 			self::$already_connected = true;
 		}
 
@@ -288,10 +290,21 @@ abstract class phpbb_database_test_case extends TestCase
 	{
 		$config = $this->get_database_config();
 
+		/** @var \phpbb\db\driver\driver_interface $db */
 		$db = new $config['dbms']();
 		$db->sql_connect($config['dbhost'], $config['dbuser'], $config['dbpasswd'], $config['dbname'], $config['dbport']);
 
 		$this->db_connections[] = $db;
+
+		return $db;
+	}
+
+	public function new_doctrine_dbal(): \Doctrine\DBAL\Connection
+	{
+		$config = $this->get_database_config();
+
+		$db = \phpbb\db\doctrine\connection_factory::get_connection_from_params($config['dbms'], $config['dbhost'], $config['dbuser'], $config['dbpasswd'], $config['dbname'], $config['dbport']);
+		$this->db_connections_doctrine[] = $db;
 
 		return $db;
 	}
@@ -384,57 +397,5 @@ abstract class phpbb_database_test_case extends TestCase
 		}
 
 		return $core_tables;
-	}
-
-	/**
-	 * PHPUnit deprecates several methods and properties in its recent versions
-	 * Provide BC layer to be able to test in multiple environment settings
-	 */
-	public function expectException(string $exception): void
-	{
-		if (version_compare(self::$phpunit_version, '9.0', '>='))
-		{
-			switch ($exception) {
-				case PHPUnit\Framework\Error\Deprecated::class:
-					parent::expectDeprecation();
-				break;
-
-				case PHPUnit\Framework\Error\Error::class:
-					parent::expectError();
-				break;
-
-				case PHPUnit\Framework\Error\Notice::class:
-					parent::expectNotice();
-				break;
-
-				case PHPUnit\Framework\Error\Warning::class:
-					parent::expectWarning();
-				break;
-
-				default:
-					parent::expectException($exception);
-				break;
-			}
-		}
-		else
-		{
-			parent::expectException($exception);
-		}
-	}
-
-	/**
-	 * PHPUnit deprecates several methods and properties in its recent versions
-	 * Provide BC layer to be able to test in multiple environment settings
-	 */
-	public static function assertFileNotExists(string $filename, string $message = ''): void
-	{
-		if (version_compare(self::$phpunit_version, '9.0', '>='))
-		{
-			parent::assertFileDoesNotExist($filename, $message);
-		}
-		else
-		{
-			parent::assertFileNotExists($filename, $message);
-		}
 	}
 }

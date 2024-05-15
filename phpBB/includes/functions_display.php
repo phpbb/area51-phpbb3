@@ -551,7 +551,7 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 			}
 			$last_post_time = $user->format_date($row['forum_last_post_time']);
 			$last_post_time_rfc3339 = gmdate(DATE_RFC3339, $row['forum_last_post_time']);
-			$last_post_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'f=' . $row['forum_id_last_post'] . '&amp;p=' . $row['forum_last_post_id']) . '#p' . $row['forum_last_post_id'];
+			$last_post_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['forum_last_post_id']) . '#p' . $row['forum_last_post_id'];
 		}
 		else
 		{
@@ -843,8 +843,6 @@ function generate_forum_nav(&$forum_data_ary)
 	$template->assign_block_vars_array('navlinks', $navlinks_parents);
 	$template->assign_block_vars('navlinks', $navlinks);
 	$template->assign_vars($forum_template_data);
-
-	return;
 }
 
 /**
@@ -966,8 +964,6 @@ function get_moderators(&$forum_moderators, $forum_id = false)
 		}
 	}
 	$db->sql_freeresult($result);
-
-	return;
 }
 
 /**
@@ -999,8 +995,6 @@ function gen_forum_auth_level($mode, $forum_id, $forum_status)
 	{
 		$template->assign_block_vars('rules', array('RULE' => $rule));
 	}
-
-	return;
 }
 
 /**
@@ -1086,12 +1080,12 @@ function display_custom_bbcodes()
 	// Start counting from 22 for the bbcode ids (every bbcode takes two ids - opening/closing)
 	$num_predefined_bbcodes = NUM_PREDEFINED_BBCODES;
 
-	$sql_ary = array(
-		'SELECT'	=> 'b.bbcode_id, b.bbcode_tag, b.bbcode_helpline',
-		'FROM'		=> array(BBCODES_TABLE => 'b'),
+	$sql_ary = [
+		'SELECT'	=> 'b.bbcode_id, b.bbcode_tag, b.bbcode_helpline, b.bbcode_match',
+		'FROM'		=> [BBCODES_TABLE => 'b'],
 		'WHERE'		=> 'b.display_on_posting = 1',
 		'ORDER_BY'	=> 'b.bbcode_tag',
-	);
+	];
 
 	/**
 	* Event to modify the SQL query before custom bbcode data is queried
@@ -1119,13 +1113,18 @@ function display_custom_bbcodes()
 		// Convert Numeric Character References to UTF-8 chars.
 		$row['bbcode_helpline'] = utf8_decode_ncr($row['bbcode_helpline']);
 
-		$custom_tags = array(
-			'BBCODE_NAME'		=> "'[{$row['bbcode_tag']}]', '[/" . str_replace('=', '', $row['bbcode_tag']) . "]'",
+		// Does the closing bbcode tag exists? If so display it.
+		$bbcode_close_tag	= '%\[\/' . utf8_strtolower($row['bbcode_tag']) . '\]%';
+		$bbcode_match_str	= utf8_strtolower($row['bbcode_match']);
+		$bbcode_name_clean	= preg_match($bbcode_close_tag, $bbcode_match_str) ? "'[{$row['bbcode_tag']}]', '[/" . str_replace('=', '', $row['bbcode_tag']) . "]'" : "'[{$row['bbcode_tag']}]', ''";
+
+		$custom_tags = [
+			'BBCODE_NAME'		=> $bbcode_name_clean,
 			'BBCODE_ID'			=> $num_predefined_bbcodes + ($i * 2),
 			'BBCODE_TAG'		=> $row['bbcode_tag'],
 			'BBCODE_TAG_CLEAN'	=> str_replace('=', '-', $row['bbcode_tag']),
 			'BBCODE_HELPLINE'	=> $row['bbcode_helpline'],
-		);
+		];
 
 		/**
 		* Event to modify the template data block of a custom bbcode
@@ -1477,15 +1476,13 @@ function watch_topic_forum($mode, &$s_watching, $user_id, $forum_id, $topic_id, 
 		$s_watching['title_toggle'] = $user->lang[((!$is_watching) ? 'STOP' : 'START') . '_WATCHING_' . strtoupper($mode)];
 		$s_watching['is_watching'] = $is_watching;
 	}
-
-	return;
 }
 
 /**
 * Get user rank title and image
 *
 * @param array $user_data the current stored users data
-* @param int $user_posts the users number of posts
+* @param int|false $user_posts the users number of posts or false if guest
 *
 * @return array An associative array containing the rank title (title), the rank image as full img tag (img) and the rank image source (img_src)
 *
@@ -1635,6 +1632,10 @@ function phpbb_show_profile($data, $user_notes_enabled = false, $warn_user_enabl
 		include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 	}
 
+	/** @var \phpbb\ban\manager $ban_manager */
+	$ban_manager = $phpbb_container->get('ban.manager');
+	$user_banned = $ban_manager->check($data);
+
 	// Can this user receive a Private Message?
 	$can_receive_pm = $check_can_receive_pm && (
 		// They must be a "normal" user
@@ -1647,7 +1648,7 @@ function phpbb_show_profile($data, $user_notes_enabled = false, $warn_user_enabl
 		count($auth->acl_get_list($user_id, 'u_readpm')) &&
 
 		// They must not be permanently banned
-		!count(phpbb_get_banned_user_ids($user_id, false)) &&
+		(empty($user_banned) || $user_banned['end'] > 0) &&
 
 		// They must allow users to contact via PM
 		(($auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_')) || $data['user_allow_pm'])
@@ -1684,8 +1685,8 @@ function phpbb_show_profile($data, $user_notes_enabled = false, $warn_user_enabl
 		'S_WARNINGS'	=> ($auth->acl_getf_global('m_') || $auth->acl_get('m_warn')) ? true : false,
 
 		'U_SEARCH_USER' => ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id=$user_id&amp;sr=posts") : '',
-		'U_NOTES'		=> ($user_notes_enabled && $auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $user_id, true, $user->session_id) : '',
-		'U_WARN'		=> ($warn_user_enabled && $auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $user_id, true, $user->session_id) : '',
+		'U_NOTES'		=> ($user_notes_enabled && $auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $user_id) : '',
+		'U_WARN'		=> ($warn_user_enabled && $auth->acl_get('m_warn')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_user&amp;u=' . $user_id) : '',
 		'U_PM'			=> ($config['allow_privmsg'] && $auth->acl_get('u_sendpm') && $can_receive_pm) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;u=' . $user_id) : '',
 		'U_EMAIL'		=> $email,
 		'U_JABBER'		=> ($data['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contact&amp;action=jabber&amp;u=' . $user_id) : '',

@@ -110,6 +110,10 @@ ul.topiclist dfn {
 	display: block;
 }
 
+.forum-image img {
+	max-width: 100%;
+}
+
 li.row {
 	border-top: 1px solid transparent;
 	border-bottom: 1px solid transparent;
@@ -137,7 +141,7 @@ li.header dt,
 li.header dd {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10px;
-	line-height: 10px;
+	line-height: 16px;
 	text-transform: uppercase;
 	border-left-width: 0;
 	margin: 2px 0 4px;
@@ -189,7 +193,7 @@ dl.row-item dt {
 }
 
 dl.row-item dt .list-inner {
-	padding-left: 52px;					/* Space for folder icon */
+	padding-left: 52px;			/* Space for folder icon */
 }
 
 dl.row-item dt,
@@ -628,8 +632,6 @@ blockquote .codebox {
 
 .attach-image img {
 	border: 1px solid transparent;
-
-	/*	cursor: move; */
 	cursor: default;
 }
 
@@ -680,6 +682,18 @@ dl.thumbnail dd {
 
 dl.thumbnail dt a:hover img {
 	border: 1px solid transparent;
+}
+
+.c-file-comment {
+	font-style: italic;
+}
+
+.c-file-audio-controls {
+	max-width: 100%;
+}
+
+.c-file-video-controls {
+	max-width: 100%;
 }
 
 /* Post poll styles
@@ -783,6 +797,10 @@ fieldset.polls dd div {
 .postprofile dd.profile-rank,
 .postprofile .search-result-date {
 	margin-bottom: 10px;
+}
+
+.profile-rank img {
+	max-width: 160px;
 }
 
 /* Post-profile avatars */
@@ -928,3 +946,10 @@ table.fixed-width-table {
 
 /* stylelint-enable selector-max-compound-selectors */
 /* stylelint-enable selector-no-qualifying-type */
+
+/* Memberlist
+---------------------------------------- */
+.group-description ol,
+.group-description ul {
+	list-style-position: inside;
+}

@@ -60,8 +60,15 @@ class acp_main
 		{
 			if ($action === 'admlogout')
 			{
-				$user->unset_admin();
-				redirect(append_sid("{$phpbb_root_path}index.$phpEx"));
+				if (check_link_hash($request->variable('hash', ''), 'acp_logout'))
+				{
+					$user->unset_admin();
+					redirect(append_sid("{$phpbb_root_path}index.$phpEx"));
+				}
+				else
+				{
+					redirect(append_sid("{$phpbb_admin_path}index.$phpEx"));
+				}
 			}
 
 			if (!confirm_box(true))
@@ -197,7 +204,6 @@ class acp_main
 						}
 
 						// Resync post counts
-						$start = $max_post_id = 0;
 
 						// Find the maximum post ID, we can only stop the cycle when we've reached it
 						$sql = 'SELECT MAX(forum_last_post_id) as max_post_id
@@ -226,6 +232,7 @@ class acp_main
 						$step = ($config['num_posts']) ? (max((int) ($config['num_posts'] / 5), 20000)) : 20000;
 						$db->sql_query('UPDATE ' . USERS_TABLE . ' SET user_posts = 0');
 
+						$start = 0;
 						while ($start < $max_post_id)
 						{
 							$sql = 'SELECT COUNT(post_id) AS num_posts, poster_id
@@ -430,11 +437,11 @@ class acp_main
 		// Version check
 		$user->add_lang('install');
 
-		if ($auth->acl_get('a_server') && version_compare(PHP_VERSION, '7.1.3', '<'))
+		if ($auth->acl_get('a_server') && version_compare(PHP_VERSION, '7.2.0', '<'))
 		{
 			$template->assign_vars(array(
 				'S_PHP_VERSION_OLD'	=> true,
-				'L_PHP_VERSION_OLD'	=> sprintf($user->lang['PHP_VERSION_OLD'], PHP_VERSION, '7.1.3', '<a href="https://www.phpbb.com/support/docs/en/3.3/ug/quickstart/requirements">', '</a>'),
+				'L_PHP_VERSION_OLD'	=> sprintf($user->lang['PHP_VERSION_OLD'], PHP_VERSION, '7.2.0', '<a href="https://www.phpbb.com/support/docs/en/3.3/ug/quickstart/requirements">', '</a>'),
 			));
 		}
 
@@ -526,20 +533,13 @@ class acp_main
 			$files_per_day = $total_files;
 		}
 
-		if ($config['allow_attachments'] || $config['allow_pm_attach'])
-		{
-			$sql = 'SELECT COUNT(attach_id) AS total_orphan
-				FROM ' . ATTACHMENTS_TABLE . '
-				WHERE is_orphan = 1
-					AND filetime < ' . (time() - 3*60*60);
-			$result = $db->sql_query($sql);
-			$total_orphan = (int) $db->sql_fetchfield('total_orphan');
-			$db->sql_freeresult($result);
-		}
-		else
-		{
-			$total_orphan = false;
-		}
+		$sql = 'SELECT COUNT(attach_id) AS total_orphan
+			FROM ' . ATTACHMENTS_TABLE . '
+			WHERE is_orphan = 1
+				AND filetime < ' . (time() - 3*60*60);
+		$result = $db->sql_query($sql);
+		$total_orphan = (int) $db->sql_fetchfield('total_orphan');
+		$db->sql_freeresult($result);
 
 		$dbsize = get_database_size();
 
@@ -557,7 +557,6 @@ class acp_main
 			'DBSIZE'			=> $dbsize,
 			'UPLOAD_DIR_SIZE'	=> $upload_dir_size,
 			'TOTAL_ORPHAN'		=> $total_orphan,
-			'S_TOTAL_ORPHAN'	=> ($total_orphan === false) ? false : true,
 			'GZIP_COMPRESSION'	=> ($config['gzip_compress'] && @extension_loaded('zlib')) ? $user->lang['ON'] : $user->lang['OFF'],
 			'DATABASE_INFO'		=> $db->sql_server_info(),
 			'PHP_VERSION_INFO'	=> PHP_VERSION,
@@ -627,16 +626,7 @@ class acp_main
 				));
 			}
 
-			$option_ary = array('activate' => 'ACTIVATE', 'delete' => 'DELETE');
-			if ($config['email_enable'])
-			{
-				$option_ary += array('remind' => 'REMIND');
-			}
-
-			$template->assign_vars(array(
-				'S_INACTIVE_USERS'		=> true,
-				'S_INACTIVE_OPTIONS'	=> build_select($option_ary))
-			);
+			$template->assign_var('S_INACTIVE_USERS', true);
 		}
 
 		// Warn if install is still present
@@ -653,16 +643,9 @@ class acp_main
 				$search_backend_factory = $phpbb_container->get('search.backend_factory');
 				$search = $search_backend_factory->get_active();
 			}
-			catch (RuntimeException $e)
+			catch (\phpbb\search\exception\no_search_backend_found_exception $e)
 			{
-				if (strpos($e->getMessage(), 'No service found') === 0)
-				{
-					trigger_error('NO_SUCH_SEARCH_MODULE');
-				}
-				else
-				{
-					throw $e;
-				}
+				trigger_error('NO_SUCH_SEARCH_MODULE');
 			}
 
 			if (!$search->index_created())

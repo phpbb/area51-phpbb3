@@ -2,6 +2,7 @@ imports:
     - { resource: services_attachment.yml }
     - { resource: services_auth.yml }
     - { resource: services_avatar.yml }
+    - { resource: services_ban.yml }
     - { resource: services_captcha.yml }
     - { resource: services_console.yml }
     - { resource: services_content.yml }
@@ -12,15 +13,18 @@ imports:
     - { resource: services_feed.yml }
     - { resource: services_files.yml }
     - { resource: services_filesystem.yml }
+    - { resource: services_finder.yml }
     - { resource: services_help.yml }
     - { resource: services_http.yml }
     - { resource: services_language.yml }
+    - { resource: services_mention.yml }
     - { resource: services_migrator.yml }
     - { resource: services_mimetype_guesser.yml }
     - { resource: services_module.yml }
     - { resource: services_notification.yml }
     - { resource: services_password.yml }
     - { resource: services_php.yml }
+    - { resource: services_posting.yml }
     - { resource: services_profilefield.yml }
     - { resource: services_report.yml }
     - { resource: services_routing.yml }
@@ -43,6 +47,7 @@ services:
              - '@cache.driver'
              - '@config'
              - '@dbal.conn'
+             - '@event_dispatcher'
              - '%core.root_path%'
              - '%core.php_ext%'
 
@@ -93,7 +98,7 @@ services:
             - '@config'
             - '@cron.manager'
             - '@dbal.conn'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '@language'
             - '@request'
             - '@routing.helper'
@@ -128,7 +133,7 @@ services:
             - '@cache'
             - '@config'
             - '@language'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '@path_helper'
             - '@user'
 
@@ -138,7 +143,7 @@ services:
             - '@dbal.conn'
             - '@user'
             - '@auth'
-            - '@dispatcher'
+            - '@event_dispatcher'
             - '%core.root_path%'
             - '%core.adm_relative_path%'
             - '%core.php_ext%'

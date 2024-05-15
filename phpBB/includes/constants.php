@@ -42,7 +42,6 @@ define('USER_ACTIVATION_ADMIN', 2);
 define('USER_ACTIVATION_DISABLE', 3);
 
 define('AVATAR_UPLOAD', 1);
-define('AVATAR_REMOTE', 2);
 define('AVATAR_GALLERY', 3);
 
 define('USER_NORMAL', 0);
@@ -159,9 +158,16 @@ define('CONFIRM_POST', 3);
 define('CONFIRM_REPORT', 4);
 
 // Categories - Attachments
+/* @deprecated Replaced by \phpbb\attachment\attachment_category constants in 4.0.0-a1, to be removed in 4.1.0-a1 */
 define('ATTACHMENT_CATEGORY_NONE', 0);
+/* @deprecated Replaced by \phpbb\attachment\attachment_category constants in 4.0.0-a1, to be removed in 4.1.0-a1 */
 define('ATTACHMENT_CATEGORY_IMAGE', 1); // Inline Images
+/* @deprecated Replaced by \phpbb\attachment\attachment_category constants in 4.0.0-a1, to be removed in 4.1.0-a1 */
 define('ATTACHMENT_CATEGORY_THUMB', 4); // Not used within the database, only while displaying posts
+/* @deprecated Replaced by \phpbb\attachment\attachment_category constants in 4.0.0-a1, to be removed in 4.1.0-a1 */
+define('ATTACHMENT_CATEGORY_AUDIO', 7); // Browser-playable audio files
+/* @deprecated Replaced by \phpbb\attachment\attachment_category constants in 4.0.0-a1, to be removed in 4.1.0-a1 */
+define('ATTACHMENT_CATEGORY_VIDEO', 8); // Browser-playable video files
 
 // BBCode UID length
 define('BBCODE_UID_LEN', 8);
@@ -182,7 +188,6 @@ define('BBCODE_ID_U', 7);
 define('BBCODE_ID_CODE', 8);
 define('BBCODE_ID_LIST', 9);
 define('BBCODE_ID_EMAIL', 10);
-define('BBCODE_ID_FLASH', 11);
 define('BBCODE_ID_ATTACH', 12);
 
 // BBCode hard limit
@@ -234,11 +239,14 @@ define('ACL_ROLES_TABLE',			$table_prefix . 'acl_roles');
 define('ACL_USERS_TABLE',			$table_prefix . 'acl_users');
 define('ATTACHMENTS_TABLE',			$table_prefix . 'attachments');
 define('BACKUPS_TABLE',				$table_prefix . 'backups');
-define('BANLIST_TABLE',				$table_prefix . 'banlist');
+define('BANS_TABLE',				$table_prefix . 'bans');
 define('BBCODES_TABLE',				$table_prefix . 'bbcodes');
 define('BOOKMARKS_TABLE',			$table_prefix . 'bookmarks');
 define('BOTS_TABLE',				$table_prefix . 'bots');
-@define('CONFIG_TABLE',				$table_prefix . 'config');
+if (!defined('CONFIG_TABLE'))
+{
+	define('CONFIG_TABLE',			$table_prefix . 'config');
+}
 define('CONFIG_TEXT_TABLE',			$table_prefix . 'config_text');
 define('CONFIRM_TABLE',				$table_prefix . 'confirm');
 define('DISALLOW_TABLE',			$table_prefix . 'disallow');

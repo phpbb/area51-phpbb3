@@ -75,14 +75,14 @@ class report_post extends \phpbb\notification\type\post_in_queue
 	/**
 	* Find the users who want to receive notifications
 	*
-	* @param array $post Data from the post
+	* @param array $type_data Data from the post
 	* @param array $options Options for finding users for notification
 	*
 	* @return array
 	*/
-	public function find_users_for_notification($post, $options = array())
+	public function find_users_for_notification($type_data, $options = array())
 	{
-		$notify_users = parent::find_users_for_notification($post, $options);
+		$notify_users = parent::find_users_for_notification($type_data, $options);
 
 		// never notify reporter
 		unset($notify_users[$this->user->data['user_id']]);
@@ -91,9 +91,7 @@ class report_post extends \phpbb\notification\type\post_in_queue
 	}
 
 	/**
-	* Get email template
-	*
-	* @return string|bool
+	* {@inheritdoc}
 	*/
 	public function get_email_template()
 	{
@@ -110,14 +108,14 @@ class report_post extends \phpbb\notification\type\post_in_queue
 		$board_url = generate_board_url();
 
 		return array(
-			'POST_SUBJECT'				=> htmlspecialchars_decode(censor_text($this->get_data('post_subject')), ENT_COMPAT),
-			'TOPIC_TITLE'				=> htmlspecialchars_decode(censor_text($this->get_data('topic_title')), ENT_COMPAT),
+			'POST_SUBJECT'				=> html_entity_decode(censor_text($this->get_data('post_subject')), ENT_COMPAT),
+			'TOPIC_TITLE'				=> html_entity_decode(censor_text($this->get_data('topic_title')), ENT_COMPAT),
 
-			'U_VIEW_REPORT'				=> "{$board_url}/mcp.{$this->php_ext}?f={$this->get_data('forum_id')}&p={$this->item_id}&i=reports&mode=report_details#reports",
+			'U_VIEW_REPORT'				=> "{$board_url}/mcp.{$this->php_ext}?p={$this->item_id}&i=reports&mode=report_details#reports",
 			'U_VIEW_POST'				=> "{$board_url}/viewtopic.{$this->php_ext}?p={$this->item_id}#p{$this->item_id}",
-			'U_NEWEST_POST'				=> "{$board_url}/viewtopic.{$this->php_ext}?f={$this->get_data('forum_id')}&t={$this->item_parent_id}&view=unread#unread",
-			'U_TOPIC'					=> "{$board_url}/viewtopic.{$this->php_ext}?f={$this->get_data('forum_id')}&t={$this->item_parent_id}",
-			'U_VIEW_TOPIC'				=> "{$board_url}/viewtopic.{$this->php_ext}?f={$this->get_data('forum_id')}&t={$this->item_parent_id}",
+			'U_NEWEST_POST'				=> "{$board_url}/viewtopic.{$this->php_ext}?t={$this->item_parent_id}&view=unread#unread",
+			'U_TOPIC'					=> "{$board_url}/viewtopic.{$this->php_ext}?t={$this->item_parent_id}",
+			'U_VIEW_TOPIC'				=> "{$board_url}/viewtopic.{$this->php_ext}?t={$this->item_parent_id}",
 			'U_FORUM'					=> "{$board_url}/viewforum.{$this->php_ext}?f={$this->get_data('forum_id')}",
 		);
 	}
@@ -129,7 +127,7 @@ class report_post extends \phpbb\notification\type\post_in_queue
 	*/
 	public function get_url()
 	{
-		return append_sid($this->phpbb_root_path . 'mcp.' . $this->php_ext, "f={$this->get_data('forum_id')}&amp;p={$this->item_id}&amp;i=reports&amp;mode=report_details#reports");
+		return append_sid($this->phpbb_root_path . 'mcp.' . $this->php_ext, "p={$this->item_id}&amp;i=reports&amp;mode=report_details#reports");
 	}
 
 	/**
@@ -212,13 +210,13 @@ class report_post extends \phpbb\notification\type\post_in_queue
 	/**
 	* {@inheritdoc}
 	*/
-	public function create_insert_array($post, $pre_create_data = array())
+	public function create_insert_array($type_data, $pre_create_data = array())
 	{
 		$this->set_data('reporter_id', $this->user->data['user_id']);
-		$this->set_data('reason_title', strtoupper($post['reason_title']));
-		$this->set_data('reason_description', $post['reason_description']);
-		$this->set_data('report_text', $post['report_text']);
+		$this->set_data('reason_title', strtoupper($type_data['reason_title']));
+		$this->set_data('reason_description', $type_data['reason_description']);
+		$this->set_data('report_text', $type_data['report_text']);
 
-		parent::create_insert_array($post, $pre_create_data);
+		parent::create_insert_array($type_data, $pre_create_data);
 	}
 }

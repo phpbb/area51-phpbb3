@@ -20,6 +20,9 @@ class listener implements EventSubscriberInterface
 	/** @var \phpbb\config\config */
 	protected $config;
 
+	/** @var \phpbb\language\language */
+	protected $language;
+
 	/** @var \phpbb\log\log */
 	protected $log;
 
@@ -35,16 +38,18 @@ class listener implements EventSubscriberInterface
 	/**
 	 * Constructor
 	 *
-	 * @param \phpbb\config\config $config Config object
-	 * @param \phpbb\log\log $log The phpBB log system
-	 * @param \phpbb\user $user User object
-	 * @param string $phpbb_root_path phpBB root path
-	 * @param string $phpEx phpEx
+	 * @param \phpbb\config\config     $config          Config object
+	 * @param \phpbb\language\language $language        Language object
+	 * @param \phpbb\log\log           $log             The phpBB log system
+	 * @param \phpbb\user              $user            User object
+	 * @param string                   $phpbb_root_path phpBB root path
+	 * @param string                   $phpEx           phpEx
 	 * @access public
 	 */
-	public function __construct(\phpbb\config\config $config, \phpbb\log\log $log, \phpbb\user $user, $phpbb_root_path, $phpEx)
+	public function __construct(\phpbb\config\config $config, \phpbb\language\language $language, \phpbb\log\log $log, \phpbb\user $user, $phpbb_root_path, $phpEx)
 	{
 		$this->config = $config;
+		$this->language = $language;
 		$this->log = $log;
 		$this->user = $user;
 		$this->phpbb_root_path = $phpbb_root_path;
@@ -58,7 +63,7 @@ class listener implements EventSubscriberInterface
 	 * @static
 	 * @access public
 	 */
-	static public function getSubscribedEvents()
+	public static function getSubscribedEvents()
 	{
 		return array(
 			'core.user_setup'						=> 'load_language_on_setup',
@@ -143,6 +148,7 @@ class listener implements EventSubscriberInterface
 			$user_data = array(
 				'USERNAME'		=> $this->user->data['username'],
 				'IP_ADDRESS'	=> $this->user->ip,
+				'HOST_NAME'		=> @gethostbyaddr($this->user->ip),
 				'TIME'			=> $this->user->format_date(time(), $this->config['default_dateformat'], true),
 				'LOG_MODE'		=> $event['mode'],
 			);
@@ -152,14 +158,14 @@ class listener implements EventSubscriberInterface
 			{
 				// Delete All was selected
 				$this->send_message(array_merge($user_data, array(
-					'LOGS_SELECTED' => $this->user->lang('LOG_DELETE_ALL')
+					'LOGS_SELECTED' => $this->language->lang('LOG_DELETE_ALL')
 				)), 'acp_logs');
 			}
 			else if (isset($event['conditions']['log_id']['IN']))
 			{
 				// Marked logs were selected
 				$this->send_message(array_merge($user_data, array(
-					'LOGS_SELECTED' => $this->user->lang('LOG_DELETE_MARKED', implode(', ', $event['conditions']['log_id']['IN']))
+					'LOGS_SELECTED' => $this->language->lang('LOG_DELETE_MARKED', implode(', ', $event['conditions']['log_id']['IN']))
 				)), 'acp_logs');
 			}
 		}
@@ -204,6 +210,7 @@ class listener implements EventSubscriberInterface
 			$this->send_message(array(
 				'USERNAME'		=> $this->user->data['username'],
 				'IP_ADDRESS'	=> $this->user->ip,
+				'HOST_NAME'		=> @gethostbyaddr($this->user->ip),
 				'LOGIN_TIME'	=> $this->user->format_date(time(), $this->config['default_dateformat'], true),
 			), 'acp_login', $this->user->data['user_email']);
 		}
@@ -235,7 +242,8 @@ class listener implements EventSubscriberInterface
 				'NEW_EMAIL'		=> $new_email,
 				'OLD_EMAIL'		=> $old_email,
 				'IP_ADDRESS'	=> $this->user->ip,
-				'CONTACT'		=> (!empty($this->config['sec_contact_name'])) ? $this->config['sec_contact_name'] : $this->user->lang('ACP_CONTACT_ADMIN'),
+				'HOST_NAME'		=> @gethostbyaddr($this->user->ip),
+				'CONTACT'		=> !empty($this->config['sec_contact_name']) ? $this->config['sec_contact_name'] : $this->language->lang('ACP_CONTACT_ADMIN'),
 			), 'email_change', $old_email);
 		}
 	}
@@ -282,7 +290,7 @@ class listener implements EventSubscriberInterface
 
 		$messenger = new \messenger(false);
 		$messenger->template('@phpbb_teamsecurity/' . $template);
-		$messenger->to((!empty($this->config['sec_contact'])) ? $this->config['sec_contact'] : $this->config['board_contact'], $this->config['board_contact_name']);
+		$messenger->to(!empty($this->config['sec_contact']) ? $this->config['sec_contact'] : $this->config['board_contact'], $this->config['board_contact_name']);
 		$messenger->cc($cc_user);
 		$messenger->assign_vars($message_data);
 		$messenger->send();

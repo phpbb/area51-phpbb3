@@ -137,7 +137,7 @@ class filespec
 		$this->mimetype = $upload_ary['type'];
 
 		// Opera adds the name to the mime type
-		$this->mimetype	= (strpos($this->mimetype, '; name') !== false) ? str_replace(strstr($this->mimetype, '; name'), '', $this->mimetype) : $this->mimetype;
+		$this->mimetype	= ($this->mimetype && str_contains($this->mimetype, '; name')) ? str_replace(strstr($this->mimetype, '; name'), '', $this->mimetype) : $this->mimetype;
 
 		if (!$this->mimetype)
 		{
@@ -329,7 +329,7 @@ class filespec
 	 * Get mime type
 	 *
 	 * @param string $filename Filename that needs to be checked
-	 * @return string Mime type of supplied filename
+	 * @return string Mime type of supplied filename or empty string if mimetype could not be guessed
 	 */
 	public function get_mimetype($filename)
 	{
@@ -343,7 +343,7 @@ class filespec
 			}
 		}
 
-		return $this->mimetype;
+		return $this->mimetype ?: '';
 	}
 
 	/**
@@ -478,7 +478,10 @@ class filespec
 			}
 
 			// Remove temporary filename
-			@unlink($this->filename);
+			if (file_exists($this->filename))
+			{
+				@unlink($this->filename);
+			}
 
 			if (count($this->error))
 			{

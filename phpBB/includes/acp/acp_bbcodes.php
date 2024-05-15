@@ -86,7 +86,7 @@ class acp_bbcodes
 				$display_on_posting = $request->variable('display_on_posting', 0);
 
 				$bbcode_match = $request->variable('bbcode_match', '');
-				$bbcode_tpl = htmlspecialchars_decode($request->variable('bbcode_tpl', '', true), ENT_COMPAT);
+				$bbcode_tpl = html_entity_decode($request->variable('bbcode_tpl', '', true), ENT_COMPAT);
 				$bbcode_helpline = $request->variable('bbcode_helpline', '', true);
 			break;
 		}
@@ -195,7 +195,7 @@ class acp_bbcodes
 					$data = $this->build_regexp($bbcode_match, $bbcode_tpl);
 
 					// Make sure the user didn't pick a "bad" name for the BBCode tag.
-					$hard_coded = array('code', 'quote', 'quote=', 'attachment', 'attachment=', 'b', 'i', 'url', 'url=', 'img', 'size', 'size=', 'color', 'color=', 'u', 'list', 'list=', 'email', 'email=', 'flash', 'flash=');
+					$hard_coded = array('code', 'quote', 'quote=', 'attachment', 'attachment=', 'b', 'i', 'url', 'url=', 'img', 'size', 'size=', 'color', 'color=', 'u', 'list', 'list=', 'email', 'email=', 'mention');
 
 					if (($action == 'modify' && strtolower($data['bbcode_tag']) !== strtolower($row['bbcode_tag'])) || ($action == 'create'))
 					{
@@ -216,15 +216,6 @@ class acp_bbcodes
 						}
 					}
 
-					if (substr($data['bbcode_tag'], -1) === '=')
-					{
-						$test = substr($data['bbcode_tag'], 0, -1);
-					}
-					else
-					{
-						$test = $data['bbcode_tag'];
-					}
-
 					if (strlen($data['bbcode_tag']) > 16)
 					{
 						trigger_error($user->lang['BBCODE_TAG_TOO_LONG'] . adm_back_link($this->u_action), E_USER_WARNING);
@@ -235,7 +226,7 @@ class acp_bbcodes
 						trigger_error($user->lang['BBCODE_TAG_DEF_TOO_LONG'] . adm_back_link($this->u_action), E_USER_WARNING);
 					}
 
-					if (strlen($bbcode_helpline) > 255)
+					if (strlen($bbcode_helpline) > 3000)
 					{
 						trigger_error($user->lang['BBCODE_HELPLINE_TOO_LONG'] . adm_back_link($this->u_action), E_USER_WARNING);
 					}

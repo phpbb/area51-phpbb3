@@ -163,7 +163,7 @@ class oauth extends base
 		$provider = $this->request->variable('oauth_service', '', false);
 		$service_name = $this->get_service_name($provider);
 
-		if ($provider === '' || !array_key_exists($service_name, $this->service_providers))
+		if ($provider === '' || !$this->service_providers->offsetExists($service_name))
 		{
 			return [
 				'status'		=> LOGIN_ERROR_EXTERNAL_AUTH,
@@ -218,7 +218,7 @@ class oauth extends base
 				'oauth_provider_id'	=> (string) $unique_id
 			];
 
-			$sql = 'SELECT user_id 
+			$sql = 'SELECT user_id
 				FROM ' . $this->oauth_account_table . '
 				WHERE ' . $this->db->sql_build_array('SELECT', $data);
 			$result = $this->db->sql_query($sql);
@@ -240,6 +240,7 @@ class oauth extends base
 			 * @var ServiceInterface	service			OAuth service
 			 * @since 3.2.3-RC1
 			 * @changed 3.2.6-RC1						Added redirect_data
+			 * @psalm-var string[] $vars
 			 */
 			$vars = [
 				'row',
@@ -411,7 +412,7 @@ class oauth extends base
 	/**
 	 * {@inheritdoc}
 	 */
-	public function login_link_has_necessary_data($login_link_data)
+	public function login_link_has_necessary_data(array $login_link_data)
 	{
 		if (empty($login_link_data))
 		{
@@ -452,7 +453,7 @@ class oauth extends base
 
 		$service_name = $this->get_service_name($link_data['oauth_service']);
 
-		if (!array_key_exists($service_name, $this->service_providers))
+		if (!$this->service_providers->offsetExists($service_name))
 		{
 			return 'LOGIN_ERROR_OAUTH_SERVICE_DOES_NOT_EXIST';
 		}
@@ -476,8 +477,6 @@ class oauth extends base
 		// Clear all tokens belonging to the user
 		$storage = new token_storage($this->db, $this->user, $this->oauth_token_table, $this->oauth_state_table);
 		$storage->clearAllTokens();
-
-		return;
 	}
 
 	/**
@@ -618,8 +617,8 @@ class oauth extends base
 	 * @param array		$link_data		The same variable given to
 	 * 									{@see \phpbb\auth\provider\provider_interface::link_account}
 	 * @param string	$service_name	The name of the service being used in linking.
-	 * @return string|false				Returns a language constant (string) if an error is encountered,
-	 * 									or false on success.
+	 * @return string|false|never	Returns a language constant (string) if an error is encountered,
+	 * 									an array with error info or false on success.
 	 */
 	protected function link_account_auth_link(array $link_data, $service_name)
 	{
@@ -662,7 +661,9 @@ class oauth extends base
 		}
 		else
 		{
-			return $this->set_redirect($service);
+			$this->set_redirect($service);
+
+			return false; // Not reached
 		}
 	}
 
@@ -670,6 +671,7 @@ class oauth extends base
 	 * Performs the query that inserts an account link
 	 *
 	 * @param	array	$data	This array is passed to db->sql_build_array
+	 * @return	void
 	 */
 	protected function link_account_perform_link(array $data)
 	{
@@ -828,8 +830,7 @@ class oauth extends base
 	 * Sets a redirect to the authorization uri.
 	 *
 	 * @param OAuth1Service|OAuth2Service $service		The external OAuth service
-	 * @return array|false								Array if an error occurred,
-	 *                            						false on success
+	 * @return array|never								Array if an error occurred, won't return on success
 	 */
 	protected function set_redirect($service)
 	{
@@ -854,6 +855,6 @@ class oauth extends base
 
 		redirect($service->getAuthorizationUri($parameters), false, true);
 
-		return false;
+		return []; // Never reached
 	}
 }

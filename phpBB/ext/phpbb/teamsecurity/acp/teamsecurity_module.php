@@ -18,6 +18,12 @@ class teamsecurity_module
 	/** @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
+	/** @var \phpbb\group\helper */
+	protected $group_helper;
+
+	/** @var \phpbb\language\language */
+	protected $language;
+
 	/** @var \phpbb\log\log */
 	protected $log;
 
@@ -31,20 +37,33 @@ class teamsecurity_module
 	protected $user;
 
 	/** @var string */
+	public $page_title;
+
+	/** @var string */
+	public $tpl_name;
+
+	/** @var string */
 	public $u_action;
 
+	/**
+	 * Constructor
+	 *
+	 * @throws \Exception
+	 */
 	public function __construct()
 	{
-		global $config, $db, $phpbb_log, $request, $template, $user;
+		global $phpbb_container;
 
-		$this->config = $config;
-		$this->db = $db;
-		$this->log = $phpbb_log;
-		$this->request = $request;
-		$this->template = $template;
-		$this->user = $user;
+		$this->config = $phpbb_container->get('config');
+		$this->db = $phpbb_container->get('dbal.conn');
+		$this->group_helper = $phpbb_container->get('group_helper');
+		$this->language = $phpbb_container->get('language');
+		$this->log = $phpbb_container->get('log');
+		$this->request = $phpbb_container->get('request');
+		$this->template = $phpbb_container->get('template');
+		$this->user = $phpbb_container->get('user');
 
-		$this->user->add_lang_ext('phpbb/teamsecurity', 'acp_teamsecurity');
+		$this->language->add_lang('acp_teamsecurity','phpbb/teamsecurity');
 	}
 
 	/**
@@ -56,12 +75,12 @@ class teamsecurity_module
 	public function main()
 	{
 		$this->tpl_name = 'acp_teamsecurity';
-		$this->page_title = $this->user->lang('ACP_TEAM_SECURITY_SETTINGS');
+		$this->page_title = $this->language->lang('ACP_TEAM_SECURITY_SETTINGS');
 
 		// Only allow founders to view/manage these settings
 		if ($this->user->data['user_type'] != USER_FOUNDER)
 		{
-			trigger_error($this->user->lang('ACP_FOUNDER_MANAGE_ONLY'), E_USER_WARNING);
+			trigger_error($this->language->lang('ACP_FOUNDER_MANAGE_ONLY'), E_USER_WARNING);
 		}
 
 		$form_key = 'acp_teamsecurity';
@@ -71,14 +90,14 @@ class teamsecurity_module
 		{
 			if (!check_form_key($form_key))
 			{
-				trigger_error($this->user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+				trigger_error($this->language->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
 			}
 
 			// Validate the email address submitted by the user
 			$sec_contact = $this->request->variable('sec_contact', '');
 			if ($sec_contact != '' && !preg_match('/^' . get_preg_expression('email') . '$/i', $sec_contact))
 			{
-				trigger_error($this->user->lang('EMAIL_INVALID_EMAIL') . adm_back_link($this->u_action), E_USER_WARNING);
+				trigger_error($this->language->lang('EMAIL_INVALID_EMAIL') . adm_back_link($this->u_action), E_USER_WARNING);
 			}
 
 			$this->config->set('sec_contact', $sec_contact);
@@ -91,7 +110,7 @@ class teamsecurity_module
 			$this->config->set('sec_usergroups', json_encode($this->request->variable('sec_usergroups', array(0))));
 
 			$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_TEAM_SEC_UPDATED');
-			trigger_error($this->user->lang('CONFIG_UPDATED') . adm_back_link($this->u_action));
+			trigger_error($this->language->lang('CONFIG_UPDATED') . adm_back_link($this->u_action));
 		}
 
 		// Set template vars for usergroups multi-select box
@@ -131,7 +150,7 @@ class teamsecurity_module
 		{
 			$this->template->assign_block_vars('group_options', array(
 				'VALUE'			=> $row['group_id'],
-				'LABEL'			=> ($row['group_type'] == GROUP_SPECIAL) ? $this->user->lang('G_' . $row['group_name']) : $row['group_name'],
+				'LABEL'			=> $this->group_helper->get_name($row['group_name']),
 				'S_SELECTED'	=> in_array($row['group_id'], $selected_id),
 			));
 		}

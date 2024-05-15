@@ -95,15 +95,12 @@ class icon extends AbstractExtension
 				$filesystem	= $environment->get_filesystem();
 				$root_path	= $environment->get_web_root_path();
 
-				$board_url	= defined('PHPBB_USE_BOARD_URL_PATH') && PHPBB_USE_BOARD_URL_PATH;
-				$base_path	= $board_url ? generate_board_url() . '/' : $root_path;
-
 				// Iterate over the user's styles and check for icon existance
 				foreach ($this->get_style_list() as $style_path)
 				{
 					if ($filesystem->exists("{$root_path}styles/{$style_path}/theme/png/{$icon}.png"))
 					{
-						$source = "{$base_path}styles/{$style_path}/theme/png/{$icon}.png";
+						$source = "{$root_path}styles/{$style_path}/theme/png/{$icon}.png";
 
 						break;
 					}
@@ -132,7 +129,7 @@ class icon extends AbstractExtension
 				}
 				catch (\Twig\Error\Error $e)
 				{
-					return '';
+					return $e->getMessage();
 				}
 			break;
 
@@ -151,7 +148,7 @@ class icon extends AbstractExtension
 			}
 			catch (\Twig\Error\Error $e)
 			{
-				return '';
+				return $e->getMessage();
 			}
 
 			$type = 'svg';
@@ -173,7 +170,7 @@ class icon extends AbstractExtension
 		}
 		catch (\Twig\Error\Error $e)
 		{
-			return '';
+			return $e->getMessage();
 		}
 	}
 
@@ -195,11 +192,11 @@ class icon extends AbstractExtension
 		$doc = new \DOMDocument();
 		$doc->preserveWhiteSpace = false;
 
-		/**
-		 * Suppression is needed as DOMDocument does not like HTML5 and SVGs.
-		 * Options parameter prevents $dom->saveHTML() from adding an <html> element.
-		 */
-		@$doc->loadHTML($code, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		// Hide html5/svg errors
+		libxml_use_internal_errors(true);
+
+		// Options parameter prevents $dom->saveHTML() from adding an <html> element.
+		$doc->loadHTML($code, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
 		// Remove any DOCTYPE
 		foreach ($doc->childNodes as $child)

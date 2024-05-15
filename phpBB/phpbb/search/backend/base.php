@@ -1,15 +1,15 @@
 <?php
 /**
-*
-* This file is part of the phpBB Forum Software package.
-*
-* @copyright (c) phpBB Limited <https://www.phpbb.com>
-* @license GNU General Public License, version 2 (GPL-2.0)
-*
-* For full copyright and license information, please see
-* the docs/CREDITS.txt file.
-*
-*/
+ *
+ * This file is part of the phpBB Forum Software package.
+ *
+ * @copyright (c) phpBB Limited <https://www.phpbb.com>
+ * @license GNU General Public License, version 2 (GPL-2.0)
+ *
+ * For full copyright and license information, please see
+ * the docs/CREDITS.txt file.
+ *
+ */
 
 namespace phpbb\search\backend;
 
@@ -19,9 +19,9 @@ use phpbb\db\driver\driver_interface;
 use phpbb\user;
 
 /**
-* optional base class for search plugins providing simple caching based on ACM
-* and functions to retrieve ignore_words and synonyms
-*/
+ * optional base class for search plugins providing simple caching based on ACM
+ * and functions to retrieve ignore_words and synonyms
+ */
 abstract class base implements search_backend_interface
 {
 	public const SEARCH_RESULT_NOT_IN_CACHE = 0;
@@ -52,19 +52,26 @@ abstract class base implements search_backend_interface
 	protected $user;
 
 	/**
+	 * @var string
+	 */
+	protected $search_results_table;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param service $cache
-	 * @param config $config
-	 * @param driver_interface $db
-	 * @param user $user
+	 * @param service			$cache
+	 * @param config			$config
+	 * @param driver_interface	$db
+	 * @param user				$user
+	 * @param string			$search_results_table
 	 */
-	public function __construct(service $cache, config $config, driver_interface $db, user $user)
+	public function __construct(service $cache, config $config, driver_interface $db, user $user, string $search_results_table)
 	{
 		$this->cache = $cache;
 		$this->config = $config;
 		$this->db = $db;
 		$this->user = $user;
+		$this->search_results_table = $search_results_table;
 	}
 
 	/**
@@ -180,7 +187,7 @@ abstract class base implements search_backend_interface
 			if (!empty($keywords) || count($author_ary))
 			{
 				$sql = 'SELECT search_time
-					FROM ' . SEARCH_RESULTS_TABLE . '
+					FROM ' . $this->search_results_table . '
 					WHERE search_key = \'' . $this->db->sql_escape($search_key) . '\'';
 				$result = $this->db->sql_query($sql);
 
@@ -193,7 +200,7 @@ abstract class base implements search_backend_interface
 						'search_authors'	=> ' ' . implode(' ', $author_ary) . ' '
 					);
 
-					$sql = 'INSERT INTO ' . SEARCH_RESULTS_TABLE . ' ' . $this->db->sql_build_array('INSERT', $sql_ary);
+					$sql = 'INSERT INTO ' . $this->search_results_table . ' ' . $this->db->sql_build_array('INSERT', $sql_ary);
 					$this->db->sql_query($sql);
 				}
 				$this->db->sql_freeresult($result);
@@ -253,7 +260,7 @@ abstract class base implements search_backend_interface
 			}
 			$this->cache->put('_search_results_' . $search_key, $store, $this->config['search_store_results']);
 
-			$sql = 'UPDATE ' . SEARCH_RESULTS_TABLE . '
+			$sql = 'UPDATE ' . $this->search_results_table . '
 				SET search_time = ' . time() . '
 				WHERE search_key = \'' . $this->db->sql_escape($search_key) . '\'';
 			$this->db->sql_query($sql);
@@ -280,7 +287,7 @@ abstract class base implements search_backend_interface
 			}
 
 			$sql = 'SELECT search_key
-				FROM ' . SEARCH_RESULTS_TABLE . "
+				FROM ' . $this->search_results_table . "
 				WHERE search_keywords LIKE '%*%' $sql_where";
 			$result = $this->db->sql_query($sql);
 
@@ -301,7 +308,7 @@ abstract class base implements search_backend_interface
 			}
 
 			$sql = 'SELECT search_key
-				FROM ' . SEARCH_RESULTS_TABLE . "
+				FROM ' . $this->search_results_table . "
 				WHERE $sql_where";
 			$result = $this->db->sql_query($sql);
 
@@ -313,7 +320,7 @@ abstract class base implements search_backend_interface
 		}
 
 		$sql = 'DELETE
-			FROM ' . SEARCH_RESULTS_TABLE . '
+			FROM ' . $this->search_results_table . '
 			WHERE search_time < ' . (time() - (int) $this->config['search_store_results']);
 		$this->db->sql_query($sql);
 	}
@@ -329,9 +336,9 @@ abstract class base implements search_backend_interface
 		$starttime = microtime(true);
 		$row_count = 0;
 
-		while (still_on_time() && $post_counter <= $max_post_id)
+		while (still_on_time() && $post_counter < $max_post_id)
 		{
-			$rows = $this->get_posts_between($post_counter + 1, $post_counter + self::BATCH_SIZE);
+			$rows = $this->get_posts_batch_after($post_counter);
 
 			if ($this->db->sql_buffer_nested_transactions())
 			{
@@ -346,9 +353,14 @@ abstract class base implements search_backend_interface
 					$this->index('post', (int) $row['post_id'], $row['post_text'], $row['post_subject'], (int) $row['poster_id'], (int) $row['forum_id']);
 				}
 				$row_count++;
+				$post_counter = (int) $row['post_id'];
 			}
 
-			$post_counter += self::BATCH_SIZE;
+			// With cli process only one batch each time to be able to track progress
+			if (PHP_SAPI === 'cli')
+			{
+				break;
+			}
 		}
 
 		// pretend the number of posts was as big as the number of ids we indexed so far
@@ -358,7 +370,7 @@ abstract class base implements search_backend_interface
 		$this->tidy();
 		$this->config['num_posts'] = $num_posts;
 
-		if ($post_counter <= $max_post_id)
+		if ($post_counter < $max_post_id) // If there are still post to index
 		{
 			$totaltime = microtime(true) - $starttime;
 			$rows_per_second = $row_count / $totaltime;
@@ -383,9 +395,10 @@ abstract class base implements search_backend_interface
 
 		$starttime = microtime(true);
 		$row_count = 0;
-		while (still_on_time() && $post_counter <= $max_post_id)
+
+		while (still_on_time() && $post_counter < $max_post_id)
 		{
-			$rows = $this->get_posts_between($post_counter + 1, $post_counter + self::BATCH_SIZE);
+			$rows = $this->get_posts_batch_after($post_counter);
 			$ids = $posters = $forum_ids = array();
 			foreach ($rows as $row)
 			{
@@ -398,12 +411,17 @@ abstract class base implements search_backend_interface
 			if (count($ids))
 			{
 				$this->index_remove($ids, $posters, $forum_ids);
+				$post_counter = $ids[count($ids) - 1];
 			}
 
-			$post_counter += self::BATCH_SIZE;
+			// With cli process only one batch each time to be able to track progress
+			if (PHP_SAPI === 'cli')
+			{
+				break;
+			}
 		}
 
-		if ($post_counter <= $max_post_id)
+		if ($post_counter < $max_post_id) // If there are still post delete from index
 		{
 			$totaltime = microtime(true) - $starttime;
 			$rows_per_second = $row_count / $totaltime;
@@ -445,19 +463,18 @@ abstract class base implements search_backend_interface
 	}
 
 	/**
-	 * Get posts between 2 ids
+	 * Get batch of posts after id
 	 *
-	 * @param int $initial_id
-	 * @param int $final_id
+	 * @param int $post_id
 	 * @return \Generator
 	 */
-	protected function get_posts_between(int $initial_id, int $final_id): \Generator
+	protected function get_posts_batch_after(int $post_id): \Generator
 	{
 		$sql = 'SELECT post_id, post_subject, post_text, poster_id, forum_id
-			FROM ' . POSTS_TABLE . '
-			WHERE post_id >= ' . $initial_id . '
-				AND post_id <= ' . $final_id;
-		$result = $this->db->sql_query($sql);
+				FROM ' . POSTS_TABLE . '
+				WHERE post_id > ' . (int) $post_id . '
+				ORDER BY post_id ASC';
+		$result = $this->db->sql_query_limit($sql, self::BATCH_SIZE);
 
 		while ($row = $this->db->sql_fetchrow($result))
 		{
