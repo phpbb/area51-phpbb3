@@ -66,7 +66,10 @@ class phpbb_extension_metadata_manager_test extends phpbb_database_test_case
 			$this->phpbb_root_path,
 			$this->phpEx
 		);
+		$log = new \phpbb\log\dummy();
+		$assets_bag = new \phpbb\template\assets_bag();
 		$twig = new \phpbb\template\twig\environment(
+			$assets_bag,
 			$this->config,
 			$filesystem,
 			$phpbb_path_helper,

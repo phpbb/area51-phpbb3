@@ -57,8 +57,8 @@ class icon extends AbstractExtension
 	 * Generate icon HTML for use in the template, depending on the mode.
 	 *
 	 * @param environment	$environment	Twig environment object
-	 * @param string		$type			Icon type (font|iconify|png|svg)
-	 * @param string		$icon			Icon name (eg. "bold")
+	 * @param string		$type			Icon type (font|png|svg)
+	 * @param array|string	$icon			Icon name (eg. "bold")
 	 * @param string		$title			Icon title
 	 * @param bool			$hidden			Hide the icon title from view
 	 * @param string		$classes		Additional classes (eg. "fa-fw")
@@ -83,12 +83,7 @@ class icon extends AbstractExtension
 		switch ($type)
 		{
 			case 'font':
-				// Nothing to do here..
-			break;
-
-			case 'iconify':
-				$source = explode(':', $icon);
-				$source = $source[0];
+				$classes = $this->insert_fa_class($classes);
 			break;
 
 			case 'png':
@@ -135,7 +130,6 @@ class icon extends AbstractExtension
 
 			default:
 				return '';
-			break;
 		}
 
 		// If no PNG or SVG icon was found, display a default 404 SVG icon.
@@ -172,6 +166,39 @@ class icon extends AbstractExtension
 		{
 			return $e->getMessage();
 		}
+	}
+
+	/**
+	 * Insert fa class into class string by checking if class string contains any fa classes
+	 *
+	 * @param string $class_string
+	 * @return string Updated class string or original class string if fa class is already set or string is empty
+	 */
+	protected function insert_fa_class(string $class_string): string
+	{
+		if (empty($class_string))
+		{
+			return $class_string;
+		}
+
+		// These also include pro class name we don't use, but handle them properly anyway
+		$fa_classes = ['fa-solid', 'fas', 'fa-regular', 'far', 'fal', 'fa-light', 'fab', 'fa-brands'];
+
+		// Split the class string into individual words
+		$icon_classes = explode(' ', $class_string);
+
+		// Check if the class string contains any of the fa classes, just return class string in that case
+		foreach ($icon_classes as $word)
+		{
+			if (in_array($word, $fa_classes))
+			{
+				return $class_string;
+			}
+		}
+
+		// If we reach this it means we didn't have any fa classes in the class string.
+		// Prepend class string with fas for fa-solid
+		return 'fas ' . $class_string;
 	}
 
 	/**

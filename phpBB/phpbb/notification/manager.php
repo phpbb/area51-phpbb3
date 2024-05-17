@@ -223,7 +223,7 @@ class manager
 	* Mark notifications read or unread for a given method
 	*
 	* @param string $method_name
-	* @param int|array $notification_id Notification id or array of notification ids.
+	* @param array $notification_id Notification id or array of notification ids.
 	* @param bool|int $time Time at which to mark all notifications prior to as read. False to mark all as read. (Default: False)
 	* @param bool $mark_read Define if the notification as to be set to True or False. (Default: True)
 	*/
@@ -410,12 +410,17 @@ class manager
 
 			foreach ($methods as $method)
 			{
-				// setup the notification methods and add the notification to the queue
+				// Do not load non-existent notification methods
+				if (!isset($this->notification_methods[$method]))
+				{
+					continue;
+				}
+
+				// Setup the notification methods and add the notification to the queue
 				if (!isset($notification_methods[$method]))
 				{
 					$notification_methods[$method] = $this->get_method_class($method);
 				}
-
 				$notification_methods[$method]->add_to_queue($notification);
 			}
 		}

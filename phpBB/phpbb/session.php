@@ -61,12 +61,12 @@ class session
 		$script_name = str_replace(array('\\', '//'), '/', $script_name);
 
 		// Now, remove the sid and let us get a clean query string...
-		$use_args = array();
+		$use_args = [];
 
 		// Since some browser do not encode correctly we need to do this with some "special" characters...
 		// " -> %22, ' => %27, < -> %3C, > -> %3E
-		$find = array('"', "'", '<', '>', '&quot;', '&lt;', '&gt;');
-		$replace = array('%22', '%27', '%3C', '%3E', '%22', '%3C', '%3E');
+		$find = ['"', "'", '<', '>', '&quot;', '&lt;', '&gt;'];
+		$replace = ['%22', '%27', '%3C', '%3E', '%22', '%3C', '%3E'];
 
 		foreach ($args as $argument)
 		{
@@ -75,7 +75,7 @@ class session
 				continue;
 			}
 
-			$use_args[] = str_replace($find, $replace, $argument);
+			$use_args[] = (string) str_replace($find, $replace, $argument);
 		}
 		unset($args);
 
@@ -530,7 +530,7 @@ class session
 		{
 			if ($row['bot_agent'] && preg_match('#' . str_replace('\*', '.*?', preg_quote($row['bot_agent'], '#')) . '#i', $this->browser))
 			{
-				$bot = $row['user_id'];
+				$bot = (int) $row['user_id'];
 			}
 
 			// If ip is supplied, we will make sure the ip is matching too...
@@ -1378,12 +1378,12 @@ class session
 		}
 
 		$dnsbl_check = array(
-			'sbl.spamhaus.org'	=> ['http://www.spamhaus.org/query/bl?ip=', 'check_dnsbl_spamhaus'],
+			'sbl.spamhaus.org'	=> ['https://check.spamhaus.org/listed/?searchterm=', 'check_dnsbl_spamhaus'],
 		);
 
 		if ($mode == 'register')
 		{
-			$dnsbl_check['bl.spamcop.net'] = ['http://spamcop.net/bl.shtml?', 'check_dnsbl_ipv4_generic'];
+			$dnsbl_check['bl.spamcop.net'] = ['https://www.spamcop.net/bl.shtml?', 'check_dnsbl_ipv4_generic'];
 		}
 
 		if ($ip)
@@ -1663,7 +1663,7 @@ class session
 		}
 
 		// Do not update the session page for ajax requests, so the view online still works as intended
-		$page_changed = $this->update_session_page && (!isset($this->data['session_page']) || $this->data['session_page'] != $this->page['page']) && !$request->is_ajax();
+		$page_changed = $this->update_session_page && (!isset($this->data['session_page']) || $this->data['session_page'] != $this->page['page'] || $this->data['session_forum_id'] != $this->page['forum']) && !$request->is_ajax();
 
 		// Only update session DB a minute or so after last update or if page changes
 		if ($this->time_now - (isset($this->data['session_time']) ? $this->data['session_time'] : 0) > 60 || $page_changed)

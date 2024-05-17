@@ -29,7 +29,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                   fetch-depth: 100
 
@@ -48,7 +48,7 @@ jobs:
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
@@ -166,7 +166,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - id: database-type
               env:
@@ -192,7 +192,7 @@ jobs:
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
@@ -216,6 +216,13 @@ jobs:
               if: ${{ matrix.SLOWTESTS == 1 }}
               run: |
                   .github/setup-ldap.sh
+
+            - name: Setup node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+            - name: Setup node dependencies
+              run: npm ci
 
             - name: Setup SPHINX
               run: |
@@ -296,7 +303,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - id: database-type
               env:
@@ -322,7 +329,7 @@ jobs:
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
@@ -341,6 +348,13 @@ jobs:
                   MYISAM: '0'
               run: |
                   .github/setup-database.sh $DB $MYISAM
+
+            - name: Setup node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+            - name: Setup node dependencies
+              run: npm ci
 
             - name: Run unit tests
               env:
@@ -396,7 +410,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - id: database-type
               env:
@@ -427,7 +441,7 @@ jobs:
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
@@ -446,6 +460,13 @@ jobs:
                   MYISAM: '0'
               run: |
                   .github/setup-database.sh $DB $MYISAM
+
+            - name: Setup node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+            - name: Setup node dependencies
+              run: npm ci
 
             - name: Run unit tests
               env:
@@ -470,7 +491,7 @@ jobs:
                   git config --system core.autocrlf false
                   git config --system core.eol lf
             - name: Checkout repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -488,7 +509,7 @@ jobs:
                   cd ..
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: composer-${{ matrix.php }}-${{ hashFiles('phpBB/composer.lock') }}
@@ -555,6 +576,14 @@ jobs:
                   psql -c 'create database phpbb_tests;' -U postgres
                   Set-MpPreference -ExclusionPath "${env:PGDATA}" # Exclude PGDATA directory from Windows Defender
                   Set-MpPreference -DisableRealtimeMonitoring $true
+
+            - name: Setup node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+            - name: Setup node dependencies
+              run: npm ci
+
             - name: Run unit tests
               if: ${{ matrix.type == 'unit' }}
               run: |

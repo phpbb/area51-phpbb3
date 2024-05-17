@@ -372,7 +372,27 @@ class user extends \phpbb\session
 		}
 
 		// Is board disabled and user not an admin or moderator?
-		if ($config['board_disable'] && !defined('IN_INSTALL') && !defined('IN_LOGIN') && !defined('SKIP_CHECK_DISABLED') && !$auth->acl_gets('a_', 'm_') && !$auth->acl_getf_global('m_'))
+		// Check acp setting who has access: only admins "case: 0", plus global moderators "case: 1" and plus moderators "case: 2"
+		$board_disable_access = (int) $config['board_disable_access'];
+
+		switch ($board_disable_access)
+		{
+			case 0:
+				$access_disabled_board = $auth->acl_gets('a_');
+			break;
+
+			case 1:
+				$access_disabled_board = $auth->acl_gets('a_', 'm_');
+			break;
+
+			case 2:
+			default:
+				$access_disabled_board = $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_');
+			break;
+
+		}
+
+		if ($config['board_disable'] && !defined('IN_INSTALL') && !defined('IN_LOGIN') && !defined('SKIP_CHECK_DISABLED') && !$access_disabled_board)
 		{
 			if ($this->data['is_bot'])
 			{
@@ -765,11 +785,11 @@ class user extends \phpbb\session
 	/**
 	* Get option bit field from user options.
 	*
-	* @param int $key option key, as defined in $keyoptions property.
+	* @param string $key option key, as defined in $keyoptions property.
 	* @param int|false $data bit field value to use, or false to use $this->data['user_options']
 	* @return bool true if the option is set in the bit field, false otherwise
 	*/
-	function optionget($key, $data = false)
+	function optionget(string $key, $data = false)
 	{
 		$var = ($data !== false) ? $data : $this->data['user_options'];
 		return phpbb_optionget($this->keyoptions[$key], $var);

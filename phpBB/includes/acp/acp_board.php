@@ -19,6 +19,7 @@
 * @ignore
 */
 
+use Minishlink\WebPush\VAPID;
 use phpbb\config\config;
 use phpbb\language\language;
 use phpbb\user;
@@ -79,6 +80,7 @@ class acp_board
 						'board_index_text'		=> array('lang' => 'BOARD_INDEX_TEXT',		'validate' => 'string',	'type' => 'text:40:255', 'explain' => true),
 						'board_disable'			=> array('lang' => 'DISABLE_BOARD',			'validate' => 'bool',	'type' => 'custom', 'method' => 'board_disable', 'explain' => true),
 						'board_disable_msg'		=> false,
+						'board_disable_access'	=> array('lang' => 'DISABLE_BOARD_ACCESS', 	'validate' => 'int',	'type' => 'select', 'method' => 'board_disable_access', 'explain' => true),
 						'default_lang'			=> array('lang' => 'DEFAULT_LANGUAGE',		'validate' => 'lang',	'type' => 'select', 'method' => 'language_select', 'params' => array('{CONFIG_VALUE}'), 'explain' => false),
 						'default_dateformat'	=> array('lang' => 'DEFAULT_DATE_FORMAT',	'validate' => 'string',	'type' => 'custom', 'method' => 'dateformat_select', 'explain' => true),
 						'board_timezone'		=> array('lang' => 'SYSTEM_TIMEZONE',		'validate' => 'timezone',	'type' => 'custom', 'method' => 'timezone_select', 'explain' => true),
@@ -482,6 +484,20 @@ class acp_board
 						'legend3'				=> 'ACP_SUBMIT_CHANGES',
 					)
 				);
+			break;
+
+			case 'webpush':
+				$display_vars = [
+					'title'		=> 'ACP_WEBPUSH_SETTINGS',
+					'vars' 		=> [
+						'legend1'					=> 'GENERAL_SETTINGS',
+						'webpush_enable'			=> ['lang' => 'WEBPUSH_ENABLE', 'validate' => 'bool', 'type' => 'custom', 'method' => 'webpush_enable', 'explain' => true],
+						'webpush_vapid_public'		=> ['lang' => 'WEBPUSH_VAPID_PUBLIC', 'validate' => 'string', 'type' => 'text:25:255', 'explain' => true],
+						'webpush_vapid_private'		=> ['lang' => 'WEBPUSH_VAPID_PRIVATE', 'validate' => 'string', 'type' => 'password:25:255', 'explain' => true],
+
+						'legend3'				=> 'ACP_SUBMIT_CHANGES',
+					],
+				];
 			break;
 
 			default:
@@ -1048,6 +1064,34 @@ class acp_board
 	}
 
 	/**
+	 * Board disable access for which group: admins: 0; plus global moderators: 1 and plus all moderators: 2
+	 *
+	 * @param int $value Value from config
+	 *
+	 * @return array Options array for select
+	 */
+	public function board_disable_access(int $value) : array
+	{
+		return [
+			[
+				'value'		=> 0,
+				'selected'	=> $value == 0,
+				'label'		=> $this->language->lang('DISABLE_BOARD_ACCESS_ADMIN'),
+			],
+			[
+				'value'		=> 1,
+				'selected'	=> $value == 1,
+				'label'		=> $this->language->lang('DISABLE_BOARD_ACCESS_ADMIN_GLOB_MODS'),
+			],
+			[
+				'value'		=> 2,
+				'selected'	=> $value == 2,
+				'label'		=> $this->language->lang('DISABLE_BOARD_ACCESS_ADMIN_ALL_MODS'),
+			],
+		];
+	}
+
+	/**
 	* Global quick reply enable/disable setting and button to enable in all forums
 	*/
 	function quick_reply($value, $key)
@@ -1317,5 +1361,50 @@ class acp_board
 
 		return '<input class="button2" type="submit" id="' . $key . '" name="' . $key . '" value="' . $user->lang('SEND_TEST_EMAIL') . '" />
 				<textarea id="' . $key . '_text" name="' . $key . '_text" placeholder="' . $user->lang('MESSAGE') . '"></textarea>';
+	}
+
+	/**
+	 * Generate form data for web push enable
+	 *
+	 * @param string $value Webpush enable value
+	 * @param string $key Webpush enable config key
+	 *
+	 * @return array[] Form data
+	 */
+	public function webpush_enable($value, $key): array
+	{
+		return [
+			[
+				'tag'		=> 'radio',
+				'buttons'	=> [
+					[
+						'name'		=> "config[$key]",
+						'label'		=> $this->language->lang('YES'),
+						'type'		=> 'radio',
+						'class'		=> 'radio',
+						'value'		=> 1,
+						'checked'	=> $value,
+					],
+					[
+						'name'		=> "config[$key]",
+						'label'		=> $this->language->lang('NO'),
+						'type'		=> 'radio',
+						'class'		=> 'radio',
+						'value'		=> 0,
+						'checked'	=> !$value,
+					],
+				],
+			],
+			[
+				'tag'		=> 'input',
+				'class'		=> 'button2',
+				'name'		=> "config[$key]",
+				'type'		=> 'button',
+				'value'		=> $this->language->lang('WEBPUSH_GENERATE_VAPID_KEYS'),
+				'data'		=> [
+					'ajax'	=> 'generate_vapid_keys',
+				]
+			],
+		];
 	}
 }

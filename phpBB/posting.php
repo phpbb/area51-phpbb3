@@ -103,8 +103,17 @@ switch ($mode)
 			trigger_error('NO_POST');
 		}
 
+		// Need to update session forum_id to valid value for proper viewonline information
+		if (!$forum_id)
+		{
+			$user->page['forum'] = (int) $topic_forum['forum_id'];
+			$user->update_session_page = true;
+			$user->update_session_infos();
+		}
+
 		$topic_id = (int) $topic_forum['topic_id'];
 		$forum_id = (int) $topic_forum['forum_id'];
+
 	break;
 }
 
@@ -1417,7 +1426,14 @@ if ($submit || $preview || $refresh)
 	// Store message, sync counters
 	if (!count($error) && $submit)
 	{
-		if ($submit)
+		/** @var \phpbb\lock\posting $posting_lock */
+		$posting_lock = $phpbb_container->get('posting.lock');
+
+		// Get creation time and form token, must be already checked at this point
+		$creation_time	= abs($request->variable('creation_time', 0));
+		$form_token = $request->variable('form_token', '');
+
+		if ($posting_lock->acquire($creation_time, $form_token))
 		{
 			// Lock/Unlock Topic
 			$change_topic_status = $post_data['topic_status'];
@@ -1607,6 +1623,11 @@ if ($submit || $preview || $refresh)
 			}
 
 			redirect($redirect_url);
+		}
+		else
+		{
+			// Posting was already locked before, hence form submission was already attempted once and is now invalid
+			$error[] = $language->lang('FORM_INVALID');
 		}
 	}
 }

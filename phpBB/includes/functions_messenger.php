@@ -582,6 +582,11 @@ class messenger
 		);
 		extract($phpbb_dispatcher->trigger_event('core.notification_message_email', compact($vars)));
 
+		$this->addresses = $addresses;
+		$this->subject = $subject;
+		$this->msg = $msg;
+		unset($addresses, $subject, $msg);
+
 		if ($break)
 		{
 			return true;
@@ -737,6 +742,7 @@ class messenger
 		}
 
 		$template_environment = new \phpbb\template\twig\environment(
+			$phpbb_container->get('assets.bag'),
 			$phpbb_container->get('config'),
 			$phpbb_container->get('filesystem'),
 			$phpbb_container->get('path_helper'),

@@ -281,16 +281,8 @@ class acp_main
 					break;
 
 					case 'db_track':
-						switch ($db->get_sql_layer())
-						{
-							case 'sqlite3':
-								$db->sql_query('DELETE FROM ' . TOPICS_POSTED_TABLE);
-							break;
-
-							default:
-								$db->sql_query('TRUNCATE TABLE ' . TOPICS_POSTED_TABLE);
-							break;
-						}
+						$db_tools = $phpbb_container->get('dbal.tools');
+						$db_tools->sql_truncate_table(TOPICS_POSTED_TABLE);
 
 						// This can get really nasty... therefore we only do the last six months
 						$get_from_time = time() - (6 * 4 * 7 * 24 * 60 * 60);
@@ -370,7 +362,7 @@ class acp_main
 
 						// Clear permissions
 						$auth->acl_clear_prefetch();
-						phpbb_cache_moderators($db, $cache, $auth);
+						phpbb_cache_moderators($db, $phpbb_container->get('dbal.tools'), $cache, $auth);
 
 						$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_PURGE_CACHE');
 
@@ -388,19 +380,11 @@ class acp_main
 						}
 
 						$tables = array(CONFIRM_TABLE, SESSIONS_TABLE);
+						$db_tools = $phpbb_container->get('dbal.tools');
 
 						foreach ($tables as $table)
 						{
-							switch ($db->get_sql_layer())
-							{
-								case 'sqlite3':
-									$db->sql_query("DELETE FROM $table");
-								break;
-
-								default:
-									$db->sql_query("TRUNCATE TABLE $table");
-								break;
-							}
+							$db_tools->sql_truncate_table($table);
 						}
 
 						// let's restore the admin session
@@ -657,6 +641,9 @@ class acp_main
 			}
 		}
 
+		// Warn if incomplete captcha is enabled
+		$this->check_captcha_type($config, $template);
+
 		if (!defined('PHPBB_DISABLE_CONFIG_CHECK'))
 		{
 			// World-Writable? (000x)
@@ -688,5 +675,28 @@ class acp_main
 
 		$this->tpl_name = 'acp_main';
 		$this->page_title = 'ACP_MAIN';
+	}
+
+	/**
+	 * Check CAPTCHA type and output warning if incomplete type or unsafe config is used
+	 *
+	 * @param \phpbb\config\config $config
+	 * @param \phpbb\template\template $template
+	 * @return void
+	 */
+	protected function check_captcha_type(\phpbb\config\config $config, \phpbb\template\template $template): void
+	{
+		$template_vars = [];
+
+		if (!$config['enable_confirm'])
+		{
+			$template_vars['S_CAPTCHA_UNSAFE'] = true;
+		}
+		else if ($config['captcha_plugin'] == 'core.captcha.plugins.incomplete')
+		{
+			$template_vars['S_CAPTCHA_INCOMPLETE'] = true;
+		}
+
+		$template->assign_vars($template_vars);
 	}
 }

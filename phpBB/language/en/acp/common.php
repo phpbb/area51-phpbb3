@@ -219,6 +219,7 @@ $lang = array_merge($lang, array(
 	'ACP_VIEW_GLOBAL_MOD_PERMISSIONS'	=> 'View global moderation permissions',
 	'ACP_VIEW_USER_PERMISSIONS'			=> 'View user-based permissions',
 
+	'ACP_WEBPUSH_SETTINGS'		=> 'Web Push settings',
 	'ACP_WORDS'					=> 'Word censoring',
 
 	'ACTION'				=> 'Action',
@@ -233,6 +234,9 @@ $lang = array_merge($lang, array(
 	'ADM_LOGGED_OUT'		=> 'Successfully logged out from Administration Control Panel',
 
 	'BACK'					=> 'Back',
+
+	'CAPTCHA_UNSAFE_WARNING'		=> 'Your board is currently vulnerable to spam submissions because the Spambot countermeasures are either disabled or not configured correctly.',
+	'CAPTCHA_INCOMPLETE_WARNING'	=> '“Incomplete Captcha“ is currently enabled. This placeholder CAPTCHA will prevent all form submissions requiring CAPTCHA verification, e.g. user registration. Please configure a proper CAPTCHA solution like Q&amp;A or reCaptcha to ensure intended functionality.',
 
 	'CONTAINER_EXCEPTION' => 'phpBB encountered an error building the container due to an installed extension. For this reason, all extensions have been temporarily disabled. Please try purging your forum cache. All extensions will automatically be re-enabled once the container error is resolved. If this error continues, please visit <a href="https://www.phpbb.com/support">phpBB.com</a> for support.',
 	'EXCEPTION' => 'Exception',
@@ -592,6 +596,7 @@ $lang = array_merge($lang, array(
 	'LOG_CONFIG_SETTINGS'		=> '<strong>Altered board settings</strong>',
 	'LOG_CONFIG_SIGNATURE'		=> '<strong>Altered signature settings</strong>',
 	'LOG_CONFIG_VISUAL'			=> '<strong>Altered anti-spambot settings</strong>',
+	'LOG_CONFIG_WEBPUSH'		=> '<strong>Altered Web Push settings</strong>',
 
 	'LOG_APPROVE_TOPIC'			=> '<strong>Approved topic</strong><br />» %s',
 	'LOG_BUMP_TOPIC'			=> '<strong>User bumped topic</strong><br />» %s',
@@ -811,6 +816,9 @@ $lang = array_merge($lang, array(
 		2 => '<strong>Deleted %2$d user warnings</strong><br />» %1$s', // Example: '<strong>Deleted 2 user warnings</strong><br />» username'
 	),
 	'LOG_WARNINGS_DELETED_ALL'	=> '<strong>Deleted all user warnings</strong><br />» %s',
+
+	'LOG_WEBPUSH_MESSAGE_FAIL'			=> '<strong>Web Push message could not be sent:</strong> %s',
+	'LOG_WEBPUSH_SUBSCRIPTION_REMOVED'	=> '<strong>Removed Web Push subscription:</strong>» %s',
 
 	'LOG_WORD_ADD'			=> '<strong>Added word censor</strong><br />» %s',
 	'LOG_WORD_DELETE'		=> '<strong>Deleted word censor</strong><br />» %s',

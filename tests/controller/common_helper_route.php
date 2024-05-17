@@ -116,9 +116,11 @@ abstract class phpbb_controller_common_helper_route extends phpbb_database_test_
 		$container = new phpbb_mock_container_builder();
 		$container->setParameter('core.environment', PHPBB_ENVIRONMENT);
 		$cache_path = $phpbb_root_path . 'cache/twig';
+		$assets_bag = new \phpbb\template\assets_bag();
 		$context = new \phpbb\template\context();
 		$loader = new \phpbb\template\twig\loader('');
 		$twig = new \phpbb\template\twig\environment(
+			$assets_bag,
 			$this->config,
 			$this->filesystem,
 			$this->phpbb_path_helper,

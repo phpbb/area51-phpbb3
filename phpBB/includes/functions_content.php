@@ -324,7 +324,7 @@ function bump_topic_allowed($forum_id, $topic_bumped, $last_post_time, $topic_po
 *
 * @return	string			Context of the specified words separated by "..."
 */
-function get_context($text, $words, $length = 400)
+function get_context(string $text, array $words, int $length = 400)
 {
 	// first replace all whitespaces with single spaces
 	$text = preg_replace('/ +/', ' ', strtr($text, "\t\n\r\x0C ", '     '));
@@ -554,6 +554,8 @@ function strip_bbcode(&$text, $uid = '')
 /**
 * For display of custom parsed text on user-facing pages
 * Expects $text to be the value directly from the database (stored value)
+*
+* @return string Generated text
 */
 function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text = true)
 {
