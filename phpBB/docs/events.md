@@ -184,6 +184,24 @@ acp_group_types_prepend
 * Since: 3.2.9-RC1
 * Purpose: Add additional group type options to group settings (prepend the list)
 
+acp_groups_add_user_options_after
+===
+* Location: adm/style/acp_groups.html
+* Since: 3.3.13-RC1
+* Purpose: Add content after options for adding user to group in the ACP
+
+acp_groups_add_user_options_before
+===
+* Location: adm/style/acp_groups.html
+* Since: 3.3.13-RC1
+* Purpose: Add content before options for adding user to group in the ACP
+
+acp_groups_add_user_usernames_before
+===
+* Location: adm/style/acp_groups.html
+* Since: 3.3.13-RC1
+* Purpose: Add content before usernames option for adding user to group in the ACP
+
 acp_groups_find_username_append
 ===
 * Location: adm/style/acp_groups.html
@@ -1597,6 +1615,20 @@ navbar_header_username_prepend
 * Since: 3.1.0-RC1
 * Purpose: Add text and HTMl before the username shown in the navbar.
 
+notification_dropdown_footer_after
+===
+* Locations:
+    + styles/prosilver/template/notification_dropdown.html
+* Since: 3.3.12
+* Purpose: Add content after notifications list footer.
+
+notification_dropdown_footer_before
+===
+* Locations:
+    + styles/prosilver/template/notification_dropdown.html
+* Since: 3.3.12
+* Purpose: Add content before notifications list footer.
+
 overall_footer_after
 ===
 * Locations:
@@ -2520,6 +2552,20 @@ ucp_friend_list_before
     + styles/prosilver/template/ucp_zebra_friends.html
 * Since: 3.1.0-a4
 * Purpose: Add optional elements before list of friends in UCP
+
+ucp_group_settings_after
+===
+* Locations:
+    + styles/prosilver/template/ucp_groups_manage.html
+* Since: 3.3.13-RC1
+* Purpose: Add content after options for managing a group in the UCP
+
+ucp_group_settings_before
+===
+* Locations:
+    + styles/prosilver/template/ucp_groups_manage.html
+* Since: 3.3.13-RC1
+* Purpose: Add content before options for managing a group in the UCP
 
 ucp_header_content_before
 ===
