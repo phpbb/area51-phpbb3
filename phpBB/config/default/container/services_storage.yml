@@ -70,8 +70,6 @@ services:
         shared: false
         arguments:
             - '@filesystem'
-            - '@upload_imagesize'
-            - '@mimetype.guesser'
             - '%core.root_path%'
         tags:
             - { name: storage.adapter }
@@ -90,6 +88,7 @@ services:
             - '@cache'
             - '@config'
             - '@dbal.conn'
+            - '@mimetype.extension_guesser'
             - '@storage.avatar'
             - '@symfony_request'
 
@@ -102,8 +101,26 @@ services:
             - '@content.visibility'
             - '@dbal.conn'
             - '@event_dispatcher'
+            - '@mimetype.extension_guesser'
             - '@language'
             - '@request'
             - '@storage.attachment'
             - '@symfony_request'
             - '@user'
+
+# Helpers
+    storage.state_helper:
+        class: phpbb\storage\state_helper
+        arguments:
+            - '@config'
+            - '@config_text'
+            - '@storage.provider_collection'
+
+    storage.helper:
+        class: phpbb\storage\helper
+        arguments:
+            - '@config'
+            - '@storage.adapter.factory'
+            - '@storage.state_helper'
+            - '@storage.provider_collection'
+            - '@storage.adapter_collection'

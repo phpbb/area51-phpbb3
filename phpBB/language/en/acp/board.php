@@ -69,6 +69,8 @@ $lang = array_merge($lang, array(
 	'SITE_HOME_URL'					=> 'Main website URL',
 	'SITE_HOME_URL_EXPLAIN'			=> 'If specified, a link to this URL will be prepended to your board’s breadcrumbs and the board logo will link to this URL instead of the forum index. An absolute URL is required, e.g. <samp>http://www.phpbb.com</samp>.',
 	'SITE_NAME'						=> 'Site name',
+	'SITE_NAME_SHORT'				=> 'Short site name',
+	'SITE_NAME_SHORT_EXPLAIN'		=> 'Short name will be used if your site is added to a mobile device’s home screen. It can not exceed 12 characters (Emoji is supported).',
 	'SYSTEM_TIMEZONE'				=> 'Guest timezone',
 	'SYSTEM_TIMEZONE_EXPLAIN'			=> 'Timezone to use for displaying times to users who are not logged in (guests, bots). Logged in users set their timezone during registration and can change it in their user control panel.',
 	'WARNINGS_EXPIRE'				=> 'Warning duration',
@@ -206,10 +208,6 @@ $lang = array_merge($lang, array(
 
 	'MAX_SIG_FONT_SIZE'				=> 'Maximum signature font size',
 	'MAX_SIG_FONT_SIZE_EXPLAIN'		=> 'Maximum font size allowed in user signatures. Set to 0 for unlimited size.',
-	'MAX_SIG_IMG_HEIGHT'			=> 'Maximum signature image height',
-	'MAX_SIG_IMG_HEIGHT_EXPLAIN'	=> 'Maximum height of an image file in user signatures. Set to 0 for unlimited height.',
-	'MAX_SIG_IMG_WIDTH'				=> 'Maximum signature image width',
-	'MAX_SIG_IMG_WIDTH_EXPLAIN'		=> 'Maximum width of an image file in user signatures. Set to 0 for unlimited width.',
 	'MAX_SIG_LENGTH'				=> 'Maximum signature length',
 	'MAX_SIG_LENGTH_EXPLAIN'		=> 'Maximum number of characters in user signatures.',
 	'MAX_SIG_SMILIES'				=> 'Maximum smilies per signature',
@@ -590,6 +588,10 @@ $lang = array_merge($lang, [
 	'WEBPUSH_VAPID_PUBLIC_EXPLAIN'	=> 'The Voluntary Application Server Identification (VAPID) public key is shared to authenticate push messages from your site.<br><em><strong>Caution:</strong> Modifying the VAPID public key will automatically render all Web Push subscriptions invalid.</em>',
 	'WEBPUSH_VAPID_PRIVATE'			=> 'Server identification private key',
 	'WEBPUSH_VAPID_PRIVATE_EXPLAIN'	=> 'The Voluntary Application Server Identification (VAPID) private key is used to generate authenticated push messages dispatched from your site. The VAPID private key <strong>must</strong> form a valid public-private key pair alongside the VAPID public key.<br><em><strong>Caution:</strong> Modifying the VAPID private key will automatically render all Web Push subscriptions invalid.</em>',
+	'WEBPUSH_METHOD_DEFAULT_ENABLE'	=> 'Enable all user-based web push notification options by default',
+	'WEBPUSH_METHOD_DEFAULT_ENABLE_EXPLAIN'	=> 'When this setting is enabled, users who subscribe and allow browser notifications will start receiving them automatically. Users only need to visit the UCP Notification settings to disable any unwanted notifications.<br><br>If this setting is disabled, users will not receive any notifications, even if they have subscribed, until they visit the UCP Notification settings to enable the specific notification options they wish to receive.',
+	'WEBPUSH_DROPDOWN_SUBSCRIBE'	=> 'Show “Subscribe” button in notification dropdown',
+	'WEBPUSH_DROPDOWN_SUBSCRIBE_EXPLAIN'	=> 'Display a “Subscribe” button in the Notification dropdown, allowing users to easily subscribe to push notifications from anywhere in the forum.',
 ]);
 
 // Jabber settings

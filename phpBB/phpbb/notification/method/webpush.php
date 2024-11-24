@@ -48,6 +48,12 @@ class webpush extends messenger_base implements extended_method_interface
 	/** @var string Notification push subscriptions table */
 	protected $push_subscriptions_table;
 
+	/** @var int Fallback size for padding if endpoint is mozilla, see https://github.com/web-push-libs/web-push-php/issues/108#issuecomment-2133477054 */
+	const MOZILLA_FALLBACK_PADDING = 2820;
+
+	/** @var array Map for storing push token between db insertion and sending of notifications */
+	private array $push_token_map = [];
+
 	/**
 	 * Notification Method Web Push constructor
 	 *
@@ -92,6 +98,14 @@ class webpush extends messenger_base implements extended_method_interface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public function is_enabled_by_default()
+	{
+		return (bool) $this->config['webpush_method_default_enable'];
+	}
+
+	/**
 	* {@inheritdoc}
 	*/
 	public function get_notified_users($notification_type_id, array $options): array
@@ -126,17 +140,16 @@ class webpush extends messenger_base implements extended_method_interface
 		{
 			$data = $notification->get_insert_array();
 			$data += [
-				'push_data'		=> json_encode([
-					'heading'	=> $this->config['sitename'],
-					'title'		=> strip_tags($notification->get_title()),
-					'text'		=> strip_tags($notification->get_reference()),
-					'url'		=> htmlspecialchars_decode($notification->get_url()),
-					'avatar'	=> $notification->get_avatar(),
-				]),
+				'push_data'				=> json_encode(array_merge(
+					$data,
+					['notification_type_name' => $notification->get_type()],
+				)),
 				'notification_time'		=> time(),
+				'push_token'			=> hash('sha256', random_bytes(32))
 			];
 			$data = self::clean_data($data);
 			$insert_buffer->insert($data);
+			$this->push_token_map[$notification->notification_type_id][$notification->item_id] = $data['push_token'];
 		}
 
 		$insert_buffer->flush();
@@ -210,6 +223,9 @@ class webpush extends messenger_base implements extended_method_interface
 			$data = [
 				'item_id'	=> $notification->item_id,
 				'type_id'	=> $notification->notification_type_id,
+				'user_id'	=> $notification->user_id,
+				'version'	=> $this->config['assets_version'],
+				'token'		=> hash('sha256', $user['user_form_salt'] . $this->push_token_map[$notification->notification_type_id][$notification->item_id]),
 			];
 			$json_data = json_encode($data);
 
@@ -217,6 +233,7 @@ class webpush extends messenger_base implements extended_method_interface
 			{
 				try
 				{
+					$this->set_endpoint_padding($web_push, $subscription['endpoint']);
 					$push_subscription = Subscription::create([
 						'endpoint'			=> $subscription['endpoint'],
 						'keys'				=> [
@@ -324,12 +341,21 @@ class webpush extends messenger_base implements extended_method_interface
 			'item_parent_id'		=> null,
 			'user_id'				=> null,
 			'push_data'				=> null,
+			'push_token'			=> null,
 			'notification_time'		=> null,
 		];
 
 		return array_intersect_key($data, $row);
 	}
 
+	/**
+	 * Get template data for the UCP
+	 *
+	 * @param helper $controller_helper
+	 * @param form_helper $form_helper
+	 *
+	 * @return array
+	 */
 	public function get_ucp_template_data(helper $controller_helper, form_helper $form_helper): array
 	{
 		$subscription_map = $this->get_user_subscription_map([$this->user->id()]);
@@ -347,7 +373,7 @@ class webpush extends messenger_base implements extended_method_interface
 		}
 
 		return [
-			'NOTIFICATIONS_WEBPUSH_ENABLE'	=> true,
+			'NOTIFICATIONS_WEBPUSH_ENABLE'	=> $this->config['webpush_dropdown_subscribe'] || stripos($this->user->page['page'], 'notification_options'),
 			'U_WEBPUSH_SUBSCRIBE'			=> $controller_helper->route('phpbb_ucp_push_subscribe_controller'),
 			'U_WEBPUSH_UNSUBSCRIBE'			=> $controller_helper->route('phpbb_ucp_push_unsubscribe_controller'),
 			'VAPID_PUBLIC_KEY'				=> $this->config['webpush_vapid_public'],
@@ -428,5 +454,28 @@ class webpush extends messenger_base implements extended_method_interface
 		}
 
 		$this->remove_subscriptions($remove_subscriptions);
+	}
+
+	/**
+	 * Set web push padding for endpoint
+	 *
+	 * @param \Minishlink\WebPush\WebPush $web_push
+	 * @param string $endpoint
+	 *
+	 * @return void
+	 */
+	protected function set_endpoint_padding(\Minishlink\WebPush\WebPush $web_push, string $endpoint): void
+	{
+		if (str_contains($endpoint, 'mozilla.com') || str_contains($endpoint, 'mozaws.net'))
+		{
+			try
+			{
+				$web_push->setAutomaticPadding(self::MOZILLA_FALLBACK_PADDING);
+			}
+			catch (\Exception)
+			{
+				// This shouldn't happen since we won't pass padding length outside limits
+			}
+		}
 	}
 }

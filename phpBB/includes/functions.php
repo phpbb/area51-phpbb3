@@ -107,9 +107,17 @@ function phpbb_gmgetdate($time = false)
 	}
 
 	// getdate() interprets timestamps in local time.
-	// What follows uses the fact that getdate() and
-	// date('Z') balance each other out.
-	return getdate($time - date('Z'));
+	// So use UTC timezone temporarily to get UTC date info array.
+	$current_timezone = date_default_timezone_get();
+
+	// Set UTC timezone and get respective date info
+	date_default_timezone_set('UTC');
+	$date_info = getdate($time);
+
+	// Restore timezone back
+	date_default_timezone_set($current_timezone);
+
+	return $date_info;
 }
 
 /**
@@ -319,11 +327,14 @@ function style_select($default = '', $all = false, array $styledata = [])
 		$db->sql_freeresult($result);
 	}
 
-	$style_options = '';
+	$style_options = [];
 	foreach ($styledata as $row)
 	{
-		$selected = ($row['style_id'] == $default) ? ' selected="selected"' : '';
-		$style_options .= '<option value="' . $row['style_id'] . '"' . $selected . '>' . $row['style_name'] . '</option>';
+		$style_options[] = [
+			'value' 	=> $row['style_id'],
+			'selected'	=> $row['style_id'] == $default,
+			'label'		=> $row['style_name'],
+		];
 	}
 
 	return $style_options;
@@ -2928,8 +2939,16 @@ function msg_handler($errno, $msg_text, $errfile, $errline): bool
 	global $phpbb_root_path, $msg_title, $msg_long_text, $phpbb_log;
 	global $phpbb_container;
 
+	// https://www.php.net/manual/en/language.operators.errorcontrol.php
+	// error_reporting() return a different error code inside the error handler after php 8.0
+	$suppresed = E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE;
+	if (PHP_VERSION_ID < 80000)
+	{
+		$suppresed = 0;
+	}
+
 	// Do not display notices if we suppress them via @
-	if (error_reporting() == 0 && $errno != E_USER_ERROR && $errno != E_USER_WARNING && $errno != E_USER_NOTICE)
+	if (error_reporting() == $suppresed && $errno != E_USER_ERROR && $errno != E_USER_WARNING && $errno != E_USER_NOTICE)
 	{
 		return true;
 	}
@@ -3542,127 +3561,6 @@ function phpbb_quoteattr($data, $entities = null)
 }
 
 /**
-* Get user avatar
-*
-* @deprecated 4.0.0 Use \phpbb\avatar\helper::get_user_avatar() instead
-*
-* @param array $user_row Row from the users table
-* @param string $alt Optional language string for alt tag within image, can be a language key or text
-* @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
-* @param bool $lazy If true, will be lazy loaded (requires JS)
-*
-* @return string Avatar html
-*/
-function phpbb_get_user_avatar($user_row, $alt = 'USER_AVATAR', $ignore_config = false, $lazy = false)
-{
-	$row = \phpbb\avatar\manager::clean_row($user_row, 'user');
-	return phpbb_get_avatar($row, $alt, $ignore_config, $lazy);
-}
-
-/**
-* Get group avatar
-*
-* @deprecated 4.0.0 Use \phpbb\avatar\helper::get_group_avatar() instead
-*
-* @param array $group_row Row from the groups table
-* @param string $alt Optional language string for alt tag within image, can be a language key or text
-* @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
-* @param bool $lazy If true, will be lazy loaded (requires JS)
-*
-* @return string Avatar html
-*/
-function phpbb_get_group_avatar($group_row, $alt = 'GROUP_AVATAR', $ignore_config = false, $lazy = false)
-{
-	$row = \phpbb\avatar\manager::clean_row($group_row, 'group');
-	return phpbb_get_avatar($row, $alt, $ignore_config, $lazy);
-}
-
-/**
-* Get avatar
-*
-* @deprecated 4.0.0 Use \phpbb\avatar\helper::get_avatar() instead
-*
-* @param array $row Row cleaned by \phpbb\avatar\manager::clean_row
-* @param string $alt Optional language string for alt tag within image, can be a language key or text
-* @param bool $ignore_config Ignores the config-setting, to be still able to view the avatar in the UCP
-* @param bool $lazy If true, will be lazy loaded (requires JS)
-*
-* @return string Avatar html
-*/
-function phpbb_get_avatar($row, $alt, $ignore_config = false, $lazy = false)
-{
-	global $user, $config;
-	global $phpbb_container, $phpbb_dispatcher;
-
-	if (!$config['allow_avatar'] && !$ignore_config)
-	{
-		return '';
-	}
-
-	$avatar_data = array(
-		'src' => $row['avatar'],
-		'width' => $row['avatar_width'],
-		'height' => $row['avatar_height'],
-	);
-
-	/* @var $phpbb_avatar_manager \phpbb\avatar\manager */
-	$phpbb_avatar_manager = $phpbb_container->get('avatar.manager');
-	$driver = $phpbb_avatar_manager->get_driver($row['avatar_type'], !$ignore_config);
-	$html = '';
-
-	if ($driver)
-	{
-		$html = $driver->get_custom_html($user, $row, $alt);
-		$avatar_data = $driver->get_data($row);
-	}
-	else
-	{
-		$avatar_data['src'] = '';
-	}
-
-	if (empty($html) && !empty($avatar_data['src']))
-	{
-		if ($lazy)
-		{
-			// This path is sent with the base template paths in the assign_vars()
-			// call below. We need to correct it in case we are accessing from a
-			// controller because the web paths will be incorrect otherwise.
-			$phpbb_path_helper = $phpbb_container->get('path_helper');
-			$web_path = $phpbb_path_helper->get_web_root_path();
-
-			$theme = "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/theme';
-
-			$src = 'src="' . $theme . '/images/no_avatar.gif" data-src="' . $avatar_data['src'] . '"';
-		}
-		else
-		{
-			$src = 'src="' . $avatar_data['src'] . '"';
-		}
-
-		$html = '<img class="avatar" ' . $src . ' ' .
-			($avatar_data['width'] ? ('width="' . $avatar_data['width'] . '" ') : '') .
-			($avatar_data['height'] ? ('height="' . $avatar_data['height'] . '" ') : '') .
-			'alt="' . ((!empty($user->lang[$alt])) ? $user->lang[$alt] : $alt) . '" />';
-	}
-
-	/**
-	* Event to modify HTML <img> tag of avatar
-	*
-	* @event core.get_avatar_after
-	* @var	array	row				Row cleaned by \phpbb\avatar\manager::clean_row
-	* @var	string	alt				Optional language string for alt tag within image, can be a language key or text
-	* @var	bool	ignore_config	Ignores the config-setting, to be still able to view the avatar in the UCP
-	* @var	array	avatar_data		The HTML attributes for avatar <img> tag
-	* @var	string	html			The HTML <img> tag of generated avatar
-	* @since 3.1.6-RC1
-	*/
-	$vars = array('row', 'alt', 'ignore_config', 'avatar_data', 'html');
-	extract($phpbb_dispatcher->trigger_event('core.get_avatar_after', compact($vars)));
-
-	return $html;
-}
-
-/**
 * Generate page header
 */
 function page_header($page_title = '', $display_online_list = false, $item_id = 0, $item = 'forum', $send_headers = true)
@@ -3853,6 +3751,9 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		$timezone_name = $user->lang['timezones'][$timezone_name];
 	}
 
+	/** @var \phpbb\controller\helper $controller_helper */
+	$controller_helper = $phpbb_container->get('controller.helper');
+
 	// Output the notifications
 	$notifications = false;
 	if ($config['load_notifications'] && $config['allow_board_notifications'] && $user->data['user_id'] != ANONYMOUS && $user->data['user_type'] != USER_IGNORE)
@@ -3869,10 +3770,22 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		{
 			$template->assign_block_vars('notifications', $notification->prepare_for_display());
 		}
+
+		// Assign web push template vars globally (if not done already by ucp_notifications) for the dropdown subscribe button
+		if ($config['webpush_enable'] && $config['webpush_dropdown_subscribe']
+			&& $template->retrieve_var('NOTIFICATIONS_WEBPUSH_ENABLE') === null)
+		{
+			$methods = $phpbb_notifications->get_subscription_methods();
+			$webpush = $methods['notification.method.webpush'] ?? null;
+
+			if ($webpush)
+			{
+				$form_helper = $phpbb_container->get('form_helper');
+				$template->assign_vars($webpush['method']->get_ucp_template_data($controller_helper, $form_helper));
+			}
+		}
 	}
 
-	/** @var \phpbb\controller\helper $controller_helper */
-	$controller_helper = $phpbb_container->get('controller.helper');
 	$notification_mark_hash = generate_link_hash('mark_all_notifications_read');
 
 	$phpbb_version_parts = explode('.', PHPBB_VERSION, 3);
@@ -3950,7 +3863,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'U_SEARCH_UNANSWERED'	=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=unanswered'),
 		'U_SEARCH_UNREAD'		=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=unreadposts'),
 		'U_SEARCH_ACTIVE_TOPICS'=> append_sid("{$phpbb_root_path}search.$phpEx", 'search_id=active_topics'),
-		'U_DELETE_COOKIES'		=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=delete_cookies'),
+		'U_DELETE_COOKIES'		=> $controller_helper->route('phpbb_ucp_delete_cookies_controller'),
 		'U_CONTACT_US'			=> ($config['contact_admin_form_enable'] && $config['email_enable']) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=contactadmin') : '',
 		'U_TEAM'				=> (!$auth->acl_get('u_viewprofile')) ? '' : append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=team'),
 		'U_TERMS_USE'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=terms'),
@@ -3958,6 +3871,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'UA_PRIVACY'			=> addslashes(append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=privacy')),
 		'U_RESTORE_PERMISSIONS'	=> ($user->data['user_perm_from'] && $auth->acl_get('a_switchperm')) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=restore_perm') : '',
 		'U_FEED'				=> $controller_helper->route('phpbb_feed_index'),
+		'U_MANIFEST'			=> $controller_helper->route('phpbb_manifest_controller'),
 
 		'S_ALLOW_MENTIONS'		=> ($config['allow_mentions'] && $auth->acl_get('u_mention') && (empty($forum_id) || $auth->acl_get('f_mention', $forum_id))) ? true : false,
 		'S_MENTION_NAMES_LIMIT'	=> $config['mention_names_limit'],
@@ -4126,7 +4040,9 @@ function phpbb_generate_debug_output(\phpbb\db\driver\driver_interface $db, \php
 
 		if ($auth->acl_get('a_'))
 		{
-			$debug_info[] = '<a href="' . build_url() . '&amp;explain=1">SQL Explain</a>';
+			$page_url = build_url();
+			$page_url .= ((!str_contains($page_url, '?')) ? '?' : '&amp;') . 'explain=1';
+			$debug_info[] = '<a href="' . $page_url . '">SQL Explain</a>';
 		}
 	}
 

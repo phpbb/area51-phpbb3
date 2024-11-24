@@ -58,6 +58,7 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 		$phpbb_dispatcher = $dispatcher;
 
 		$controller_helper = $this->createMock('\phpbb\controller\helper');
+		$routing_helper = $this->createMock('\phpbb\routing\helper');
 
 		// $this->avatar_foobar will be needed later on
 		$this->avatar_foobar = $this->getMockBuilder('\phpbb\avatar\driver\foobar')
@@ -96,7 +97,7 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 			{
 				$cur_avatar = $this->getMockBuilder('\phpbb\avatar\driver\\' . $driver)
 				->setMethods(array('get_name'))
-				->setConstructorArgs(array($this->config, $controller_helper, $phpbb_root_path, $phpEx, $storage, $path_helper, $dispatcher, $files_factory, $php_ini))
+				->setConstructorArgs(array($this->config, $phpbb_root_path, $phpEx, $storage, $path_helper, $routing_helper, $dispatcher, $files_factory, $php_ini))
 				->getMock();
 			}
 			$cur_avatar->expects($this->any())
@@ -191,9 +192,14 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 	{
 		$avatar_settings = $this->manager->get_avatar_settings($this->avatar_foobar);
 
-		$expected_settings = array(
-			'allow_avatar_' . get_class($this->avatar_foobar)	=> array('lang' => 'ALLOW_' . strtoupper(get_class($this->avatar_foobar)), 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => true),
-		);
+		$expected_settings = [
+			'allow_avatar_' . get_class($this->avatar_foobar)	=> [
+				'lang' => 'ALLOW_' . strtoupper(get_class($this->avatar_foobar)),
+				'validate' => 'bool',
+				'type' => 'radio:yes_no',
+				'explain' => true
+			],
+		];
 
 		$this->assertEquals($expected_settings, $avatar_settings);
 	}
