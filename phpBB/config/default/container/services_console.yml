@@ -284,20 +284,22 @@ services:
     console.command.thumbnail.delete:
         class: phpbb\console\command\thumbnail\delete
         arguments:
-            - '@config'
             - '@user'
             - '@dbal.conn'
-            - '%core.root_path%'
+            - '@language'
+            - '@storage.attachment'
         tags:
             - { name: console.command }
 
     console.command.thumbnail.generate:
         class: phpbb\console\command\thumbnail\generate
         arguments:
-            - '@config'
             - '@user'
             - '@dbal.conn'
             - '@cache'
+            - '@language'
+            - '@storage.attachment'
+            - '@filesystem.temp'
             - '%core.root_path%'
             - '%core.php_ext%'
         tags:
@@ -307,6 +309,7 @@ services:
         class: phpbb\console\command\thumbnail\recreate
         arguments:
             - '@user'
+            - '@language'
         tags:
             - { name: console.command }
 
@@ -327,6 +330,7 @@ services:
             - '@config'
             - '@language'
             - '@log'
+            - '@messenger.method.email'
             - '@notification_manager'
             - '@user_loader'
             - '%core.root_path%'
@@ -341,6 +345,7 @@ services:
             - '@dbal.conn'
             - '@config'
             - '@language'
+            - '@messenger.method.email'
             - '@passwords.manager'
             - '%core.root_path%'
             - '%core.php_ext%'

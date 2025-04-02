@@ -107,6 +107,20 @@ class acp_main
 					default:
 						$confirm = true;
 						$confirm_lang = 'CONFIRM_OPERATION';
+
+						/**
+						 * Event to add confirm box for custom ACP quick actions
+						 *
+						 * @event core.acp_main_add_actions_confirm
+						 * @var	string	id				The module ID
+						 * @var	string	mode			The module mode
+						 * @var	string	action			Custom action type name
+						 * @var	boolean	confirm			Do we display the confirm box to run the custom action
+						 * @var	string	confirm_lang	Lang var name to display in confirm box
+						 * @since 3.3.15-RC1
+						 */
+						$vars = ['id', 'mode', 'action', 'confirm', 'confirm_lang'];
+						extract($phpbb_dispatcher->trigger_event('core.acp_main_add_actions_confirm', compact($vars)));
 				}
 
 				if ($confirm)
@@ -414,6 +428,19 @@ class acp_main
 							trigger_error('PURGE_SESSIONS_SUCCESS');
 						}
 					break;
+
+					default:
+						/**
+						 * Event to add custom ACP quick actions
+						 *
+						 * @event core.acp_main_add_actions
+						 * @var	string	id				The module ID
+						 * @var	string	mode			The module mode
+						 * @var	string	action			Custom action type name
+						 * @since 3.3.15-RC1
+						 */
+						$vars = ['id', 'mode', 'action'];
+						extract($phpbb_dispatcher->trigger_event('core.acp_main_add_actions', compact($vars)));
 				}
 			}
 		}
@@ -449,7 +476,7 @@ class acp_main
 					'UPGRADE_INSTRUCTIONS'		=> !empty($upgrades_available) ? $user->lang('UPGRADE_INSTRUCTIONS', $upgrades_available['current'], $upgrades_available['announcement']) : false,
 				));
 			}
-			catch (\RuntimeException $e)
+			catch (\phpbb\exception\runtime_exception $e)
 			{
 				$message = call_user_func_array(array($user, 'lang'), array_merge(array($e->getMessage()), $e->get_parameters()));
 				$template->assign_vars(array(
@@ -496,7 +523,7 @@ class acp_main
 		$upload_dir_size = get_formatted_filesize($config['upload_dir_size']);
 
 		$storage_avatar = $phpbb_container->get('storage.avatar');
-		$avatar_dir_size = get_formatted_filesize($storage_avatar->get_size());
+		$avatar_dir_size = get_formatted_filesize($storage_avatar->total_size());
 
 		if ($posts_per_day > $total_posts)
 		{

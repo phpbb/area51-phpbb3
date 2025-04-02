@@ -11,6 +11,8 @@
 *
 */
 
+use phpbb\messenger\method\messenger_interface;
+
 /**
 * @ignore
 */
@@ -244,7 +246,7 @@ function user_add($user_row, $cp_data = false, $notifications_data = null)
 
 		'user_notify'			=> 0,
 		'user_notify_pm'		=> 1,
-		'user_notify_type'		=> NOTIFY_EMAIL,
+		'user_notify_type'		=> messenger_interface::NOTIFY_EMAIL,
 		'user_allow_pm'			=> 1,
 		'user_allow_viewonline'	=> 1,
 		'user_allow_viewemail'	=> 1,
@@ -2124,7 +2126,8 @@ function group_correct_avatar($group_id, $old_entry)
 
 	try
 	{
-		$storage->rename($old_filename, $new_filename);
+		$storage->write($new_filename, $storage->read($old_filename));
+		$storage->delete($old_filename);
 
 		$sql = 'UPDATE ' . GROUPS_TABLE . '
 			SET group_avatar = \'' . $db->sql_escape($new_entry) . "'
@@ -2314,6 +2317,28 @@ function group_user_add($group_id, $user_id_ary = false, $username_ary = false, 
 	{
 		return 'GROUP_USERS_EXIST';
 	}
+
+	/**
+	 * Event before users are added to a group
+	 *
+	 * @event core.group_add_user_before
+	 * @var	int		group_id		ID of the group to which users are added
+	 * @var	string 	group_name		Name of the group
+	 * @var	array	user_id_ary		IDs of the users to be added
+	 * @var	array	username_ary	Names of the users to be added
+	 * @var	int		pending			Pending setting, 1 if user(s) added are pending
+	 * @var	array	add_id_ary		IDs of the users to be added who are not members yet
+	 * @since 3.3.15-RC1
+	 */
+	$vars = array(
+		'group_id',
+		'group_name',
+		'user_id_ary',
+		'username_ary',
+		'pending',
+		'add_id_ary',
+	);
+	extract($phpbb_dispatcher->trigger_event('core.group_add_user_before', compact($vars)));
 
 	$db->sql_transaction('begin');
 

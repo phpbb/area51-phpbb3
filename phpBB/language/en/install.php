@@ -110,8 +110,6 @@ $lang = array_merge($lang, array(
 	'PHP_GETIMAGESIZE_SUPPORT_EXPLAIN'	=> 'In order for phpBB to function correctly, the getimagesize function needs to be available.',
 	'PCRE_UTF_SUPPORT'					=> 'PCRE UTF-8 support',
 	'PCRE_UTF_SUPPORT_EXPLAIN'			=> 'phpBB will not run if your PHP installation is not compiled with UTF-8 support in the PCRE extension.',
-	'PHP_JSON_SUPPORT'					=> 'PHP JSON support',
-	'PHP_JSON_SUPPORT_EXPLAIN'			=> 'In order for phpBB to function correctly, the PHP JSON extension needs to be available.',
 	'PHP_MBSTRING_SUPPORT'				=> 'PHP mbstring support',
 	'PHP_MBSTRING_SUPPORT_EXPLAIN'		=> 'In order for phpBB to function correctly, the PHP mbstring extension needs to be available.',
 	'PHP_XML_SUPPORT'					=> 'PHP XML/DOM support',
@@ -222,6 +220,13 @@ $lang = array_merge($lang, array(
 	'UPDATE_INCOMPLETE_EXPLAIN'		=> '<h1>Incomplete update</h1>
 
 		<p>We noticed that the last update of your phpBB installation hasn’t been completed. Visit the <a href="%1$s" title="%1$s">database updater</a>, ensure <em>Update database only</em> is selected and click on <strong>Submit</strong>. Don\'t forget to delete the "install"-directory after you have updated the database successfully.</p>',
+
+	// Auto update
+	'UPDATE_PACKAGE_DOWNLOAD_FAILURE'		=> 'Failed to download the update package.',
+	'UPDATE_SIGNATURE_DOWNLOAD_FAILURE'		=> 'Failed to download the update package signature.',
+	'UPDATE_SIGNATURE_INVALID'				=> 'The update package is corrupted.',
+	'UPDATE_PACKAGE_EXTRACT_FAILURE'		=> 'Could not extract files from the update package.',
+	'UPDATE_FILES_COPY_FAILURE'				=> 'Could not copy files from the update package.',
 
 	//
 	// Server data

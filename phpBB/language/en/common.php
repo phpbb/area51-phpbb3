@@ -78,6 +78,7 @@ $lang = array_merge($lang, array(
 	'ALL_TOPICS'					=> 'All Topics',
 	'ALT_TEXT'						=> 'Alternative text',
 	'AND'							=> 'And',
+	'APPEARANCE'					=> 'Appearance',
 	'ARE_WATCHING_FORUM'			=> 'You have subscribed to be notified of new posts in this forum.',
 	'ARE_WATCHING_TOPIC'			=> 'You have subscribed to be notified of new posts in this topic.',
 	'ASCENDING'						=> 'Ascending',
@@ -351,6 +352,7 @@ $lang = array_merge($lang, array(
 	'HIDE_ME'						=> 'Hide my online status this session',
 	'HOURS'							=> 'Hours',
 	'HOME'							=> 'Home',
+	'HTTP_HANDLER_NOT_FOUND'		=> 'The operation could not be completed because the cURL PHP extension and allow_url_fopen PHP ini setting have been disabled and no other HTTP handler could be found.',
 
 	'ICQ'						=> 'ICQ',
 	'IF'						=> 'If',

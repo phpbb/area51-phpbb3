@@ -402,7 +402,7 @@ class acp_board
 					'vars'	=> array(
 						'legend1'				=> 'ACP_SERVER_SETTINGS',
 						'gzip_compress'			=> array('lang' => 'ENABLE_GZIP',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
-						'use_system_cron'		=> array('lang' => 'USE_SYSTEM_CRON',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
+						'use_system_cron'		=> array('lang' => 'USE_SYSTEM_CRON',		'validate' => 'bool',	'type' => 'radio:enabled_disabled', 'explain' => true),
 
 						'legend2'				=> 'PATH_SETTINGS',
 						'enable_mod_rewrite'	=> array('lang' => 'MOD_REWRITE_ENABLE',	'validate' => 'bool',	'type' => 'custom', 'method' => 'enable_mod_rewrite', 'explain' => true),
@@ -473,7 +473,6 @@ class acp_board
 						'smtp_delivery'			=> array('lang' => 'USE_SMTP',				'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
 						'smtp_host'				=> array('lang' => 'SMTP_SERVER',			'validate' => 'string',	'type' => 'text:25:50', 'explain' => true),
 						'smtp_port'				=> array('lang' => 'SMTP_PORT',				'validate' => 'int:0:99999',	'type' => 'number:0:99999', 'explain' => true),
-						'smtp_auth_method'		=> array('lang' => 'SMTP_AUTH_METHOD',		'validate' => 'string',	'type' => 'select', 'method' => 'mail_auth_select', 'explain' => true),
 						'smtp_username'			=> array('lang' => 'SMTP_USERNAME',			'validate' => 'string',	'type' => 'text:25:255', 'explain' => true),
 						'smtp_password'			=> array('lang' => 'SMTP_PASSWORD',			'validate' => 'string',	'type' => 'password:25:255', 'explain' => true),
 						'smtp_verify_peer'		=> array('lang' => 'SMTP_VERIFY_PEER',		'validate' => 'bool',	'type' => 'radio:yes_no', 'explain' => true),
@@ -721,17 +720,16 @@ class acp_board
 		{
 			if ($config['email_enable'])
 			{
-				include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
-
-				$messenger = new messenger(false);
-				$messenger->template('test');
-				$messenger->set_addresses($user->data);
-				$messenger->anti_abuse_headers($config, $user);
-				$messenger->assign_vars(array(
+				$email_method = $phpbb_container->get('messenger.method.email');
+				$email_method->set_use_queue(false);
+				$email_method->template('test');
+				$email_method->set_addresses($user->data);
+				$email_method->anti_abuse_headers($config, $user);
+				$email_method->assign_vars([
 					'USERNAME'	=> html_entity_decode($user->data['username'], ENT_COMPAT),
 					'MESSAGE'	=> html_entity_decode($request->variable('send_test_email_text', '', true), ENT_COMPAT),
-				));
-				$messenger->send(NOTIFY_EMAIL);
+				]);
+				$email_method->send();
 
 				trigger_error($user->lang('TEST_EMAIL_SENT') . adm_back_link($this->u_action));
 			}
@@ -885,30 +883,6 @@ class acp_board
 	}
 
 	/**
-	* Select mail authentication method
-	*/
-	function mail_auth_select($selected_method, $key = '')
-	{
-		global $user;
-
-		$auth_methods = ['PLAIN', 'LOGIN', 'CRAM-MD5', 'DIGEST-MD5', 'POP-BEFORE-SMTP'];
-		$s_smtp_auth_options = [];
-
-		foreach ($auth_methods as $method)
-		{
-			$s_smtp_auth_options[] = [
-				'value'		=> $method,
-				'selected'	=> $selected_method == $method,
-				'label'		=> $user->lang('SMTP_' . str_replace('-', '_', $method)),
-			];
-		}
-
-		return [
-			'options' => $s_smtp_auth_options,
-		];
-	}
-
-	/**
 	* Select full folder action
 	*/
 	function full_folder_select($value, $key = '')
@@ -938,7 +912,7 @@ class acp_board
 	*/
 	function select_acc_activation($selected_value, $value)
 	{
-		global $user, $config;
+		global $user, $config, $phpbb_dispatcher;
 
 		$act_ary = [
 			'ACC_DISABLE'	=> [true, USER_ACTIVATION_DISABLE],
@@ -948,6 +922,18 @@ class acp_board
 		];
 
 		$act_options = [];
+
+		/**
+		 * Event to add and/or modify account activation configurations
+		 *
+		 * @event core.acp_account_activation_edit_add
+		 * @var	array	act_ary		Array of account activation methods
+		 * @var	array	act_options	Options available in the activation method
+		 * @since 3.3.15-RC1
+		 */
+		$vars = ['act_ary', 'act_options'];
+		extract($phpbb_dispatcher->trigger_event('core.acp_account_activation_edit_add', compact($vars)));
+
 		foreach ($act_ary as $key => $data)
 		{
 			list($available, $value) = $data;

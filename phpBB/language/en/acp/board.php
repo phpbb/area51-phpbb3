@@ -470,8 +470,8 @@ $lang = array_merge($lang, array(
 	'SMILIES_PATH_EXPLAIN'		=> 'Path under your phpBB root directory, e.g. <samp>images/smilies</samp>.',
 	'UPLOAD_ICONS_PATH'			=> 'Extension group icons storage path',
 	'UPLOAD_ICONS_PATH_EXPLAIN'	=> 'Path under your phpBB root directory, e.g. <samp>images/upload_icons</samp>.',
-	'USE_SYSTEM_CRON'		=> 'Run periodic tasks from system cron',
-	'USE_SYSTEM_CRON_EXPLAIN'		=> 'When off, phpBB will arrange for periodic tasks to be run automatically. When on, phpBB will not schedule any periodic tasks by itself; a system administrator must arrange for <code>bin/phpbbcli.php cron:run</code> to be run by the system cron facility at regular intervals (e.g. every 5 minutes).',
+	'USE_SYSTEM_CRON'			=> 'Run periodic tasks from operating system cron',
+	'USE_SYSTEM_CRON_EXPLAIN'	=> 'When disabled, phpBB will arrange for periodic tasks to be run automatically. When enabled, phpBB will not schedule any periodic tasks by itself; a system administrator must arrange for <code>bin/phpbbcli.php cron:run</code> to be run by the operating system cron facility at regular intervals (e.g. every 5 minutes).',
 ));
 
 // Security Settings
@@ -553,15 +553,8 @@ $lang = array_merge($lang, array(
 	'SEND_TEST_EMAIL_EXPLAIN'		=> 'This will send a test email to the address defined in your account.',
 	'SMTP_ALLOW_SELF_SIGNED'		=> 'Allow self-signed SSL certificates',
 	'SMTP_ALLOW_SELF_SIGNED_EXPLAIN'=> 'Allow connections to SMTP server with self-signed SSL certificate. <br><em><strong>Warning:</strong> Allowing self-signed SSL certificates may cause security implications.</em>',
-	'SMTP_AUTH_METHOD'				=> 'Authentication method for SMTP',
-	'SMTP_AUTH_METHOD_EXPLAIN'		=> 'Only used if a username/password is set, ask your provider if you are unsure which method to use.',
-	'SMTP_CRAM_MD5'					=> 'CRAM-MD5',
-	'SMTP_DIGEST_MD5'				=> 'DIGEST-MD5',
-	'SMTP_LOGIN'					=> 'LOGIN',
 	'SMTP_PASSWORD'					=> 'SMTP password',
 	'SMTP_PASSWORD_EXPLAIN'			=> 'Only enter a password if your SMTP server requires it.<br><em><strong>Warning:</strong> This password will be stored as plain text in the database, visible to everybody who can access your database or who can view this configuration page.</em>',
-	'SMTP_PLAIN'					=> 'PLAIN',
-	'SMTP_POP_BEFORE_SMTP'			=> 'POP-BEFORE-SMTP',
 	'SMTP_PORT'						=> 'SMTP server port',
 	'SMTP_PORT_EXPLAIN'				=> 'Only change this if you know your SMTP server is on a different port.',
 	'SMTP_SERVER'					=> 'SMTP server address',

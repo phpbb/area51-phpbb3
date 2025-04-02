@@ -133,11 +133,7 @@ class webpush
 			$notification_data = $this->get_anonymous_notifications();
 		}
 
-		// Decode and return data if everything is fine
-		$data = json_decode($notification_data, true);
-		$data['url'] = isset($data['url']) ? $this->path_helper->update_web_root_path($data['url']) : '';
-
-		return new JsonResponse($data);
+		return new JsonResponse($notification_data, 200, [], true);
 	}
 
 	/**
@@ -165,6 +161,11 @@ class webpush
 		$notification_data = $this->db->sql_fetchfield('push_data');
 		$this->db->sql_freeresult($result);
 
+		if (!$notification_data)
+		{
+			throw new http_exception(Response::HTTP_BAD_REQUEST, 'AJAX_ERROR_TEXT');
+		}
+
 		return $this->get_notification_data($notification_data);
 	}
 
@@ -191,6 +192,11 @@ class webpush
 			$result = $this->db->sql_query($sql);
 			$notification_row = $this->db->sql_fetchrow($result);
 			$this->db->sql_freeresult($result);
+
+			if (!$notification_row || !isset($notification_row['push_data']) || !isset($notification_row['push_token']))
+			{
+				throw new http_exception(Response::HTTP_BAD_REQUEST, 'AJAX_ERROR_TEXT');
+			}
 
 			$notification_data = $notification_row['push_data'];
 			$push_token = $notification_row['push_token'];
@@ -244,7 +250,7 @@ class webpush
 		$this->user_loader->load_users($notification->users_to_query());
 
 		return json_encode([
-			'heading'	=> $this->config['sitename'],
+			'heading'	=> html_entity_decode($this->config['sitename'], ENT_QUOTES, 'UTF-8'),
 			'title'		=> strip_tags(html_entity_decode($notification->get_title(), ENT_NOQUOTES, 'UTF-8')),
 			'text'		=> strip_tags(html_entity_decode($notification->get_reference(), ENT_NOQUOTES, 'UTF-8')),
 			'url'		=> htmlspecialchars_decode($notification->get_url()),

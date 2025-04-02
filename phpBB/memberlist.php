@@ -428,8 +428,6 @@ switch ($mode)
 					if (check_form_key('memberlist_messaging'))
 					{
 
-						include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
-
 						$subject = sprintf($user->lang['IM_JABBER_SUBJECT'], $user->data['username'], $config['server_name']);
 						$message = $request->variable('message', '', true);
 
@@ -438,22 +436,21 @@ switch ($mode)
 							trigger_error('EMPTY_MESSAGE_IM');
 						}
 
-						$messenger = new messenger(false);
+						$jabber = $phpbb_container->get('messenger.method.jabber');
+						$jabber->set_use_queue(false);
 
-						$messenger->template('profile_send_im', $row['user_lang']);
-						$messenger->subject(html_entity_decode($subject, ENT_COMPAT));
+						$jabber->template('profile_send_im', $row['user_lang']);
+						$jabber->subject(html_entity_decode($subject, ENT_COMPAT));
+						$jabber->set_addresses($row);
 
-						$messenger->replyto($user->data['user_email']);
-						$messenger->set_addresses($row);
-
-						$messenger->assign_vars(array(
+						$jabber->assign_vars([
 							'BOARD_CONTACT'	=> phpbb_get_board_contact($config, $phpEx),
 							'FROM_USERNAME'	=> html_entity_decode($user->data['username'], ENT_COMPAT),
 							'TO_USERNAME'	=> html_entity_decode($row['username'], ENT_COMPAT),
-							'MESSAGE'		=> html_entity_decode($message, ENT_COMPAT))
-						);
+							'MESSAGE'		=> html_entity_decode($message, ENT_COMPAT),
+						]);
 
-						$messenger->send(NOTIFY_IM);
+						$jabber->send();
 
 						$s_select = 'S_SENT_JABBER';
 					}
@@ -815,11 +812,26 @@ switch ($mode)
 		* Modify user's template vars before we display the profile
 		*
 		* @event core.memberlist_modify_view_profile_template_vars
-		* @var	array	template_ary	Array with user's template vars
+		* @var	array	template_ary			Array with user's template vars
+		* @var	int		user_id					The user ID
+		* @var	bool	user_notes_enabled		Is the mcp user notes module enabled?
+		* @var	bool	warn_user_enabled		Is the mcp warnings module enabled?
+		* @var	bool	friends_enabled			Is the ucp friends module enabled?
+		* @var	bool	foes_enabled			Is the ucp foes module enabled?
+		* @var	bool    friend					Is the user friend?
+		* @var	bool	foe						Is the user foe?
 		* @since 3.2.6-RC1
+		* @changed 3.3.15-RC1 Added vars user_id, user_notes_enabled, warn_user_enabled, friend, friends_enabled, foe, foes_enabled
 		*/
 		$vars = array(
 			'template_ary',
+			'user_id',
+			'user_notes_enabled',
+			'warn_user_enabled',
+			'friend',
+			'friends_enabled',
+			'foe',
+			'foes_enabled',
 		);
 		extract($phpbb_dispatcher->trigger_event('core.memberlist_modify_view_profile_template_vars', compact($vars)));
 
@@ -888,10 +900,7 @@ switch ($mode)
 
 	case 'contactadmin':
 	case 'email':
-		if (!class_exists('messenger'))
-		{
-			include($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
-		}
+		$messenger = $phpbb_container->get('messenger.method_collection');
 
 		$user_id	= $request->variable('u', 0);
 		$topic_id	= $request->variable('t', 0);
@@ -925,7 +934,6 @@ switch ($mode)
 
 		if ($request->is_set_post('submit'))
 		{
-			$messenger = new messenger(false);
 			$form->submit($messenger);
 		}
 
@@ -1377,10 +1385,10 @@ switch ($mode)
 
 		$order_by .= $sort_key_sql[$sort_key] . ' ' . (($sort_dir == 'a') ? 'ASC' : 'DESC');
 
-		// Unfortunately we must do this here for sorting by rank, else the sort order is applied wrongly
-		if ($sort_key == 'm')
+		// For sorting by non-unique columns (rank, posts) add unique sort key to avoid duplicated rows in results
+		if ($sort_key == 'm' || $sort_key == 'd')
 		{
-			$order_by .= ', u.user_posts DESC';
+			$order_by .= ', u.user_id ASC';
 		}
 
 		/**
