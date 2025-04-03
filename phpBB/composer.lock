@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "96d8bdaa91db532b0a0bf5e1b6c0ec31",
+    "content-hash": "37ee4f7c59a91d6129641c6e35aa9c82",
     "packages": [
         {
             "name": "bantu/ini-get-wrapper",
@@ -2406,6 +2406,57 @@
                 "source": "https://github.com/paragonie/sodium_compat/tree/v2.1.0"
             },
             "time": "2024-09-04T12:51:01+00:00"
+        },
+        {
+            "name": "phpbb/teamsecurity",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpbb-extensions/teamsecurity.git",
+                "reference": "a7ce5018c1210b8aff6cd7d6a6827ba75f25fa62"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpbb-extensions/teamsecurity/zipball/a7ce5018c1210b8aff6cd7d6a6827ba75f25fa62",
+                "reference": "a7ce5018c1210b8aff6cd7d6a6827ba75f25fa62",
+                "shasum": ""
+            },
+            "require": {
+                "composer/installers": "~1.0",
+                "php": ">=8.1"
+            },
+            "default-branch": true,
+            "type": "phpbb-extension",
+            "extra": {
+                "display-name": "Team Security Measures",
+                "soft-require": {
+                    "phpbb/phpbb": ">=4.0.0@dev,<4.1.0@dev"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Cullum",
+                    "email": "michael@phpbb.com",
+                    "homepage": "http://michaelcullum.com",
+                    "role": "Extensions Team Consultant"
+                },
+                {
+                    "name": "Matt Friedman",
+                    "homepage": "https://imattpro.github.io",
+                    "role": "Extensions Development Team Lead"
+                }
+            ],
+            "description": "Security measures to help watch over team member accounts.",
+            "homepage": "https://www.phpbb.com",
+            "support": {
+                "issues": "https://github.com/phpbb-extensions/teamsecurity/issues",
+                "source": "https://github.com/phpbb-extensions/teamsecurity/tree/master"
+            },
+            "time": "2025-04-03T04:08:56+00:00"
         },
         {
             "name": "psr/cache",
@@ -10170,7 +10221,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "phpbb/teamsecurity": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
