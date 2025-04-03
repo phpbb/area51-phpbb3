@@ -1,7 +1,0 @@
-Subject: {SITENAME} Account Email Address Changed
-
-The email address associated with the account "{USERNAME}" has recently been changed from "{OLD_EMAIL}" to "{NEW_EMAIL}".
-
-If you are the owner of this account and did not authorise this change, immediately reset your account password and please notify {CONTACT} that a possible security breach has been made from the IP address {IP_ADDRESS} ({HOST_NAME}) against your account (They will have received a copy of this email).
-
-{EMAIL_SIG}
