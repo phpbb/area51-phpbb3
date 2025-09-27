@@ -2370,16 +2370,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpbb-extensions/teamsecurity.git",
-                "reference": "a7ce5018c1210b8aff6cd7d6a6827ba75f25fa62"
+                "reference": "b31c5806b306955776d41333d50b103e411743d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpbb-extensions/teamsecurity/zipball/a7ce5018c1210b8aff6cd7d6a6827ba75f25fa62",
-                "reference": "a7ce5018c1210b8aff6cd7d6a6827ba75f25fa62",
+                "url": "https://api.github.com/repos/phpbb-extensions/teamsecurity/zipball/b31c5806b306955776d41333d50b103e411743d1",
+                "reference": "b31c5806b306955776d41333d50b103e411743d1",
                 "shasum": ""
             },
             "require": {
-                "composer/installers": "~1.0",
+                "composer/installers": "^1.0 || ^2.0",
                 "php": ">=8.1"
             },
             "default-branch": true,
@@ -2413,7 +2413,7 @@
                 "issues": "https://github.com/phpbb-extensions/teamsecurity/issues",
                 "source": "https://github.com/phpbb-extensions/teamsecurity/tree/master"
             },
-            "time": "2025-04-03T04:08:56+00:00"
+            "time": "2025-09-26T16:47:44+00:00"
         },
         {
             "name": "psr/cache",
