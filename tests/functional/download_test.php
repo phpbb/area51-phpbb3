@@ -225,10 +225,13 @@ class phpbb_functional_download_test extends phpbb_functional_test_case
 
 	public function load_ids($data)
 	{
-		$this->db = $this->get_db();
-
 		if (!empty($data['forums']))
 		{
+			array_walk($data['forums'], function(&$value, $key)
+				{
+					$value = $this->db->sql_escape($value);
+				}
+			);
 			$sql = 'SELECT *
 				FROM phpbb_forums
 				WHERE ' . $this->db->sql_in_set('forum_name', $data['forums']);
@@ -245,6 +248,11 @@ class phpbb_functional_download_test extends phpbb_functional_test_case
 
 		if (!empty($data['topics']))
 		{
+			array_walk($data['topics'], function(&$value, $key)
+				{
+					$value = $this->db->sql_escape($value);
+				}
+			);
 			$sql = 'SELECT *
 				FROM phpbb_topics
 				WHERE ' . $this->db->sql_in_set('topic_title', $data['topics']);
@@ -262,6 +270,11 @@ class phpbb_functional_download_test extends phpbb_functional_test_case
 		$post_ids = array();
 		if (!empty($data['posts']))
 		{
+			array_walk($data['posts'], function(&$value, $key)
+				{
+					$value = $this->db->sql_escape($value);
+				}
+			);
 			$sql = 'SELECT *
 				FROM phpbb_posts
 				WHERE ' . $this->db->sql_in_set('post_subject', $data['posts']);
@@ -276,7 +289,7 @@ class phpbb_functional_download_test extends phpbb_functional_test_case
 			}
 			$this->db->sql_freeresult($result);
 
-			if (isset($data['attachments']))
+			if (isset($data['attachments']) && !empty($post_ids))
 			{
 				$sql = 'SELECT *
 					FROM phpbb_attachments

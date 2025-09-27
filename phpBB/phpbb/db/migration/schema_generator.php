@@ -14,21 +14,17 @@
 namespace phpbb\db\migration;
 
 use Closure;
-use LogicException;
 use phpbb\config\config;
 use phpbb\db\driver\driver_interface;
 use phpbb\db\migrator;
 use phpbb\db\tools\tools_interface;
 use UnexpectedValueException;
-use CHItA\TopologicalSort\TopologicalSort;
 
 /**
 * The schema generator generates the schema based on the existing migrations
 */
 class schema_generator
 {
-	use TopologicalSort;
-
 	/** @var config */
 	protected $config;
 
@@ -103,24 +99,56 @@ class schema_generator
 			return $this->tables;
 		}
 
-		$migrations = $this->class_names;
-		$filter = function($class_name) {
-			return !migrator::is_migration($class_name);
-		};
-
-		$edges = function($class_name) {
-			return $class_name::depends_on();
-		};
-
-		$apply_for_each = function($class_name) {
-			$this->apply_migration_to_schema($class_name);
-		};
-
-		try
+		$dependency_counts = [];
+		$dependencies = [];
+		$applicable_migrations = [];
+		$migration_count = 0;
+		foreach ($this->class_names as $class_name)
 		{
-			$this->topologicalSort($migrations, $edges, true, $apply_for_each, $filter);
+			if (!migrator::is_migration($class_name))
+			{
+				continue;
+			}
+
+			$migration_count++;
+			$migration_dependencies = $class_name::depends_on();
+			if (empty($migration_dependencies))
+			{
+				$applicable_migrations[] = $class_name;
+				continue;
+			}
+
+			$dependency_counts[$class_name] = count($migration_dependencies);
+			foreach ($migration_dependencies as $migration_dependency)
+			{
+				$dependencies[$migration_dependency][] = $class_name;
+			}
 		}
-		catch (LogicException $e)
+
+		$applied_migrations = 0;
+		while (!empty($applicable_migrations))
+		{
+			$migration = array_pop($applicable_migrations);
+			$this->apply_migration_to_schema($migration);
+			++$applied_migrations;
+
+			if (!array_key_exists($migration, $dependencies))
+			{
+				continue;
+			}
+
+			$dependents = $dependencies[$migration];
+			foreach ($dependents as $dependent)
+			{
+				$dependency_counts[$dependent]--;
+				if ($dependency_counts[$dependent] === 0)
+				{
+					$applicable_migrations[] = $dependent;
+				}
+			}
+		}
+
+		if ($migration_count !== $applied_migrations)
 		{
 			throw new UnexpectedValueException(
 				"Migrations either have circular dependencies or unsatisfiable dependencies."
@@ -157,8 +185,10 @@ class schema_generator
 			'drop_columns'		=> 'COLUMNS',
 			'change_columns'	=> 'COLUMNS',
 			'add_index'			=> 'KEYS',
+			'add_primary_keys'	=> 'PRIMARY_KEY',
 			'add_unique_index'	=> 'KEYS',
 			'drop_keys'			=> 'KEYS',
+			'rename_index'		=> 'KEYS',
 		];
 
 		$schema_changes = $migration->update_schema();
@@ -178,6 +208,7 @@ class schema_generator
 			{
 				case 'add':
 				case 'change':
+				case 'rename':
 					$action = function(&$value, $changes, $value_transform = null) {
 						self::set_all($value, $changes, $value_transform);
 					};
@@ -240,7 +271,7 @@ class schema_generator
 	 * @param mixed			$data				Array of values to be set.
 	 * @param callable|null	$value_transform	Callback to transform the value being set.
 	 */
-	private static function set_all(&$schema, $data, ?callable $value_transform = null)
+	private static function set_all(&$schema, $data, callable|null $value_transform = null)
 	{
 		$data = (!is_array($data)) ? [$data] : $data;
 		foreach ($data as $key => $change)
@@ -317,9 +348,9 @@ class schema_generator
 	 *
 	 * @return Closure|null The value transformation callback or null if it is not needed.
 	 */
-	private static function get_value_transform(string $change_type, string $schema_type) : ?Closure
+	private static function get_value_transform(string $change_type, string $schema_type) : Closure|null
 	{
-		if ($change_type !== 'add')
+		if (!in_array($change_type, ['add', 'rename']))
 		{
 			return null;
 		}
@@ -327,6 +358,23 @@ class schema_generator
 		switch ($schema_type)
 		{
 			case 'index':
+				if ($change_type == 'rename')
+				{
+					return function(&$value, $key, $change) {
+						if (isset($value[$key]))
+						{
+							$data_backup = $value[$key];
+							unset($value[$key]);
+							$value[$change] = $data_backup;
+							unset($data_backup);
+						}
+						else
+						{
+							return null;
+						}
+					};
+				}
+
 				return function(&$value, $key, $change) {
 					$value[$key] = ['INDEX', $change];
 				};

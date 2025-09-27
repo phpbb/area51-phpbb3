@@ -13,9 +13,6 @@
 
 namespace phpbb\db\doctrine;
 
-use InvalidArgumentException;
-use phpbb\db\doctrine\oci8\driver as oci8_driver;
-
 /**
  * Helper class to generate Doctrine DBAL configuration.
  */
@@ -33,15 +30,15 @@ class connection_parameter_factory
 	 *
 	 * @return array Doctrine DBAL connection parameters.
 	 *
-	 * @throws InvalidArgumentException If a required parameter is empty or null.
+	 * @throws \InvalidArgumentException If a required parameter is empty or null.
 	 */
 	public static function get_configuration(
 		string $driver,
-		?string $host = null,
-		?string $user = null,
-		?string $password = null,
-		?string $name = null,
-		?string $port = null) : array
+		string|null $host = null,
+		string|null $user = null,
+		string|null $password = null,
+		string|null $name = null,
+		string|null $port = null) : array
 	{
 		$params = [
 			'driver' => $driver,
@@ -69,17 +66,17 @@ class connection_parameter_factory
 	 *
 	 * @return array Doctrine's DBAL configuration for SQLite.
 	 *
-	 * @throws InvalidArgumentException If a required parameter is empty or null.
+	 * @throws \InvalidArgumentException If a required parameter is empty or null.
 	 */
 	private static function build_connection_parameters(
 		array $params,
-		?string $host = null,
-		?string $user = null,
-		?string $password = null,
-		?string $name = null,
-		?string $port = null) : array
+		string|null $host = null,
+		string|null $user = null,
+		string|null $password = null,
+		string|null $name = null,
+		string|null $port = null) : array
 	{
-		if ($params['driver'] === 'pdo_sqlite')
+		if (in_array($params['driver'], ['pdo_sqlite', 'sqlite3']))
 		{
 			return self::enrich_parameters(
 				self::build_sqlite_parameters($params, $host, $user, $password)
@@ -88,7 +85,7 @@ class connection_parameter_factory
 
 		if (empty($user) || empty($name))
 		{
-			throw new InvalidArgumentException('Required database parameter is not set.');
+			throw new \InvalidArgumentException('Required database parameter is not set.');
 		}
 
 		$params = array_merge($params, [
@@ -120,7 +117,7 @@ class connection_parameter_factory
 	 *
 	 * @return array Doctrine's DBAL configuration for SQLite.
 	 */
-	private static function build_sqlite_parameters(array $params, string $path, ?string $user, ?string $password) : array
+	private static function build_sqlite_parameters(array $params, string $path, string|null $user, string|null $password) : array
 	{
 		$params['path'] = $path;
 
@@ -146,36 +143,28 @@ class connection_parameter_factory
 	 */
 	private static function enrich_parameters(array $params) : array
 	{
-		$enrichment_tags = [
-			'pdo_mysql' => [
-				'charset' => 'UTF8',
-			],
-			'oci8' => [
-				'charset' => 'UTF8',
-				'platform' => new oracle_platform(),
-				'driverClass' => oci8_driver::class,
-			],
-			'pdo_pgsql' => [
-				'charset' => 'UTF8',
-				'platform' => new postgresql_platform(),
-			],
-			'pdo_sqlsrv' => [
-				'platform' => new sqlsrv_platform(),
-			],
-		];
-
-		if ($params['driver'] === 'pdo_mysql')
+		if (in_array($params['driver'], ['mysqli', 'pdo_mysql', 'pgsql', 'pdo_pgsql', 'oci8', 'pdo_oci']))
 		{
-			$enrichment_tags['pdo_mysql'][\PDO::MYSQL_ATTR_FOUND_ROWS] = true;
+			$params['charset'] = 'UTF8';
 		}
 
-		$driver = $params['driver'];
-		if (!array_key_exists($driver, $enrichment_tags))
+		if ($params['driver'] === 'pdo_mysql' && extension_loaded('pdo_mysql'))
 		{
-			return $params;
+			// Constant PDO::MYSQL_ATTR_FOUND_ROWS is deprecated since 8.5, use Pdo\Mysql::ATTR_FOUND_ROWS instead
+			if (class_exists('\Pdo\Mysql'))
+			{
+				/**
+				 * @psalm-suppress UndefinedClass
+				 */
+				$params[\Pdo\Mysql::ATTR_FOUND_ROWS] = true;
+			}
+			else
+			{
+				$params[\PDO::MYSQL_ATTR_FOUND_ROWS] = true;
+			}
 		}
 
-		return array_merge($params, $enrichment_tags[$driver]);
+		return $params;
 	}
 
 	/*

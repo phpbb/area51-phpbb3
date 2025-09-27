@@ -22,8 +22,16 @@ class phpbb_mock_event_dispatcher extends \phpbb\event\dispatcher
 	{
 	}
 
-	public function trigger_event($eventName, $data = array())
+	public function trigger_event($eventName, $data = array()): array
 	{
-		return array();
+		$data = (array) $data;
+
+		// Throw an exception if we reach the core's exit_handler()
+		if ($eventName === 'core.exit_handler')
+		{
+			throw new \RuntimeException('Exit handler called');
+		}
+
+		return $data;
 	}
 }

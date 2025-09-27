@@ -231,7 +231,7 @@ class notification_method_webpush_test extends phpbb_tests_notification_base
 		$this->notifications->set_var('notification_methods', $methods);
 	}
 
-	public function data_notification_webpush()
+	public static function data_notification_webpush()
 	{
 		return [
 			/**
@@ -656,7 +656,7 @@ class notification_method_webpush_test extends phpbb_tests_notification_base
 		$this->assertCount(0, $cur_notifications, 'Assert that no notifications have been pruned');
 	}
 
-	public function data_set_endpoint_padding(): array
+	public static function data_set_endpoint_padding(): array
 	{
 		return [
 			[
@@ -680,7 +680,6 @@ class notification_method_webpush_test extends phpbb_tests_notification_base
 	public function test_set_endpoint_padding($endpoint, $expected_padding): void
 	{
 		$web_push_reflection = new \ReflectionMethod($this->notification_method_webpush, 'set_endpoint_padding');
-		$web_push_reflection->setAccessible(true);
 
 		$auth = [
 			'VAPID' => [

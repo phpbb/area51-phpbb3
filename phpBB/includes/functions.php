@@ -130,7 +130,7 @@ function phpbb_gmgetdate($time = false)
 *
 * @return array|string                    data array if $string_only is false
 */
-function get_formatted_filesize($value, bool $string_only = true, array $allowed_units = null)
+function get_formatted_filesize($value, bool $string_only = true, array|null $allowed_units = null)
 {
 	global $user;
 
@@ -253,7 +253,7 @@ function still_on_time($extra_time = 15)
 * @return mixed				Boolean (true, false) if comparison operator is specified.
 *							Integer (-1, 0, 1) otherwise.
 */
-function phpbb_version_compare(string $version1, string $version2, string $operator = null)
+function phpbb_version_compare(string $version1, string $version2, string|null $operator = null)
 {
 	$version1 = strtolower($version1);
 	$version2 = strtolower($version2);
@@ -2408,7 +2408,7 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 			case LOGIN_ERROR_ATTEMPTS:
 
 				$captcha = $phpbb_container->get('captcha.factory')->get_instance($config['captcha_plugin']);
-				$captcha->init(CONFIRM_LOGIN);
+				$captcha->init(\phpbb\captcha\plugins\confirm_type::LOGIN);
 				// $captcha->reset();
 
 				$template->assign_vars(array(
@@ -2716,7 +2716,7 @@ function get_backtrace()
 		// Only show function arguments for include etc.
 		// Other parameters may contain sensible information
 		$argument = '';
-		if (!empty($trace['args'][0]) && in_array($trace['function'], array('include', 'require', 'include_once', 'require_once')))
+		if (!empty($trace['args'][0]) && in_array($trace['function'], array('include', 'require', 'include_once', 'require_once', 'try_apply')))
 		{
 			$argument = htmlspecialchars(phpbb_filter_root_path($trace['args'][0]), ENT_COMPAT);
 		}
@@ -3194,7 +3194,7 @@ function msg_handler($errno, $msg_text, $errfile, $errline): bool
 * and converts backslashes to forward slashes.
 *
 * @param string $errfile	Absolute file path
-*							(e.g. /var/www/phpbb3/phpBB/includes/functions.php)
+*							(e.g. /var/www/phpbb/phpBB/includes/functions.php)
 *							Please note that if $errfile is outside of the phpBB root,
 *							the root path will not be found and can not be filtered.
 * @return string			Relative file path

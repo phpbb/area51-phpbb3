@@ -19,6 +19,9 @@ class phpbb_email_parsing_test extends phpbb_test_case
 	/** @var \ReflectionProperty */
 	protected $reflection_template_property;
 
+	/** @var \phpbb\messenger\method\email */
+	protected $email;
+
 	protected function setUp(): void
 	{
 		global $phpbb_container, $config, $phpbb_root_path, $phpEx, $request, $user;
@@ -143,10 +146,9 @@ class phpbb_email_parsing_test extends phpbb_test_case
 
 		$reflection = new ReflectionObject($this->email);
 		$this->reflection_template_property = $reflection->getProperty('template');
-		$this->reflection_template_property->setAccessible(true);
 	}
 
-	public function email_parsing_data()
+	public static function email_parsing_data()
 	{
 		return array(
 			array('Author username', 'Any forum', 'The topic title', 'Dear user'),

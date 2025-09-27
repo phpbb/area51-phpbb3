@@ -1,4 +1,7 @@
 <?php
+
+use phpbb\template\twig\twig;
+
 /**
 *
 * This file is part of the phpBB Forum Software package.
@@ -14,6 +17,7 @@
 class phpbb_template_template_test_case extends phpbb_test_case
 {
 	protected $lang;
+	/** @var twig */
 	protected $template;
 	protected $template_path;
 	protected $user;
@@ -31,7 +35,6 @@ class phpbb_template_template_test_case extends phpbb_test_case
 
 		$reflection = new ReflectionClass('\phpbb\language\language');
 		self::$language_reflection_lang = $reflection->getProperty('lang');
-		self::$language_reflection_lang->setAccessible(true);
 	}
 
 	protected function display($handle)
@@ -68,7 +71,7 @@ class phpbb_template_template_test_case extends phpbb_test_case
 		return $defaults;
 	}
 
-	protected function setup_engine(array $new_config = array())
+	protected function setup_engine(array $new_config = array(), string $template_path = '')
 	{
 		global $phpbb_root_path, $phpEx;
 
@@ -90,7 +93,7 @@ class phpbb_template_template_test_case extends phpbb_test_case
 			$phpEx
 		);
 
-		$this->template_path = $this->test_path . '/templates';
+		$this->template_path = $template_path ?: $this->test_path . '/templates';
 
 		$cache_path = $phpbb_root_path . 'cache/twig';
 		$context = new \phpbb\template\context();

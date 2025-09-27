@@ -28,6 +28,10 @@ jobs:
         name: PHP ${{ matrix.php }} - ${{ matrix.db }}
 
         steps:
+            - name: Update Ubuntu package lists
+              run: |
+                  sudo apt-get update -y  --allow-releaseinfo-change
+
             - name: Checkout repository
               uses: actions/checkout@v4
               with:
@@ -141,6 +145,10 @@ jobs:
                       db: "mysql:8.0"
                     - php: '8.4'
                       db: "mariadb:10.3"
+                    - php: '8.5'
+                      db: "mysql:8.0"
+                    - php: '8.5'
+                      db: "mariadb:10.3"
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db_alias != '' && matrix.db_alias || matrix.db }}
 
@@ -169,6 +177,10 @@ jobs:
                     - 6379:6379
 
         steps:
+            - name: Update Ubuntu package lists
+              run: |
+                  sudo apt-get update -y  --allow-releaseinfo-change
+
             - name: Checkout repository
               uses: actions/checkout@v4
 
@@ -241,7 +253,7 @@ jobs:
                   DB: ${{steps.database-type.outputs.db}}
               if: ${{ matrix.SLOWTESTS != 1 && matrix.NOTESTS != 1 }}
               run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-$DB-github.xml --verbose --stop-on-error
+                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-$DB-github.xml --display-all-issues --stop-on-error
 
             - name: Slow tests
               env:
@@ -278,6 +290,8 @@ jobs:
                       db: "postgres:9.5"
                     - php: '8.4'
                       db: "postgres:9.5"
+                    - php: '8.5'
+                      db: "postgres:9.5"
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db }}
 
@@ -308,6 +322,10 @@ jobs:
                     - 6379:6379
 
         steps:
+            - name: Update Ubuntu package lists
+              run: |
+                  sudo apt-get update -y  --allow-releaseinfo-change
+
             - name: Checkout repository
               uses: actions/checkout@v4
 
@@ -366,19 +384,16 @@ jobs:
               env:
                   DB: ${{steps.database-type.outputs.db}}
               run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-$DB-github.xml --verbose --stop-on-error
+                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-$DB-github.xml --display-all-issues --stop-on-error
 
     # Other database types, namely sqlite3 and mssql
     other-tests:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-22.04
         strategy:
             matrix:
                 include:
                     - php: '8.1'
                       db: "sqlite3"
-                    - php: '8.1'
-                      db: "mcr.microsoft.com/mssql/server:2017-latest"
-                      db_alias: 'MSSQL 2017'
                     - php: '8.1'
                       db: "mcr.microsoft.com/mssql/server:2019-CU27-ubuntu-20.04"
                       db_alias: 'MSSQL 2019'
@@ -390,7 +405,7 @@ jobs:
 
         services:
             mssql:
-                image: ${{ matrix.db != 'mcr.microsoft.com/mssql/server:2017-latest' && matrix.db != 'mcr.microsoft.com/mssql/server:2019-CU27-ubuntu-20.04' && matrix.db != 'mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04' && 'mcr.microsoft.com/mssql/server:2017-latest' || matrix.db }}
+                image: ${{ matrix.db != 'mcr.microsoft.com/mssql/server:2019-CU27-ubuntu-20.04' && matrix.db != 'mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04' && 'mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04' || matrix.db }}
                 env:
                     SA_PASSWORD: "Pssw0rd_12"
                     ACCEPT_EULA: "y"
@@ -415,6 +430,10 @@ jobs:
 
 
         steps:
+            - name: Update Ubuntu package lists
+              run: |
+                  sudo apt-get update -y  --allow-releaseinfo-change
+
             - name: Checkout repository
               uses: actions/checkout@v4
 
@@ -422,7 +441,7 @@ jobs:
               env:
                   MATRIX_DB: ${{ matrix.db }}
               run: |
-                  if [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2017-latest' ] || [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2019-CU27-ubuntu-20.04' ] || [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04' ]
+                  if [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2019-CU27-ubuntu-20.04' ] || [ $MATRIX_DB == 'mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04' ]
                   then
                       db='mssql'
                   else
@@ -478,15 +497,15 @@ jobs:
               env:
                   DB: ${{steps.database-type.outputs.db}}
               run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-$DB-github.xml --verbose --stop-on-error
+                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-$DB-github.xml --display-all-issues --stop-on-error
 
     # Test with IIS & PostgreSQL on Windows
     windows-tests:
-        runs-on: windows-latest
+        runs-on: windows-2025
         strategy:
             matrix:
                 type: ['unit', 'functional']
-                php: ['8.1', '8.2', '8.3']
+                php: ['8.4']
                 db: ['postgres']
 
         name: Windows - ${{ matrix.type }} - PHP ${{ matrix.php }} - ${{ matrix.db }}
@@ -503,7 +522,7 @@ jobs:
               uses: shivammathur/setup-php@v2
               with:
                   php-version: ${{ matrix.php }}
-                  extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, intl, gd, exif, iconv, pgsql, pdo_pgsql, sodium
+                  extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, intl, gd, exif, iconv, pgsql, pdo_pgsql, sodium, bz2, fileinfo
                   ini-values: upload_tmp_dir=${{ runner.temp }}, sys_temp_dir=${{ runner.temp }}
                   coverage: none
 
@@ -593,8 +612,8 @@ jobs:
             - name: Run unit tests
               if: ${{ matrix.type == 'unit' }}
               run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --verbose --stop-on-error --exclude-group functional,slow
+                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --display-all-issues --stop-on-error --exclude-group functional,slow
             - name: Run functional tests
               if: ${{ matrix.type == 'functional' }}
               run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --verbose --stop-on-error --group functional
+                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --display-all-issues --stop-on-error --group functional

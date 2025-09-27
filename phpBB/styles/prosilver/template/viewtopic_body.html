@@ -191,7 +191,7 @@
 								<!-- IF REMAINDER eq 0 -->
 									<div>
 								<!-- ENDIF -->
-									<a href="<!-- IF postrow.contact.U_CONTACT -->{postrow.contact.U_CONTACT}<!-- ELSE -->{postrow.U_POST_AUTHOR}<!-- ENDIF -->" title="{postrow.contact.NAME}"<!-- IF $S_LAST_CELL --> class="last-cell"<!-- ENDIF --><!-- IF postrow.contact.ID eq 'jabber' --> onclick="popup(this.href, 750, 320); return false;"<!-- ENDIF -->>
+									<a href="<!-- IF postrow.contact.U_CONTACT -->{postrow.contact.U_CONTACT}<!-- ELSE -->{postrow.U_POST_AUTHOR}<!-- ENDIF -->" title="{postrow.contact.NAME}"<!-- IF $S_LAST_CELL --> class="last-cell"<!-- ENDIF -->>
 										{% EVENT viewtopic_body_contact_icon_prepend %}
 										{% if postrow.contact.ID == 'pm' %}
 											{{ Icon('font', 'message', '', true, 'far contact-icon') }}
@@ -423,9 +423,6 @@
 		<!-- EVENT viewtopic_body_postrow_back2top_before -->
 		<div class="back2top">
 			<!-- EVENT viewtopic_body_postrow_back2top_prepend -->
-			<a href="#top" class="top" title="{L_BACK_TO_TOP}">
-				{{ Icon('font', 'circle-chevron-up', lang('BACK_TO_TOP'), false, 'fas c-top-icon') }}
-			</a>
 			<!-- EVENT viewtopic_body_postrow_back2top_append -->
 		</div>
 		<!-- EVENT viewtopic_body_postrow_back2top_after -->
@@ -494,6 +491,12 @@
 			<!-- ENDIF -->
 		</div>
 	<!-- ENDIF -->
+</div>
+
+<div class="to-top-button">
+	<a href="#top" title="{{ lang('BACK_TO_TOP') }}">
+		{{ Icon('font', 'chevron-up', '', false) }}
+	</a>
 </div>
 
 <!-- EVENT viewtopic_body_footer_before -->

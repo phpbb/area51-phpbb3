@@ -70,6 +70,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->request = $this->createMock(\phpbb\request\request_interface::class);
 		$this->template = $this->createMock(\Twig\Environment::class);
 		$this->user = new \phpbb\user($this->language, '\phpbb\datetime');
+
 		$user = $this->user;
 		$this->user_loader = new \phpbb\user_loader($this->avatar_helper, $this->db, $this->phpbb_root_path, $this->php_ext, 'phpbb_users');
 		$this->path_helper = new \phpbb\path_helper($symfony_request, $this->request, $phpbb_root_path, $phpEx);
@@ -91,7 +92,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		);
 	}
 
-	public function data_notification_exceptions(): array
+	public static function data_notification_exceptions(): array
 	{
 		return [
 			'not_ajax' => [
@@ -216,9 +217,6 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 			'user_id'		=> 2,
 			'user_options'	=> 230271,
 		];
-		$this->user->lang = [
-			'GUEST'		=> 'Guest',
-		];
 
 		$json_response = $this->controller->notification();
 
@@ -227,7 +225,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->assertEquals([
 			'heading' => 'yourdomain.com',
 			'title' => 'Quoted by Guest in:',
-			'text' => '"Welcome to phpBB3"',
+			'text' => '"Welcome to phpBB"',
 			'url' => 'phpBB/viewtopic.php?p=1#p1',
 			'avatar' => [],
 		], $response_data);
@@ -274,9 +272,6 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 			'user_id'		=> ANONYMOUS,
 			'user_options'	=> 230271,
 		];
-		$this->user->lang = [
-			'GUEST'		=> 'Guest',
-		];
 
 		$json_response = $this->controller->notification();
 
@@ -285,7 +280,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->assertEquals([
 			'heading' => 'yourdomain.com',
 			'title' => 'Quoted by Guest in:',
-			'text' => '"Welcome to phpBB3"',
+			'text' => '"Welcome to phpBB"',
 			'url' => 'phpBB/viewtopic.php?p=1#p1',
 			'avatar' => [],
 		], $response_data);
@@ -331,9 +326,6 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 			'user_type'		=> USER_NORMAL,
 			'user_id'		=> ANONYMOUS,
 			'user_options'	=> 230271,
-		];
-		$this->user->lang = [
-			'GUEST'		=> 'Guest',
 		];
 
 		$this->expectException(http_exception::class);
@@ -382,9 +374,6 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 			'user_id'		=> 2,
 			'user_options'	=> 230271,
 		];
-		$this->user->lang = [
-			'GUEST'		=> 'Guest',
-		];
 
 		$json_response = $this->controller->notification();
 
@@ -393,7 +382,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->assertEquals([
 			'heading' => 'yourdomain.com',
 			'title' => 'Quoted by Guest in:',
-			'text' => '"Welcome to phpBB3"',
+			'text' => '"Welcome to phpBB"',
 			'url' => 'phpBB/viewtopic.php?p=1#p1',
 			'avatar' => [],
 		], $response_data);
@@ -433,7 +422,6 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->expectExceptionMessage('FORM_INVALID');
 
 		$check_subscribe_reflection = new ReflectionMethod($this->controller, 'check_subscribe_requests');
-		$check_subscribe_reflection->setAccessible(true);
 		$check_subscribe_reflection->invoke($this->controller);
 	}
 
@@ -447,7 +435,6 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->expectExceptionMessage('NO_AUTH_OPERATION');
 
 		$check_subscribe_reflection = new ReflectionMethod($this->controller, 'check_subscribe_requests');
-		$check_subscribe_reflection->setAccessible(true);
 		$check_subscribe_reflection->invoke($this->controller);
 	}
 

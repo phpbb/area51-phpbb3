@@ -629,7 +629,7 @@ class fulltext_sphinx implements search_backend_interface
 	/**
 	 * {@inheritdoc}
 	 */
-	public function create_index(int &$post_counter = 0): ?array
+	public function create_index(int &$post_counter = 0): array|null
 	{
 		if (!$this->index_created())
 		{
@@ -656,7 +656,7 @@ class fulltext_sphinx implements search_backend_interface
 	/**
 	 * {@inheritdoc}
 	*/
-	public function delete_index(int &$post_counter = null): ?array
+	public function delete_index(int|null &$post_counter = null): array|null
 	{
 		if ($this->index_created())
 		{
@@ -952,7 +952,7 @@ class fulltext_sphinx implements search_backend_interface
 				array('read_timeout',				'5'),
 				array('max_children',				'30'),
 				array('pid_file',					$this->config['fulltext_sphinx_data_path'] . 'searchd.pid'),
-				array('binlog_path',				$this->config['fulltext_sphinx_data_path']),
+				array('binlog_path',				rtrim($this->config['fulltext_sphinx_data_path'], '/\\')), // Trim trailing slash
 			),
 		);
 

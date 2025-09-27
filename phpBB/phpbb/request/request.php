@@ -57,7 +57,7 @@ class request implements request_interface
 	* Initialises the request class, that means it stores all input data in {@link $input input}
 	* and then calls {@link \phpbb\request\deactivated_super_global \phpbb\request\deactivated_super_global}
 	*/
-	public function __construct(\phpbb\request\type_cast_helper_interface $type_cast_helper = null, $disable_super_globals = true)
+	public function __construct(\phpbb\request\type_cast_helper_interface|null $type_cast_helper = null, $disable_super_globals = true)
 	{
 		if ($type_cast_helper)
 		{
@@ -70,12 +70,12 @@ class request implements request_interface
 
 		foreach ($this->super_globals as $const => $super_global)
 		{
-			$this->input[$const] = isset($GLOBALS[$super_global]) ? $GLOBALS[$super_global] : array();
+			$this->input[$const] = isset($GLOBALS[$super_global]) ? (array) $GLOBALS[$super_global] : array();
 		}
 
 		// simulate request_order = GP
-		$this->original_request = $this->input[request_interface::REQUEST];
-		$this->input[request_interface::REQUEST] = $this->input[request_interface::POST] + $this->input[request_interface::GET];
+		$this->original_request = (array) $this->input[request_interface::REQUEST];
+		$this->input[request_interface::REQUEST] = (array) $this->input[request_interface::POST] + (array) $this->input[request_interface::GET];
 
 		if ($disable_super_globals)
 		{

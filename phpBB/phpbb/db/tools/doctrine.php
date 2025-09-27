@@ -50,6 +50,11 @@ class doctrine implements tools_interface
 	private $return_statements;
 
 	/**
+	 * @var string
+	 */
+	private $table_prefix;
+
+	/**
 	 * Database tools constructors.
 	 *
 	 * @param Connection $connection
@@ -59,6 +64,14 @@ class doctrine implements tools_interface
 	{
 		$this->return_statements = $return_statements;
 		$this->connection = $connection;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function get_connection(): Connection
+	{
+		return $this->connection;
 	}
 
 	/**
@@ -83,7 +96,15 @@ class doctrine implements tools_interface
 	 */
 	protected function get_schema(): Schema
 	{
-		return $this->get_schema_manager()->createSchema();
+		return $this->get_schema_manager()->introspectSchema();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function set_table_prefix($table_prefix): void
+	{
+		$this->table_prefix = $table_prefix;
 	}
 
 	/**
@@ -279,30 +300,6 @@ class doctrine implements tools_interface
 	 */
 	public function sql_column_remove(string $table_name, string $column_name)
 	{
-		// Check if this column is part of a primary key. If yes, remove the primary key.
-		$primary_key_indexes = $this->get_filtered_index_list($table_name, false);
-
-		$primary_key_indexes = array_filter($primary_key_indexes, function($index) use ($column_name) {
-			$index_columns = array_map('strtolower', $index->getUnquotedColumns());
-			return in_array($column_name, $index_columns, true) && $index->isPrimary();
-		});
-
-		if (count($primary_key_indexes))
-		{
-			$ret = $this->alter_schema(
-				function (Schema $schema) use ($table_name, $column_name): void
-				{
-					$table = $schema->getTable($table_name);
-					$table->dropPrimaryKey();
-				}
-			);
-
-			if ($ret !== true)
-			{
-				return $ret;
-			}
-		}
-
 		return $this->alter_schema(
 			function (Schema $schema) use ($table_name, $column_name): void
 			{
@@ -320,6 +317,19 @@ class doctrine implements tools_interface
 			function (Schema $schema) use ($table_name, $index_name, $column): void
 			{
 				$this->schema_create_index($schema, $table_name, $index_name, $column);
+			}
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function sql_rename_index(string $table_name, string $index_name_old, string $index_name_new)
+	{
+		return $this->alter_schema(
+			function (Schema $schema) use ($table_name, $index_name_old, $index_name_new): void
+			{
+				$this->schema_rename_index($schema, $table_name, $index_name_old, $index_name_new);
 			}
 		);
 	}
@@ -358,7 +368,7 @@ class doctrine implements tools_interface
 		return $this->alter_schema(
 			function (Schema $schema) use ($table_name, $column): void
 			{
-				$this->schema_create_primary_key($schema, $column, $table_name);
+				$this->schema_create_primary_key($schema, $table_name, $column);
 			}
 		);
 	}
@@ -370,12 +380,29 @@ class doctrine implements tools_interface
 	{
 		try
 		{
-			$this->connection->executeQuery($this->get_schema_manager()->getDatabasePlatform()->getTruncateTableSQL($table_name));
+			$this->connection->executeQuery($this->connection->getDatabasePlatform()->getTruncateTableSQL($table_name));
 		}
 		catch (Exception $e)
 		{
 			return;
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function add_prefix(string $name, string $prefix): string
+	{
+		return str_ends_with($prefix, '_') ? $prefix . $name : $prefix . '_' . $name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function remove_prefix(string $name, string $prefix = ''): string
+	{
+		$prefix = str_ends_with($prefix, '_') ? $prefix : $prefix . '_';
+		return $prefix && str_starts_with($name, $prefix) ? substr($name, strlen($prefix)) : $name;
 	}
 
 	/**
@@ -452,34 +479,25 @@ class doctrine implements tools_interface
 	 */
 	protected function alter_schema(callable $callback)
 	{
-		try
+		$current_schema = $this->get_schema();
+		$new_schema = clone $current_schema;
+		call_user_func($callback, $new_schema);
+
+		$comparator = new comparator();
+		$schemaDiff = $comparator->compareSchemas($current_schema, $new_schema);
+		$queries = $schemaDiff->toSql($this->connection->getDatabasePlatform());
+
+		if ($this->return_statements)
 		{
-			$current_schema = $this->get_schema();
-			$new_schema = clone $current_schema;
-			call_user_func($callback, $new_schema);
-
-			$comparator = new comparator();
-			$schemaDiff = $comparator->compareSchemas($current_schema, $new_schema);
-			$queries = $schemaDiff->toSql($this->get_schema_manager()->getDatabasePlatform());
-
-			if ($this->return_statements)
-			{
-				return $queries;
-			}
-
-			foreach ($queries as $query)
-			{
-				// executeQuery() must be used here because $query might return a result set, for instance REPAIR does
-				$this->connection->executeQuery($query);
-			}
-
-			return true;
+			return $queries;
 		}
-		catch (Exception $e)
+
+		foreach ($queries as $query)
 		{
-			// @todo: check if it makes sense to properly handle the exception
-			return false;
+			// executeQuery() must be used here because $query might return a result set, for instance REPAIR does
+			$this->connection->executeQuery($query);
 		}
+		return true;
 	}
 
 	/**
@@ -547,6 +565,11 @@ class doctrine implements tools_interface
 				'use_key' => true,
 				'per_table' => true,
 			],
+			'rename_index' => [
+				'method' => 'schema_rename_index',
+				'use_key' => true,
+				'per_table' => true,
+			],
 		];
 
 		foreach ($mapping as $action => $params)
@@ -604,7 +627,8 @@ class doctrine implements tools_interface
 		}
 
 		$table = $schema->createTable($table_name);
-		$dbms_name = $this->get_schema_manager()->getDatabasePlatform()->getName();
+		$short_table_name = table_helper::generate_shortname(self::remove_prefix($table_name, $this->table_prefix));
+		$dbms_name = $this->connection->getDatabasePlatform()->getName();
 
 		foreach ($table_data['COLUMNS'] as $column_name => $column_data)
 		{
@@ -629,6 +653,7 @@ class doctrine implements tools_interface
 			foreach ($table_data['KEYS'] as $key_name => $key_data)
 			{
 				$columns = (is_array($key_data[1])) ? $key_data[1] : [$key_data[1]];
+				$key_name = !str_starts_with($key_name, $short_table_name) ? self::add_prefix($key_name, $short_table_name) : $key_name;
 
 				// Supports key columns defined with there length
 				$columns = array_map(function (string $column)
@@ -661,6 +686,8 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Removes a table
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param bool   $safe_check
@@ -678,6 +705,8 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Adds column to a table
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param string $column_name
@@ -698,7 +727,7 @@ class doctrine implements tools_interface
 					return false;
 				}
 
-				$dbms_name = $this->get_schema_manager()->getDatabasePlatform()->getName();
+				$dbms_name = $this->connection->getDatabasePlatform()->getName();
 
 				list($type, $options) = table_helper::convert_column_data($column_data, $dbms_name);
 				$table->addColumn($column_name, $type, $options);
@@ -708,6 +737,8 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Alters column properties
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param string $column_name
@@ -728,7 +759,7 @@ class doctrine implements tools_interface
 					return;
 				}
 
-				$dbms_name = $this->get_schema_manager()->getDatabasePlatform()->getName();
+				$dbms_name = $this->connection->getDatabasePlatform()->getName();
 
 				list($type, $options) = table_helper::convert_column_data($column_data, $dbms_name);
 				$options['type'] = Type::getType($type);
@@ -738,6 +769,8 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Alters column properties or adds a column
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param string $column_name
@@ -760,6 +793,8 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Removes a column in a table
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param string $column_name
@@ -812,6 +847,8 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Creates non-unique index for a table
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param string $index_name
@@ -824,6 +861,8 @@ class doctrine implements tools_interface
 	{
 		$columns = (is_array($column)) ? $column : [$column];
 		$table = $schema->getTable($table_name);
+		$short_table_name = table_helper::generate_shortname(self::remove_prefix($table_name, $this->table_prefix));
+		$index_name = !str_starts_with($index_name, $short_table_name) ? self::add_prefix($index_name, $short_table_name) : $index_name;
 
 		if ($safe_check && $table->hasIndex($index_name))
 		{
@@ -834,6 +873,38 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Renames table index
+	 *
+	 * @param Schema $schema
+	 * @param string $table_name
+	 * @param string $index_name_old
+	 * @param string $index_name_new
+	 * @param bool   $safe_check
+	 *
+	 * @throws SchemaException
+	 */
+	protected function schema_rename_index(Schema $schema, string $table_name, string $index_name_old, string $index_name_new, bool $safe_check = false): void
+	{
+		$table = $schema->getTable($table_name);
+		$short_table_name = table_helper::generate_shortname(self::remove_prefix($table_name, $this->table_prefix));
+
+		if (!$table->hasIndex($index_name_old))
+		{
+			$index_name_old = !str_starts_with($index_name_old, $short_table_name) ? self::add_prefix($index_name_old, $short_table_name) : self::remove_prefix($index_name_old, $short_table_name);
+		}
+		$index_name_new = !str_starts_with($index_name_new, $short_table_name) ? self::add_prefix($index_name_new, $short_table_name) : $index_name_new;
+
+		if ($safe_check && !$table->hasIndex($index_name_old))
+		{
+			return;
+		}
+
+		$table->renameIndex($index_name_old, $index_name_new);
+	}
+
+	/**
+	 * Creates unique (non-primary) index for a table
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param string $index_name
@@ -846,6 +917,8 @@ class doctrine implements tools_interface
 	{
 		$columns = (is_array($column)) ? $column : [$column];
 		$table = $schema->getTable($table_name);
+		$short_table_name = table_helper::generate_shortname(self::remove_prefix($table_name, $this->table_prefix));
+		$index_name = !str_starts_with($index_name, $short_table_name) ? self::add_prefix($index_name, $short_table_name) : $index_name;
 
 		if ($safe_check && $table->hasIndex($index_name))
 		{
@@ -856,6 +929,8 @@ class doctrine implements tools_interface
 	}
 
 	/**
+	 * Removes table index
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
 	 * @param string $index_name
@@ -866,6 +941,12 @@ class doctrine implements tools_interface
 	protected function schema_index_drop(Schema $schema, string $table_name, string $index_name, bool $safe_check = false): void
 	{
 		$table = $schema->getTable($table_name);
+		$short_table_name = table_helper::generate_shortname(self::remove_prefix($table_name, $this->table_prefix));
+
+		if (!$table->hasIndex($index_name))
+		{
+			$index_name = !str_starts_with($index_name, $short_table_name) ? self::add_prefix($index_name, $short_table_name) : self::remove_prefix($index_name, $short_table_name);
+		}
 
 		if ($safe_check && !$table->hasIndex($index_name))
 		{
@@ -876,16 +957,18 @@ class doctrine implements tools_interface
 	}
 
 	/**
-	 * @param        $column
+	 * Creates primary key for a table
+	 *
 	 * @param Schema $schema
 	 * @param string $table_name
+	 * @param array|string $column_name
 	 * @param bool   $safe_check
 	 *
 	 * @throws SchemaException
 	 */
-	protected function schema_create_primary_key(Schema $schema, $column, string $table_name, bool $safe_check = false): void
+	protected function schema_create_primary_key(Schema $schema, string $table_name, array|string $column_name, bool $safe_check = false): void
 	{
-		$columns = (is_array($column)) ? $column : [$column];
+		$columns = (is_array($column_name)) ? $column_name : [$column_name];
 		$table = $schema->getTable($table_name);
 		$table->dropPrimaryKey();
 		$table->setPrimaryKey($columns);

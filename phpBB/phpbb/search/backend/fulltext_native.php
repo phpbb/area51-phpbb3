@@ -1004,6 +1004,8 @@ class fulltext_native extends base implements search_backend_interface
 			$this->db->sql_freeresult($result);
 		}
 
+		$id_ary = array_unique($id_ary);
+
 		// store the ids, from start on then delete anything that isn't on the current page because we only need ids for one page
 		$this->save_ids($search_key, $this->search_query, $author_ary, $total_results, $id_ary, $start, $sort_dir);
 		$id_ary = array_slice($id_ary, 0, (int) $per_page);
@@ -1225,6 +1227,8 @@ class fulltext_native extends base implements search_backend_interface
 		// Build the query for really selecting the post_ids
 		if ($type == 'posts')
 		{
+			// For sorting by non-unique columns, add unique sort key to avoid duplicated rows in results
+			$sql_sort .= ', p.post_id' . (($sort_dir == 'a') ? ' ASC' : ' DESC');
 			$sql = "SELECT $select
 				FROM " . $sql_sort_table . POSTS_TABLE . ' p' . (($firstpost_only) ? ', ' . TOPICS_TABLE . ' t' : '') . "
 				WHERE $sql_author
@@ -1288,6 +1292,8 @@ class fulltext_native extends base implements search_backend_interface
 			}
 			$this->db->sql_freeresult($result);
 		}
+
+		$id_ary = array_unique($id_ary);
 
 		if (count($id_ary))
 		{
@@ -1571,7 +1577,7 @@ class fulltext_native extends base implements search_backend_interface
 		// Remove common words
 		if ($this->config['num_posts'] >= 100 && $this->config['fulltext_native_common_thres'])
 		{
-			$common_threshold = ((double) $this->config['fulltext_native_common_thres']) / 100.0;
+			$common_threshold = ((float) $this->config['fulltext_native_common_thres']) / 100.0;
 			// First, get the IDs of common words
 			$sql = 'SELECT word_id, word_text
 				FROM ' . $this->search_wordlist_table . '
@@ -1621,7 +1627,7 @@ class fulltext_native extends base implements search_backend_interface
 	/**
 	 * {@inheritdoc}
 	 */
-	public function delete_index(int &$post_counter = null): ?array
+	public function delete_index(int|null &$post_counter = null): array|null
 	{
 		$truncate_tables = [
 			$this->search_wordlist_table,
@@ -2028,14 +2034,14 @@ class fulltext_native extends base implements search_backend_interface
 		</dl>
 		<dl>
 			<dt><label for="fulltext_native_common_thres">' . $this->language->lang('COMMON_WORD_THRESHOLD') . $this->language->lang('COLON') . '</label><br /><span>' . $this->language->lang('COMMON_WORD_THRESHOLD_EXPLAIN') . '</span></dt>
-			<dd><input id="fulltext_native_common_thres" type="text" name="config[fulltext_native_common_thres]" value="' . (double) $this->config['fulltext_native_common_thres'] . '" /> %</dd>
+			<dd><input id="fulltext_native_common_thres" type="text" name="config[fulltext_native_common_thres]" value="' . (float) $this->config['fulltext_native_common_thres'] . '" /> %</dd>
 		</dl>
 		';
 
 		// These are fields required in the config table
 		return array(
 			'tpl'		=> $tpl,
-			'config'	=> array('fulltext_native_load_upd' => 'bool', 'fulltext_native_min_chars' => 'integer:0:255', 'fulltext_native_max_chars' => 'integer:0:255', 'fulltext_native_common_thres' => 'double:0:100')
+			'config'	=> array('fulltext_native_load_upd' => 'bool', 'fulltext_native_min_chars' => 'integer:0:255', 'fulltext_native_max_chars' => 'integer:0:255', 'fulltext_native_common_thres' => 'float:0:100')
 		);
 	}
 }

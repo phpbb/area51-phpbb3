@@ -21,7 +21,7 @@ abstract class phpbb_tests_notification_base extends phpbb_database_test_case
 {
 	/** @var phpbb_notification_manager_helper */
 	protected $notifications;
-	protected $db, $container, $user, $config, $auth, $cache;
+	protected $db, $container, $user, $config, $auth, $cache, $user_loader, $phpbb_dispatcher;
 
 	protected function get_notification_types()
 	{
@@ -148,7 +148,6 @@ abstract class phpbb_tests_notification_base extends phpbb_database_test_case
 
 		$messenger_method_collection = new \phpbb\di\service_collection($phpbb_container);
 		$messenger_method_collection->add('messenger.method.email');
-		$messenger_method_collection->add('messenger.method.jabber');
 		$phpbb_container->set('messenger.method_collection', $messenger_method_collection);
 
 		$phpbb_container->compile();

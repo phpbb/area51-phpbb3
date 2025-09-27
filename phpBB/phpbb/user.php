@@ -27,7 +27,7 @@ class user extends \phpbb\session
 	protected $language;
 
 	var $style = array();
-	var $date_format;
+	var $date_format = '';
 
 	/**
 	* DateTimeZone object holding the timezone of the user
@@ -627,12 +627,12 @@ class user extends \phpbb\session
 	* Format user date
 	*
 	* @param int $gmepoch unix timestamp
-	* @param string|false $format date format in date() notation. | used to indicate relative dates, for example |d m Y|, h:i is translated to Today, h:i.
+	* @param string $format date format in date() notation. | used to indicate relative dates, for example |d m Y|, h:i is translated to Today, h:i.
 	* @param bool $forcedate force non-relative date format.
 	*
 	* @return mixed translated date
 	*/
-	function format_date($gmepoch, $format = false, $forcedate = false)
+	function format_date($gmepoch, $format = '', $forcedate = false)
 	{
 		global $phpbb_dispatcher;
 		static $utc;
@@ -709,7 +709,7 @@ class user extends \phpbb\session
 	* @param ?\DateTimeZone $timezone Time zone of the time.
 	* @return \phpbb\datetime Date time object linked to the current users locale
 	*/
-	public function create_datetime(string $time = 'now', ?\DateTimeZone $timezone = null)
+	public function create_datetime(string $time = 'now', \DateTimeZone|null $timezone = null)
 	{
 		$timezone = $timezone ?: $this->create_timezone();
 		return new $this->datetime($this, $time, $timezone);
@@ -723,7 +723,7 @@ class user extends \phpbb\session
 	* @param	?\DateTimeZone	$timezone	Timezone of the date/time, falls back to timezone of current user
 	* @return	string|false			Returns the unix timestamp or false if date is invalid
 	*/
-	public function get_timestamp_from_format($format, $time, ?\DateTimeZone $timezone = null)
+	public function get_timestamp_from_format($format, $time, \DateTimeZone|null $timezone = null)
 	{
 		$timezone = $timezone ?: $this->create_timezone();
 		$date = \DateTime::createFromFormat($format, $time, $timezone);

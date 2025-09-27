@@ -23,16 +23,10 @@ class phpbb_functional_feed_test extends phpbb_functional_test_case
 	protected function setUp(): void
 	{
 		parent::setUp();
-		$this->purge_cache();
-	}
 
-	public function __construct($name = null, array $data = array(), $dataName = '')
-	{
-		parent::__construct($name, $data, $dataName);
-
-		$this->backupStaticAttributesExcludeList += [
+		$this->setBackupStaticPropertiesExcludeList([
 			'phpbb_functional_feed_test' => ['init_values'],
-		];
+		]);
 
 		$this->purge_cache();
 	}
@@ -1456,8 +1450,6 @@ class phpbb_functional_feed_test extends phpbb_functional_test_case
 
 	protected function load_ids($data)
 	{
-		$this->db = $this->get_db();
-
 		if (!empty($data['forums']))
 		{
 			$sql = 'SELECT *

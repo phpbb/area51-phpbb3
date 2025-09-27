@@ -66,7 +66,7 @@ class environment extends \Twig\Environment
 	* @param dispatcher_interface|null	$phpbb_dispatcher	Event dispatcher object
 	* @param array $options Array of options to pass to Twig
 	*/
-	public function __construct(assets_bag $assets_bag, config $phpbb_config, filesystem $filesystem, path_helper $path_helper, $cache_path, manager $extension_manager = null, LoaderInterface $loader = null, dispatcher_interface $phpbb_dispatcher = null, $options = array())
+	public function __construct(assets_bag $assets_bag, config $phpbb_config, filesystem $filesystem, path_helper $path_helper, $cache_path, manager|null $extension_manager = null, LoaderInterface|null $loader = null, dispatcher_interface|null $phpbb_dispatcher = null, $options = array())
 	{
 		$this->phpbb_config = $phpbb_config;
 
@@ -159,6 +159,16 @@ class environment extends \Twig\Environment
 	public function get_assets_bag()
 	{
 		return $this->assets_bag;
+	}
+
+	/**
+	 * Gets the event dispatcher instance
+	 *
+	 * @return dispatcher_interface
+	 */
+	public function get_phpbb_dispatcher()
+	{
+		return $this->phpbb_dispatcher;
 	}
 
 	/**
@@ -271,7 +281,7 @@ class environment extends \Twig\Environment
 	* @return \Twig\Template A template instance representing the given template name
 	* @throws \Twig\Error\LoaderError
 	*/
-	public function loadTemplate(string $cls, string $name, int $index = null) : \Twig\Template
+	public function loadTemplate(string $cls, string $name, int|null $index = null) : \Twig\Template
 	{
 		if (strpos($name, '@') === false)
 		{

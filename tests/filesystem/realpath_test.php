@@ -24,7 +24,6 @@ class phpbb_filesystem_realpath_test extends phpbb_test_case
 
 		$reflection_class = new ReflectionClass('\phpbb\filesystem\filesystem');
 		self::$filesystem_own_realpath = $reflection_class->getMethod('phpbb_own_realpath');
-		self::$filesystem_own_realpath->setAccessible(true);
 	}
 
 	protected function setUp(): void
@@ -34,7 +33,7 @@ class phpbb_filesystem_realpath_test extends phpbb_test_case
 		$this->filesystem = new \phpbb\filesystem\filesystem();
 	}
 
-	public function realpath_resolve_absolute_without_symlinks_data()
+	public static function realpath_resolve_absolute_without_symlinks_data()
 	{
 		return array(
 			// Constant data
@@ -49,7 +48,7 @@ class phpbb_filesystem_realpath_test extends phpbb_test_case
 		);
 	}
 
-	public function realpath_resolve_relative_without_symlinks_data()
+	public static function realpath_resolve_relative_without_symlinks_data()
 	{
 		if (!function_exists('getcwd'))
 		{

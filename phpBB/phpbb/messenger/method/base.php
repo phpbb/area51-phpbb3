@@ -119,8 +119,8 @@ abstract class base implements messenger_interface
 		user $user,
 		string $phpbb_root_path,
 		string $template_cache_path,
-		?manager $ext_manager = null,
-		?log_interface $log = null
+		manager|null $ext_manager = null,
+		log_interface|null $log = null
 	)
 	{
 		$this->assets_bag = $assets_bag;
@@ -140,11 +140,6 @@ abstract class base implements messenger_interface
 
 		$this->set_use_queue();
 	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	abstract public function get_id(): int;
 
 	/**
 	 * {@inheritdoc}
@@ -216,9 +211,9 @@ abstract class base implements messenger_interface
 	 * @param string	$template_path			Email template path
 	 * @param string	$template_dir_prefix	Email template directory prefix
 	 *
-	 * @return bool
+	 * @return void
 	 */
-	public function template(string $template_file, string $template_lang = '', string $template_path = '', string $template_dir_prefix = ''): bool
+	public function template(string $template_file, string $template_lang = '', string $template_path = '', string $template_dir_prefix = ''): void
 	{
 		$template_dir_prefix = (!$template_dir_prefix || $template_dir_prefix[0] === '/') ? $template_dir_prefix : '/' . $template_dir_prefix;
 
@@ -290,8 +285,6 @@ abstract class base implements messenger_interface
 		$this->template->set_filenames([
 			'body'		=> $template_file . '.txt',
 		]);
-
-		return true;
 	}
 
 	/**
@@ -425,7 +418,7 @@ abstract class base implements messenger_interface
 	 */
 	public function save_queue(): void
 	{
-		if ($this->use_queue && !empty($this->queue))
+		if ($this->use_queue)
 		{
 			$this->queue->save();
 		}
@@ -476,7 +469,7 @@ abstract class base implements messenger_interface
 	 *
 	 * @return void
 	 */
-	protected function set_template_paths(string|array $path_name, string|array $paths): void
+	protected function set_template_paths(array|string $path_name, array|string $paths): void
 	{
 		$this->setup_template();
 		$this->template->set_custom_style($path_name, $paths);
@@ -487,6 +480,5 @@ abstract class base implements messenger_interface
 	 */
 	public function header(string $header_name, mixed $header_value): void
 	{
-		return;
 	}
 }

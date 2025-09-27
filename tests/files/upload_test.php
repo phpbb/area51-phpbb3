@@ -76,7 +76,6 @@ class phpbb_files_upload_test extends phpbb_test_case
 	{
 		$upload = new \phpbb\files\upload($this->factory, $this->language, $this->php_ini, $this->request);
 		$disallowed_content = new ReflectionProperty($upload, 'disallowed_content');
-		$disallowed_content->setAccessible(true);
 
 		$upload->set_disallowed_content(array('foo'));
 		$this->assertEquals(array('foo'), $disallowed_content->getValue($upload));
@@ -96,7 +95,7 @@ class phpbb_files_upload_test extends phpbb_test_case
 		$this->assertFalse($upload->is_valid('foobar'));
 	}
 
-	public function data_internal_error()
+	public static function data_internal_error()
 	{
 		return array(
 			array(UPLOAD_ERR_INI_SIZE, 'PHP_SIZE_OVERRUN'),

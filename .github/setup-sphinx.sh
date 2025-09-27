@@ -11,7 +11,6 @@
 set -e
 set -x
 
-sudo apt-get update
 sudo apt-get install -q -y sphinxsearch
 
 DIR=$(dirname "$0")
@@ -135,7 +134,7 @@ searchd
 	read_timeout = 5
 	max_children = 30
 	pid_file = $SPHINX_DATA_DIR/searchd.pid
-	binlog_path = $SPHINX_DATA_DIR/
+	binlog_path = $SPHINX_DATA_DIR
 }
 " > $SPHINX_CONF
 

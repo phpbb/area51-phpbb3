@@ -15,7 +15,7 @@ require_once __DIR__ . '/template_test_case.php';
 
 class phpbb_template_extension_test extends phpbb_template_template_test_case
 {
-	protected function setup_engine(array $new_config = [])
+	protected function setup_engine(array $new_config = [], string $template_path = '')
 	{
 		global $config, $phpbb_container, $phpbb_dispatcher, $phpbb_root_path, $phpEx;
 
@@ -38,7 +38,7 @@ class phpbb_template_extension_test extends phpbb_template_template_test_case
 		$user->data['user_id'] = 2;
 		$auth = $this->getMockBuilder('phpbb\auth\auth')
 			->disableOriginalConstructor()
-			->setMethods(['acl_get'])
+			->onlyMethods(['acl_get'])
 			->getMock();
 		$auth->method('acl_get')
 			->willReturn(true);
@@ -84,7 +84,6 @@ class phpbb_template_extension_test extends phpbb_template_template_test_case
 
 		$class = new ReflectionClass('\phpbb\avatar\manager');
 		$enabled_drivers = $class->getProperty('enabled_drivers');
-		$enabled_drivers->setAccessible(true);
 		$enabled_drivers->setValue($class, false);
 		$avatar_helper = new phpbb\avatar\helper(
 			$config,
@@ -142,7 +141,7 @@ class phpbb_template_extension_test extends phpbb_template_template_test_case
 		]);
 	}
 
-	public function data_template_extensions()
+	public static function data_template_extensions()
 	{
 		return [
 			[
@@ -333,7 +332,7 @@ class phpbb_template_extension_test extends phpbb_template_template_test_case
 		$this->run_template($file, $vars, $block_vars, $destroy_array, $expected, $lang_vars);
 	}
 
-	public function data_template_icon_extension()
+	public static function data_template_icon_extension()
 	{
 		return [
 			/** Font: default */

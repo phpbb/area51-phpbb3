@@ -72,7 +72,7 @@ class phpbb_functional_mcp_main_test extends phpbb_functional_test_case
 		return $post;
 	}
 
-	public function mcp_view_forum_actions_data()
+	public static function mcp_view_forum_actions_data()
 	{
 		// action, success message, require_confirmation
 		return [
@@ -181,7 +181,7 @@ class phpbb_functional_mcp_main_test extends phpbb_functional_test_case
 		$this->assertStringContainsString($this->lang('TOPICS_DELETED_SUCCESS'), $crawler->filter('#message p')->text());
 	}
 
-	public function mcp_view_topic_actions_data()
+	public static function mcp_view_topic_actions_data()
 	{
 		// action, success message, require_confirmation
 		return [
@@ -208,7 +208,7 @@ class phpbb_functional_mcp_main_test extends phpbb_functional_test_case
 		// Create replies. Flood control was disabled above
 		for ($i = 1; $i <= 15; $i++)
 		{
-			sleep(1);
+			usleep(100000);
 			$post_text = "This is reply number $i to the Test Topic 4 to test moderation actions from MCP/View topic page.";
 			$post[$i] = $this->create_post(2, $post[0]['topic_id'], 'Re: Test Topic 4', $post_text);
 			$crawler = self::request('GET', "viewtopic.php?p={$post[$i]['post_id']}&sid={$this->sid}#p{$post[$i]['post_id']}");

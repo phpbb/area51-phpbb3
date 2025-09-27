@@ -22,12 +22,12 @@ class phpbb_controller_helper_route_slash_test extends phpbb_controller_common_h
 
 	protected function get_uri()
 	{
-		return '/phpBB3/app.php';
+		return '/phpBB/app.php';
 	}
 
 	protected function get_base_uri()
 	{
-		return '/phpBB3/';
+		return '/phpBB/';
 	}
 
 	protected function get_script_name()
@@ -35,8 +35,8 @@ class phpbb_controller_helper_route_slash_test extends phpbb_controller_common_h
 		return 'app.php';
 	}
 
-	protected function path_to_app()
+	protected static function path_to_app()
 	{
-		return 'phpBB3/';
+		return 'phpBB/';
 	}
 }

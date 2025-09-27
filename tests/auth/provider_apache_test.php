@@ -74,8 +74,10 @@ class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 			->will($this->returnValue(true));
 		$this->request->expects($this->exactly(2))
 			->method('server')
-			->withConsecutive(['PHP_AUTH_USER'], ['PHP_AUTH_PW'])
-			->will($this->onConsecutiveCalls($this->returnValue('foobar'), $this->returnValue('example')));
+			->willReturnMap([
+				['PHP_AUTH_USER', 'foobar'],
+				['PHP_AUTH_PW', 'example']
+			]);
 
 		$expected = array(
 			'status'		=> LOGIN_SUCCESS,
@@ -102,8 +104,10 @@ class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 			->will($this->returnValue(true));
 		$this->request->expects($this->exactly(2))
 			->method('server')
-			->withConsecutive(['PHP_AUTH_USER'], ['PHP_AUTH_PW'])
-			->will($this->onConsecutiveCalls($this->returnValue('foobar'), $this->returnValue('example')));
+			->willReturnCallback(fn(string $arg) => match(true) {
+				$arg === 'PHP_AUTH_USER' => 'foobar',
+				$arg === 'PHP_AUTH_PW' => 'example',
+			});
 
 		$expected = array(
 			'user_id' => 1,
@@ -152,7 +156,6 @@ class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 			'user_post_sortby_dir' => 'a',
 			'user_notify' => 0,
 			'user_notify_pm' => 1,
-			'user_notify_type' => 0,
 			'user_allow_pm' => 1,
 			'user_allow_viewonline' => 1,
 			'user_allow_viewemail' => 1,
@@ -165,7 +168,6 @@ class phpbb_auth_provider_apache_test extends phpbb_database_test_case
 			'user_sig' => '',
 			'user_sig_bbcode_uid' => '',
 			'user_sig_bbcode_bitfield' => '',
-			'user_jabber' => '',
 			'user_actkey' => '',
 			'user_actkey_expiration' => 0,
 			'user_newpasswd' => '',

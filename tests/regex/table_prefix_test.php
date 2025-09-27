@@ -13,11 +13,11 @@
 
 class phpbb_regex_table_prefix_test extends phpbb_test_case
 {
-	public function table_prefix_test_data()
+	public static function table_prefix_test_data()
 	{
 		return array(
 			array('phpbb_', 1),
-			array('phpBB3', 1),
+			array('phpBB', 1),
 			array('a', 1),
 
 			array('', 0),

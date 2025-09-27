@@ -34,25 +34,6 @@ abstract class phpbb_database_test_case extends TestCase
 	 */
 	private $db_connections_doctrine;
 
-	public function __construct($name = NULL, array $data = [], $dataName = '')
-	{
-		parent::__construct($name, $data, $dataName);
-
-		$this->backupStaticAttributesExcludeList += [
-			'SebastianBergmann\CodeCoverage\CodeCoverage' => ['instance'],
-			'SebastianBergmann\CodeCoverage\Filter' => ['instance'],
-			'SebastianBergmann\CodeCoverage\Util' => ['ignoredLines', 'templateMethods'],
-			'SebastianBergmann\Timer\Timer' => ['startTimes'],
-			'PHP_Token_Stream' => ['customTokens'],
-			'PHP_Token_Stream_CachingFactory' => ['cache'],
-
-			'phpbb_database_test_case' => ['already_connected'],
-		];
-
-		$this->db_connections = [];
-		$this->db_connections_doctrine = [];
-	}
-
 	/**
 	* @return array List of extensions that should be set up
 	*/
@@ -88,6 +69,7 @@ abstract class phpbb_database_test_case extends TestCase
 			$doctrine = \phpbb\db\doctrine\connection_factory::get_connection(new phpbb_mock_config_php_file());
 			$factory = new \phpbb\db\tools\factory();
 			$db_tools = $factory->get($doctrine, true);
+			$db_tools->set_table_prefix($table_prefix);
 
 			$schema_generator = new \phpbb\db\migration\schema_generator($classes, new \phpbb\config\config(array()), $db, $db_tools, $phpbb_root_path, $phpEx, $table_prefix, self::get_core_tables());
 			file_put_contents(self::$schema_file, json_encode($schema_generator->get_schema()));
@@ -133,6 +115,20 @@ abstract class phpbb_database_test_case extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
+
+		$this->setBackupStaticPropertiesExcludeList([
+			'SebastianBergmann\CodeCoverage\CodeCoverage' => ['instance'],
+			'SebastianBergmann\CodeCoverage\Filter' => ['instance'],
+			'SebastianBergmann\CodeCoverage\Util' => ['ignoredLines', 'templateMethods'],
+			'SebastianBergmann\Timer\Timer' => ['startTimes'],
+			'PHP_Token_Stream' => ['customTokens'],
+			'PHP_Token_Stream_CachingFactory' => ['cache'],
+
+			'phpbb_database_test_case' => ['already_connected'],
+		]);
+
+		$this->db_connections = [];
+		$this->db_connections_doctrine = [];
 
 		// Resynchronise tables if a fixture was loaded
 		if (isset($this->fixture_xml_data))

@@ -26,7 +26,7 @@
 
 <!--
 	phpBB style name: prosilver
-	Based on style:   prosilver (this is the default phpBB3 style)
+	Based on style:   prosilver (this is the default phpBB style)
 	Original author:  Tom Beddard ( http://www.subBlue.com/ )
 	Modified by:
 -->
@@ -71,7 +71,7 @@
 <!-- EVENT overall_header_stylesheets_after -->
 
 {% if NOTIFICATIONS_WEBPUSH_ENABLE %}
-	{% include('ucp_notifications_webpush.html') %}
+	{% include 'ucp_notifications_webpush.html' %}
 {% endif %}
 
 </head>
@@ -118,7 +118,11 @@
 	<a id="top" class="anchor" accesskey="t"></a>
 	<div id="page-header">
 <!--
+		<!-- EVENT overall_header_navbar_before -->
+
 		<div class="headerbar" role="banner">
+
+			{% include 'navbar_header.html' %}
 		<!-- EVENT overall_header_headerbar_before -->
 			<div class="inner">
 
@@ -157,10 +161,9 @@
 			<!-- EVENT overall_header_headerbar_after -->
 		</div>
 -->
-
-		<!-- EVENT overall_header_navbar_before -->
-		<!-- INCLUDE navbar_header.html -->
 	</div>
+
+	{% include 'breadcrumbs.html' %}
 
 	<!-- EVENT overall_header_page_body_before -->
 

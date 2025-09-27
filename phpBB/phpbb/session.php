@@ -125,10 +125,10 @@ class session
 			$page .= '?' . $query_string;
 		}
 
-		// The script path from the webroot to the current directory (for example: /phpBB3/adm/) : always prefixed with / and ends in /
+		// The script path from the webroot to the current directory (for example: /phpBB/adm/) : always prefixed with / and ends in /
 		$script_path = $symfony_request->getBasePath();
 
-		// The script path from the webroot to the phpBB root (for example: /phpBB3/)
+		// The script path from the webroot to the phpBB root (for example: /phpBB/)
 		$script_dirs = explode('/', $script_path);
 		array_splice($script_dirs, -count($page_dirs));
 		$root_script_path = implode('/', $script_dirs) . (count($root_dirs) ? '/' . implode('/', $root_dirs) : '');
@@ -1715,7 +1715,7 @@ class session
 	{
 		global $db;
 
-		if (isset($this->data['session_time'], $this->data['user_id']))
+		if (isset($this->data['session_time'], $this->data['user_id']) && !$this->is_push_notification_request())
 		{
 			$sql = 'UPDATE ' . USERS_TABLE . '
 				SET user_lastvisit = ' . (int) $this->data['session_time'] . ',
@@ -1734,12 +1734,24 @@ class session
 	{
 		global $db;
 
-		if (isset($this->time_now, $this->data['user_id']))
+		if (isset($this->time_now, $this->data['user_id']) && !$this->is_push_notification_request())
 		{
 			$sql = 'UPDATE ' . USERS_TABLE . '
 				SET user_last_active = ' . $this->time_now . '
 				WHERE user_id = ' . (int) $this->data['user_id'];
 			$db->sql_query($sql);
 		}
+	}
+
+	/**
+	 * Determine if the request is an Ajax request from the web push service worker
+	 *
+	 * @return bool True if the request is an Ajax request and the page URL contains '/push/notification', otherwise false
+	 */
+	protected function is_push_notification_request(): bool
+	{
+		global $request;
+
+		return $request->is_ajax() && str_contains($this->page['page'], '/push/notification');
 	}
 }

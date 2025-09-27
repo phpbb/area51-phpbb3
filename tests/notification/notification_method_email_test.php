@@ -107,7 +107,6 @@ class notification_method_email_test extends phpbb_tests_notification_base
 
 		$messenger_method_collection = new \phpbb\di\service_collection($phpbb_container);
 		$messenger_method_collection->add('messenger.method.email');
-		$messenger_method_collection->add('messenger.method.jabber');
 		$phpbb_container->set('messenger.method_collection', $messenger_method_collection);
 
 		$this->notification_method_email = $this->getMockBuilder('\phpbb\notification\method\email')
@@ -121,13 +120,12 @@ class notification_method_email_test extends phpbb_tests_notification_base
 				$phpbb_container->getParameter('tables.notification_emails'),
 				$phpbb_container->get('messenger.method_collection')
 			])
-			->setMethods(['notify_using_messenger'])
+			->onlyMethods(['notify_using_messenger'])
 			->getMock();
 		$notification_method_email = $this->notification_method_email;
 
 		$class = new ReflectionClass($notification_method_email);
 		$empty_queue_method = $class->getMethod('empty_queue');
-		$empty_queue_method->setAccessible(true);
 
 		$this->notification_method_email->method('notify_using_messenger')
 			->will($this->returnCallback(function () use ($notification_method_email, $empty_queue_method) {
@@ -179,7 +177,7 @@ class notification_method_email_test extends phpbb_tests_notification_base
 		$this->notifications->set_var('notification_methods', $methods);
 	}
 
-	public function data_notification_email()
+	public static function data_notification_email()
 	{
 		return [
 			/**

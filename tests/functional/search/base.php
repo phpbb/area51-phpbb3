@@ -137,8 +137,6 @@ abstract class phpbb_functional_search_base extends phpbb_functional_test_case
 		$this->login();
 		$this->admin_login();
 
-		$this->create_search_index('phpbb\\search\\backend\\fulltext_native');
-
 		$post = $this->create_topic(2, 'Test Topic 1 foosubject', 'This is a test topic posted by the barsearch testing framework.');
 		$topic_multiple_results_count1 = $this->create_topic(2, 'Test Topic for multiple search results', 'This is a test topic posted to test multiple results count.');
 		$this->create_post(2, $topic_multiple_results_count1['topic_id'], 'Re: Test Topic for multiple search results', 'This is a test post 2 posted to test multiple results count.');
@@ -193,13 +191,13 @@ abstract class phpbb_functional_search_base extends phpbb_functional_test_case
 
 		foreach (['', 'a', 't', 'f', 'i', 's'] as $sort_key)
 		{
-			$this->assert_search_found('phpbb3+installation', 1, 4, $sort_key);
+			$this->assert_search_found('phpbb+installation', 1, 4, $sort_key);
 			$this->assert_search_found('foosubject+barsearch', 1, 2, $sort_key);
 			$this->assert_search_found('barsearch-testing', 1, 2, $sort_key); // test hyphen ignored
 			$this->assert_search_found('barsearch+-+testing', 1, 2, $sort_key); // test hyphen wrapped with space ignored
 			$this->assert_search_found('multiple+results+count', 3, 15, $sort_key); // test multiple results count - posts
 			$this->assert_search_found_topics('multiple+results+count', 2, $sort_key); // test multiple results count - topics
-			$this->assert_search_found_topics('phpbb3+installation', 1, $sort_key);
+			$this->assert_search_found_topics('phpbb+installation', 1, $sort_key);
 			$this->assert_search_found_topics('foosubject+barsearch', 1, $sort_key);
 
 			$this->assert_search_in_forum(2, 'multiple+search+results', 3, $sort_key); // test multiple results count - forum search - posts
@@ -227,6 +225,159 @@ abstract class phpbb_functional_search_base extends phpbb_functional_test_case
 		$this->delete_topic($topic_by_author['topic_id']);
 		$this->delete_topic($topic_multiple_results_count1['topic_id']);
 		$this->delete_topic($topic_multiple_results_count2['topic_id']);
+	}
+
+	public function test_caching_search_results()
+	{
+		global $phpbb_root_path;
+
+		// Sphinx search doesn't use phpBB search results caching
+		if (strpos($this->search_backend, 'fulltext_sphinx'))
+		{
+			$this->markTestSkipped("Sphinx search doesn't use phpBB search results caching");
+		}
+
+		$this->purge_cache();
+		$this->login();
+		$this->admin_login();
+
+		$crawler = self::request('GET', 'search.php?author_id=2&sr=posts');
+		$posts_found_text = $crawler->filter('.searchresults-title')->text();
+
+		// Get total user's post count
+		preg_match('!(\d+)!', $posts_found_text, $matches);
+		$posts_count = (int) $matches[1];
+
+		$this->assertStringContainsString("Search found $posts_count matches", $posts_found_text, $this->search_backend);
+
+		// Set this value to cache less results than total count
+		$sql = 'UPDATE ' . CONFIG_TABLE . '
+			SET config_value = ' . floor($posts_count / 3) . "
+			WHERE config_name = '" . $this->db->sql_escape('search_block_size') . "'";
+		$this->db->sql_query($sql);
+
+		// Temporarily set posts_per_page to the value allowing to get several pages (4+)
+		$crawler = self::request('GET', 'adm/index.php?sid=' . $this->sid . '&i=acp_board&mode=post');
+		$form = $crawler->selectButton('Submit')->form();
+		$values = $form->getValues();
+		$current_posts_per_page = $values['config[posts_per_page]'];
+		$values['config[posts_per_page]'] = floor($posts_count / 10);
+		$form->setValues($values);
+		$crawler = self::submit($form);
+		$this->assertEquals(1, $crawler->filter('.successbox')->count(), $this->search_backend);
+
+		// Now actually test caching search results
+		$this->purge_cache();
+
+		// Default sort direction is 'd' (descending), browse  the 1st page
+		$crawler = self::request('GET', 'search.php?author_id=2&sr=posts');
+		$pagination = $crawler->filter('.pagination')->eq(0);
+		$posts_found_text = $pagination->text();
+
+		$this->assertStringContainsString("Search found $posts_count matches", $posts_found_text, $this->search_backend);
+
+		// Filter all search result page links on the 1st page
+		$pagination = $pagination->filter('li > a')->reduce(
+			function ($node, $i)
+			{
+				return ($node->attr('class') == 'button');
+			}
+		);
+
+		// Get last page number
+		$last_page = (int) $pagination->last()->text();
+
+		// Browse the last search page
+		$crawler = self::$client->click($pagination->selectLink($last_page)->link());
+		$pagination = $crawler->filter('.pagination')->eq(0);
+
+		// Filter all search result page links on the last page
+		$pagination = $pagination->filter('li > a')->reduce(
+			function ($node, $i)
+			{
+				return ($node->attr('class') == 'button');
+			}
+		);
+
+		// Now change sort direction to ascending
+		$form = $crawler->selectButton('sort')->form();
+		$values = $form->getValues();
+		$values['sd'] = 'a';
+		$form->setValues($values);
+		$crawler = self::submit($form);
+
+		$pagination = $crawler->filter('.pagination')->eq(0);
+
+		// Filter all search result page links on the 1st page with new sort direction
+		$pagination = $pagination->filter('li > a')->reduce(
+			function ($node, $i)
+			{
+				return ($node->attr('class') == 'button');
+			}
+		);
+
+		// Browse the rest of search results pages with new sort direction
+		$pages = range(2, $last_page);
+		foreach ($pages as $page_number)
+		{
+			$crawler = self::$client->click($pagination->selectLink($page_number)->link());
+			$pagination = $crawler->filter('.pagination')->eq(0);
+			$pagination = $pagination->filter('li > a')->reduce(
+				function ($node, $i)
+				{
+					return ($node->attr('class') == 'button');
+				}
+			);
+		}
+
+		// Get search results cache varname
+		$finder = new \Symfony\Component\Finder\Finder();
+		$finder
+			->name('data_search_results_*.php')
+			->files()
+			->in($phpbb_root_path . 'cache/' . PHPBB_ENVIRONMENT);
+		$iterator = $finder->getIterator();
+		$iterator->rewind();
+		$cache_filename = $iterator->current();
+		$cache_varname = substr($cache_filename->getBasename('.php'), 4);
+
+		// Get cached post ids data
+		$cache = $this->get_cache_driver();
+		$post_ids_cached = $cache->get($cache_varname);
+
+		$cached_results_count = count($post_ids_cached) - 2; // Don't count '-1' and '-2' indexes
+
+		$post_ids_cached_backup = $post_ids_cached;
+
+		// Cached data still should have initial 'd' sort direction
+		$this->assertTrue($post_ids_cached[-2] === 'd', $this->search_backend);
+
+		// Cached search results count should be equal to displayed on search results page
+		$this->assertEquals($posts_count, $post_ids_cached[-1], $this->search_backend);
+
+		// Actual cached data array count should be equal to displayed on search results page too
+		$this->assertEquals($posts_count, $cached_results_count, $this->search_backend);
+
+		// Cached data array shouldn't change after removing duplicates. That is, it shouldn't have any duplicates.
+		unset($post_ids_cached[-2], $post_ids_cached[-1]);
+		unset($post_ids_cached_backup[-2], $post_ids_cached_backup[-1]);
+		$post_ids_cached = array_unique($post_ids_cached);
+		$this->assertEquals($post_ids_cached_backup, $post_ids_cached, $this->search_backend);
+
+		// Restore this value to default
+		$sql = 'UPDATE ' . CONFIG_TABLE . "
+			SET config_value = 250
+			WHERE config_name = '" . $this->db->sql_escape('search_block_size') . "'";
+		$this->db->sql_query($sql);
+
+		// Restore posts_per_page value
+		$crawler = self::request('GET', 'adm/index.php?sid=' . $this->sid . '&i=acp_board&mode=post');
+		$form = $crawler->selectButton('Submit')->form();
+		$values = $form->getValues();
+		$values['config[posts_per_page]'] = $current_posts_per_page;
+		$form->setValues($values);
+		$crawler = self::submit($form);
+		$this->assertEquals(1, $crawler->filter('.successbox')->count(), $this->search_backend);
 	}
 
 	protected function create_search_index($backend = null)
@@ -263,7 +414,12 @@ abstract class phpbb_functional_search_base extends phpbb_functional_test_case
 
 		// Ensure search index has been actually created
 		$crawler = self::request('GET', 'adm/index.php?i=acp_search&mode=index&sid=' . $this->sid);
-		$posts_indexed = (int) $crawler->filter('#acp_search_index_' . str_replace('\\', '-', $search_type) . ' td')->eq(1)->text();
+		$posts_indexed = (int) $crawler->filter('#acp_search_index_' . str_replace('\\', '-', $search_type) . ' td')->reduce(
+			function ($node, $i) {
+				// Find the value of total posts indexed
+				return (strpos($node->text(), $this->lang('FULLTEXT_MYSQL_TOTAL_POSTS')) !== false  || strpos($node->text(), $this->lang('TOTAL_WORDS')) !== false);
+			})
+		->nextAll()->eq(0)->text();
 		$this->assertTrue($posts_indexed > 0);
 	}
 
@@ -300,7 +456,12 @@ abstract class phpbb_functional_search_base extends phpbb_functional_test_case
 
 		// Ensure search index has been actually removed
 		$crawler = self::request('GET', 'adm/index.php?i=acp_search&mode=index&sid=' . $this->sid);
-		$posts_indexed = (int) $crawler->filter('#acp_search_index_' . str_replace('\\', '-', $this->search_backend) . ' td')->eq(1)->text();
+		$posts_indexed = (int) $crawler->filter('#acp_search_index_' . str_replace('\\', '-', $this->search_backend) . ' td')->reduce(
+			function ($node, $i) {
+				// Find the value of total posts indexed
+				return (strpos($node->text(), $this->lang('FULLTEXT_MYSQL_TOTAL_POSTS')) !== false  || strpos($node->text(), $this->lang('TOTAL_WORDS')) !== false);
+			})
+		->nextAll()->eq(0)->text();
 		$this->assertEquals(0, $posts_indexed);
 	}
 }

@@ -11,13 +11,15 @@
 *
 */
 
+namespace phpbb\Sniffs\Namespaces;
+
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
 
 /**
 * Checks that each use statement is used.
 */
-class phpbb_Sniffs_Namespaces_UnusedUseSniff implements Sniff
+class UnusedUseSniff implements Sniff
 {
 	const FIND = [
 		T_NS_SEPARATOR,
@@ -49,9 +51,20 @@ class phpbb_Sniffs_Namespaces_UnusedUseSniff implements Sniff
 			$phpcsFile->addError($error, $stack_pointer, 'FullName');
 		}
 
-		if ($found_name === $short_name)
+		/* 
+		 * Check for possible union types (like string|MyType|null)
+		 * and question mark nullable type syntax (like ?MyType)
+		 */
+		$types = explode('|', $found_name);
+		foreach ($types as $type)
 		{
-			return true;
+			// Nullable type syntax
+			$type = (strpos($type, '?') === 0) ? substr($type, 1) : $type;
+
+			if ($short_name === $type)
+			{
+				return true;
+			}
 		}
 
 		return false;

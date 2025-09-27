@@ -55,7 +55,7 @@ class ban_manager_test extends \phpbb_session_test_case
 		$this->phpbb_container = $phpbb_container;
 	}
 
-	public function data_check_ban(): array
+	public static function data_check_ban(): array
 	{
 		return [
 			[
@@ -170,7 +170,7 @@ class ban_manager_test extends \phpbb_session_test_case
 		$this->assertEquals($expected, $this->ban_manager->check($user_data));
 	}
 
-	public function data_get_bans(): array
+	public static function data_get_bans(): array
 	{
 		return [
 			[
@@ -298,7 +298,7 @@ class ban_manager_test extends \phpbb_session_test_case
 		$this->assertEquals($expected, $actual);
 	}
 
-	public function data_get_ban_end(): array
+	public static function data_get_ban_end(): array
 	{
 		return [
 			[
@@ -411,7 +411,6 @@ class ban_manager_test extends \phpbb_session_test_case
 
 		$ban_type_ip_reflection = new \ReflectionClass($ban_type_ip);
 		$get_excluded_reflection = $ban_type_ip_reflection->getMethod('get_excluded');
-		$get_excluded_reflection->setAccessible(true);
 		$this->assertFalse($get_excluded_reflection->invoke($ban_type_ip));
 	}
 
@@ -457,7 +456,7 @@ class ban_manager_test extends \phpbb_session_test_case
 		));
 	}
 
-	public function data_test_ban(): array
+	public static function data_test_ban(): array
 	{
 		return [
 			[
@@ -629,7 +628,7 @@ class ban_manager_test extends \phpbb_session_test_case
 		);
 	}
 
-	public function data_test_unban(): array
+	public static function data_test_unban(): array
 	{
 		return [
 			[
@@ -700,7 +699,7 @@ class ban_manager_test extends \phpbb_session_test_case
 		$this->assertFalse($check->invoke($ban_type_ip, [], []));
 	}
 
-	public function data_get_ban_message(): array
+	public static function data_get_ban_message(): array
 	{
 		return [
 			[
