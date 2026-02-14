@@ -182,7 +182,9 @@ class session
 			return (strpos($config['cookie_domain'], '.') === 0) ? substr($config['cookie_domain'], 1) : $config['cookie_domain'];
 		}
 
-		// Use provided host if neither cookie_domain nor server_name are set in config
+		// Try using provided host if neither cookie_domain nor server_name are set in config
+		$host = @parse_url('https://' . $host);
+		$host = (!empty($host['host'])) ? $host['host'] : '';
 		if (!empty($host))
 		{
 			return $host;
