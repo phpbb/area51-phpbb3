@@ -316,7 +316,12 @@ class webpush
 	{
 		$this->check_subscribe_requests();
 
-		$data = json_sanitizer::decode($symfony_request->get('data', ''));
+		$data = json_sanitizer::decode($symfony_request->attributes->get('data', ''));
+
+		if (!$this->verify_endpoint($data['endpoint']))
+		{
+			throw new http_exception(Response::HTTP_BAD_REQUEST, 'NOTIFY_WEB_PUSH_UNSUPPORTED_SERVICE');
+		}
 
 		$sql = 'INSERT INTO ' . $this->push_subscriptions_table . ' ' . $this->db->sql_build_array('INSERT', [
 			'user_id'			=> $this->user->id(),
@@ -331,6 +336,52 @@ class webpush
 			'success'		=> true,
 			'form_tokens'	=> $this->form_helper->get_form_tokens(self::FORM_TOKEN_UCP),
 		]);
+	}
+
+	/**
+	 * Verify that the endpoint is valid and belongs to a known push service
+	 *
+	 * @param string $endpoint Endpoint URL to verify
+	 * @return bool True if endpoint is valid URL and belongs to a known push service, false otherwise
+	 */
+	protected function verify_endpoint(string $endpoint): bool
+	{
+		$parts = parse_url($endpoint);
+
+		// Basic URL structural check
+		if (!$parts || !isset($parts['scheme'], $parts['host']))
+		{
+			return false;
+		}
+
+		// MUST be HTTPS: https://datatracker.ietf.org/doc/html/rfc8030#section-8
+		if (strtolower($parts['scheme']) !== 'https')
+		{
+			return false;
+		}
+
+		// Only allow endpoints for known push services (e.g. Mozilla, Google)
+		// See https://github.com/pushpad/known-push-services for list of known services
+		$allowed_services = [
+			'android.googleapis.com',
+			'fcm.googleapis.com',
+			'updates.push.services.mozilla.com',
+			'updates-autopush.stage.mozaws.net',
+			'updates-autopush.dev.mozaws.net',
+			'*.notify.windows.com',
+			'*.push.apple.com',
+		];
+
+		foreach ($allowed_services as $allowed_host)
+		{
+			// Use str_ends_with to support subdomains like 'web.push.apple.com'
+			if (str_ends_with(strtolower($parts['host']), $allowed_host))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
