@@ -368,8 +368,8 @@ class webpush
 			'updates.push.services.mozilla.com',
 			'updates-autopush.stage.mozaws.net',
 			'updates-autopush.dev.mozaws.net',
-			'*.notify.windows.com',
-			'*.push.apple.com',
+			'.notify.windows.com',
+			'.push.apple.com',
 		];
 
 		foreach ($allowed_services as $allowed_host)

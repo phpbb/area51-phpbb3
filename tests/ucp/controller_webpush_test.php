@@ -506,6 +506,38 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 		$this->controller->subscribe($symfony_request);
 	}
+	public function data_provider_subscribe_supported_endpoint()
+	{
+		return [
+			'fcm' => ['https://fcm.googleapis.com/fcm/send/test_endpoint'],
+			'apns' => ['https://api.push.apple.com/3/device/test_endpoint'],
+			'apns_sandbox' => ['https://api.sandbox.push.apple.com/3/device/test_endpoint'],
+		];
+	}
+
+	/**
+	 * @dataProvider data_provider_subscribe_supported_endpoint
+	 */
+	public function test_subscribe_supported_endpoint($data_provider)
+	{
+		$this->form_helper->method('check_form_tokens')->willReturn(true);
+		$this->request->method('is_ajax')->willReturn(true);
+		$this->user->data['user_id'] = 2;
+		$this->user->data['is_bot'] = false;
+		$this->user->data['user_type'] = USER_NORMAL;
+
+		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => $data_provider,
+			'expiration_time' => 0,
+			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
+		]));
+
+		$response = $this->controller->subscribe($symfony_request);
+
+		$this->assertInstanceOf(JsonResponse::class, $response);
+	}
 
 	public function test_unsubscribe_success()
 	{
