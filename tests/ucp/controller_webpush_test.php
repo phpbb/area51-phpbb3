@@ -455,8 +455,9 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->user->data['user_type'] = USER_NORMAL;
 
 		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
-		$symfony_request->method('get')->willReturn(json_encode([
-			'endpoint' => 'test_endpoint',
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'expiration_time' => 0,
 			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
 		]));
@@ -476,12 +477,34 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 		$this->assertEquals([
 			'user_id' => '2',
-			'endpoint' => 'test_endpoint',
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'p256dh' => 'test_p256dh',
 			'auth' => 'test_auth',
 			'expiration_time' => 0,
 			'subscription_id' => '1',
 		], $row);
+	}
+
+	public function test_subscribe_unsupported_endpoint()
+	{
+		$this->form_helper->method('check_form_tokens')->willReturn(true);
+		$this->request->method('is_ajax')->willReturn(true);
+		$this->user->data['user_id'] = 2;
+		$this->user->data['is_bot'] = false;
+		$this->user->data['user_type'] = USER_NORMAL;
+
+		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => 'test_endpoint',
+			'expiration_time' => 0,
+			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
+		]));
+
+		$this->expectException(http_exception::class);
+		$this->expectExceptionMessage('NOTIFY_WEB_PUSH_UNSUPPORTED_SERVICE');
+
+		$this->controller->subscribe($symfony_request);
 	}
 
 	public function test_unsubscribe_success()
@@ -493,8 +516,9 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->user->data['user_type'] = USER_NORMAL;
 
 		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
-		$symfony_request->method('get')->willReturn(json_encode([
-			'endpoint' => 'test_endpoint',
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'expiration_time' => 0,
 			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
 		]));
@@ -514,7 +538,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 		$this->assertEquals([
 			'user_id' => '2',
-			'endpoint' => 'test_endpoint',
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'p256dh' => 'test_p256dh',
 			'auth' => 'test_auth',
 			'expiration_time' => 0,

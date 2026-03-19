@@ -394,7 +394,7 @@ class webpush
 	{
 		$this->check_subscribe_requests();
 
-		$data = json_sanitizer::decode($symfony_request->get('data', ''));
+		$data = json_sanitizer::decode($symfony_request->attributes->get('data', ''));
 
 		$endpoint = $data['endpoint'];
 
