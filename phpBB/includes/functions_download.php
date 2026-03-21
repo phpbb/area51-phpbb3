@@ -201,6 +201,9 @@ function send_file_to_browser($attachment, $upload_dir, $category)
 	// Send out the Headers. Do not set Content-Disposition to inline please, it is a security measure for users using the Internet Explorer.
 	header('Content-Type: ' . $attachment['mimetype']);
 
+	// Send restrictive CSP for file served to browser
+	header("Content-Security-Policy: default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; script-src 'none'; object-src 'none'; frame-src 'none';");
+
 	if (phpbb_is_greater_ie_version($user->browser, 7))
 	{
 		header('X-Content-Type-Options: nosniff');
@@ -216,7 +219,16 @@ function send_file_to_browser($attachment, $upload_dir, $category)
 	}
 	else
 	{
-		header('Content-Disposition: ' . ((strpos($attachment['mimetype'], 'image') === 0) ? 'inline' : 'attachment') . '; ' . header_filename(html_entity_decode($attachment['real_filename'], ENT_COMPAT)));
+		// Only set inline if category is set to image (= displayed inside <img>) and mimetype says it's an image
+		if ($category == ATTACHMENT_CATEGORY_IMAGE && strpos($attachment['mimetype'], 'image') === 0)
+		{
+			$disposition = 'inline';
+		}
+		else
+		{
+			$disposition = 'attachment';
+		}
+		header('Content-Disposition: ' . $disposition . '; ' . header_filename(html_entity_decode($attachment['real_filename'], ENT_COMPAT)));
 		if (phpbb_is_greater_ie_version($user->browser, 7) && (strpos($attachment['mimetype'], 'image') !== 0))
 		{
 			header('X-Download-Options: noopen');
