@@ -26,6 +26,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 	protected $controller;
 	protected $controller_helper;
 	protected $db;
+	protected $dispatcher;
 	protected $form_helper;
 	protected $language;
 	protected $notification_manager;
@@ -60,6 +61,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$config = $this->config;
 		$this->controller_helper = $this->createMock(\phpbb\controller\helper::class);
 		$this->db = $this->new_dbal();
+		$this->dispatcher = $this->createMock(\phpbb\event\dispatcher::class);
 		$this->form_helper = $this->createMock(\phpbb\form\form_helper::class);
 		$lang_loader = new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx);
 		$this->language = new \phpbb\language\language($lang_loader);
@@ -79,6 +81,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 			$this->config,
 			$this->controller_helper,
 			$this->db,
+			$this->dispatcher,
 			$this->form_helper,
 			$this->language,
 			$this->notification_manager,
@@ -448,6 +451,14 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 	public function test_subscribe_success()
 	{
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				return $args;
+			});
 		$this->form_helper->method('check_form_tokens')->willReturn(true);
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->user->data['user_id'] = 2;
@@ -506,7 +517,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 		$this->controller->subscribe($symfony_request);
 	}
-	public function data_provider_subscribe_supported_endpoint()
+	public static function data_provider_subscribe_supported_endpoint(): array
 	{
 		return [
 			'fcm' => ['https://fcm.googleapis.com/fcm/send/test_endpoint'],
@@ -520,6 +531,14 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 	 */
 	public function test_subscribe_supported_endpoint($data_provider)
 	{
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				return $args;
+			});
 		$this->form_helper->method('check_form_tokens')->willReturn(true);
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->user->data['user_id'] = 2;
@@ -539,8 +558,65 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->assertInstanceOf(JsonResponse::class, $response);
 	}
 
+	public function test_subscribe_success_event_endpoint()
+	{
+		// Mock triggering of expected event and add new valid endpoint
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				$args['allowed_services'][] = 'test.endpoint.com';
+				return $args;
+			});
+		$this->form_helper->method('check_form_tokens')->willReturn(true);
+		$this->request->method('is_ajax')->willReturn(true);
+		$this->user->data['user_id'] = 2;
+		$this->user->data['is_bot'] = false;
+		$this->user->data['user_type'] = USER_NORMAL;
+
+		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => 'https://test.endpoint.com/send/candy/test_endpoint',
+			'expiration_time' => 0,
+			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
+		]));
+
+		$response = $this->controller->subscribe($symfony_request);
+
+		$this->assertEquals(['success' => true, 'form_tokens' => $this->form_helper->get_form_tokens(webpush::FORM_TOKEN_UCP)], json_decode($response->getContent(), true));
+
+		// Get subscription data from database
+		$sql = 'SELECT *
+				FROM phpbb_push_subscriptions
+				WHERE user_id = 2
+				ORDER BY subscription_id DESC';
+		$result = $this->db->sql_query_limit($sql, 1);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		$this->assertEquals([
+			'user_id' => '2',
+			'endpoint' => 'https://test.endpoint.com/send/candy/test_endpoint',
+			'p256dh' => 'test_p256dh',
+			'auth' => 'test_auth',
+			'expiration_time' => 0,
+			'subscription_id' => $row['subscription_id'] ?? 0, // will have to take ID from database
+		], $row);
+	}
+
 	public function test_unsubscribe_success()
 	{
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				return $args;
+			});
 		$this->form_helper->method('check_form_tokens')->willReturn(true);
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->user->data['user_id'] = 2;
@@ -586,7 +662,8 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		// Get subscription data from database
 		$sql = 'SELECT *
 				FROM phpbb_push_subscriptions
-				WHERE user_id = 2';
+				WHERE user_id = 2
+				  AND subscription_id = 1';
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);

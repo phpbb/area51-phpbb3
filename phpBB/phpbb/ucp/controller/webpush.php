@@ -16,6 +16,7 @@ namespace phpbb\ucp\controller;
 use phpbb\config\config;
 use phpbb\controller\helper as controller_helper;
 use phpbb\db\driver\driver_interface;
+use phpbb\event\dispatcher_interface;
 use phpbb\exception\http_exception;
 use phpbb\form\form_helper;
 use phpbb\json\sanitizer as json_sanitizer;
@@ -46,6 +47,9 @@ class webpush
 
 	/** @var driver_interface */
 	protected $db;
+
+	/** @var dispatcher_interface */
+	protected $dispatcher;
 
 	/** @var form_helper */
 	protected $form_helper;
@@ -83,6 +87,7 @@ class webpush
 	 * @param config $config
 	 * @param controller_helper $controller_helper
 	 * @param driver_interface $db
+	 * @param dispatcher_interface $dispatcher
 	 * @param form_helper $form_helper
 	 * @param language $language
 	 * @param manager $notification_manager
@@ -94,12 +99,13 @@ class webpush
 	 * @param string $notification_webpush_table
 	 * @param string $push_subscriptions_table
 	 */
-	public function __construct(config $config, controller_helper $controller_helper, driver_interface $db, form_helper $form_helper, language $language, manager $notification_manager,
+	public function __construct(config $config, controller_helper $controller_helper, driver_interface $db, dispatcher_interface $dispatcher, form_helper $form_helper, language $language, manager $notification_manager,
 								path_helper $path_helper, request_interface $request, user_loader $user_loader, user $user, Environment $template, string $notification_webpush_table, string $push_subscriptions_table)
 	{
 		$this->config = $config;
 		$this->controller_helper = $controller_helper;
 		$this->db = $db;
+		$this->dispatcher = $dispatcher;
 		$this->form_helper = $form_helper;
 		$this->language = $language;
 		$this->notification_manager = $notification_manager;
@@ -371,6 +377,18 @@ class webpush
 			'.notify.windows.com',
 			'.push.apple.com',
 		];
+
+		/**
+		 * Event to modify allowed services for web push notifications
+		 *
+		 * @event core.ucp_webpush_controller_verify_endpoint
+		 * @var array allowed_services Allowed service URLs
+		 * @since 4.0.0-a2
+		 */
+		$vars = [
+			'allowed_services',
+		];
+		extract($this->dispatcher->trigger_event('core.ucp_webpush_controller_verify_endpoint', compact($vars)));
 
 		foreach ($allowed_services as $allowed_host)
 		{
