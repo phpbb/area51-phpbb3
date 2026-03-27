@@ -219,8 +219,10 @@ function send_file_to_browser($attachment, $upload_dir, $category)
 	}
 	else
 	{
-		// Only set inline if category is set to image (= displayed inside <img>) and mimetype says it's an image
-		if ($category == ATTACHMENT_CATEGORY_IMAGE && strpos($attachment['mimetype'], 'image') === 0)
+		$sec_fetch_dest = $request->header('Sec-Fetch-Dest');
+
+		// Only set inline if category is set to image, mimetype says it's an image, and browser either sends no Sec-Fetch-Dest header or explicitly marks the request as an image
+		if ($category == ATTACHMENT_CATEGORY_IMAGE && strpos($attachment['mimetype'], 'image') === 0 && (empty($sec_fetch_dest) || $sec_fetch_dest === 'image'))
 		{
 			$disposition = 'inline';
 		}
