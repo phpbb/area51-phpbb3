@@ -222,7 +222,7 @@ function send_file_to_browser($attachment, $upload_dir, $category)
 		$sec_fetch_dest = $request->header('Sec-Fetch-Dest');
 
 		// Only set inline if category is set to image, mimetype says it's an image, and browser either sends no Sec-Fetch-Dest header or explicitly marks the request as an image
-		if ($category == ATTACHMENT_CATEGORY_IMAGE && strpos($attachment['mimetype'], 'image') === 0 && (empty($sec_fetch_dest) || $sec_fetch_dest === 'image'))
+		if ($category == ATTACHMENT_CATEGORY_IMAGE && phpbb_allow_serve_inline($attachment['mimetype'], $sec_fetch_dest))
 		{
 			$disposition = 'inline';
 		}
@@ -794,4 +794,23 @@ function phpbb_is_greater_ie_version($user_agent, $version)
 	{
 		return false;
 	}
+}
+
+/**
+ * Return whether image type should be allowed to be displayed inline based on the mimetype and potentially Sec-Fetch-Dest header
+ *
+ * @param string $mimetype Image mime type
+ * @param string $sec_fetch_dest Sec-Fetch-Dest header field content
+ * @return bool
+ */
+function phpbb_allow_serve_inline(string $mimetype, string $sec_fetch_dest): bool
+{
+	// Allow image types that are known to be supported by all major browsers, and that are known to be safe when rendered inline
+	$allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/bmp', 'image/tiff'];
+	if (in_array($mimetype, $allowed_types, true))
+	{
+		return true;
+	}
+
+	return strpos($mimetype, 'image') === 0 && (empty($sec_fetch_dest) || $sec_fetch_dest === 'image');
 }
