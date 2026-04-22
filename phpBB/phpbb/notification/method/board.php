@@ -352,7 +352,7 @@ class board extends \phpbb\notification\method\base
 			SET notification_read = ' . ($mark_read ? 1 : 0) . '
 			WHERE notification_time <= ' . (int) $time . '
 				AND ' . ((is_array($notification_id)) ? $this->db->sql_in_set('notification_id', $notification_id) : 'notification_id = ' . (int) $notification_id) .
-			(($user_id !== false) ? ' AND user_id = ' . (int) $user_id : '');
+				' AND user_id = ' . (int) $user_id;
 		$this->db->sql_query($sql);
 	}
 
