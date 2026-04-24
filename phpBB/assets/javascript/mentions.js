@@ -22,6 +22,7 @@
 		const $mentionDataContainer = $('[data-mention-url]:first');
 		const mentionURL = $mentionDataContainer.data('mentionUrl');
 		const mentionNamesLimit = $mentionDataContainer.data('mentionNamesLimit');
+		const mentionForumId = $mentionDataContainer.data('forumId');
 		const mentionTopicId = $mentionDataContainer.data('topicId');
 		const mentionUserId = $mentionDataContainer.data('userId');
 		let queryInProgress = null;
@@ -241,8 +242,8 @@
 			queryInProgress = query;
 
 			// eslint-disable-next-line camelcase
-			const parameters = { keyword: query, topic_id: mentionTopicId, _referer: location.href };
-			$.getJSON(mentionURL, parameters, data => {
+			const parameters = { keyword: query, topic_id: mentionTopicId, forum_id: mentionForumId, _referer: location.href };
+			$.post(mentionURL, parameters, data => {
 				cachedNames[query] = data.names;
 				cachedAll[query] = data.all;
 				callback(data.names);

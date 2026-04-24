@@ -14,10 +14,11 @@
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class phpbb_mention_controller_test extends phpbb_database_test_case
 {
-	protected $db, $container, $user, $config, $auth, $cache;
+	protected $controller_helper, $db, $container, $user, $config, $auth, $cache;
 
 	/**
 	 * @var \phpbb\mention\controller\mention
@@ -38,22 +39,27 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 	{
 		parent::setUp();
 
-		global $auth, $cache, $config, $db, $phpbb_container, $phpbb_dispatcher, $lang, $user, $request, $phpEx, $phpbb_root_path, $user_loader;
+		global $cache, $phpbb_dispatcher, $lang, $user, $phpEx, $phpbb_root_path, $user_loader;
 
 		// Database
 		$this->db = $this->new_dbal();
-		$db = $this->db;
 
 		// Auth
-		$auth = $this->createMock('\phpbb\auth\auth');
-		$auth->expects($this->any())
+		$this->auth = $this->createMock('\phpbb\auth\auth');
+		$this->auth->expects($this->any())
 			 ->method('acl_gets')
 			 ->with('a_group', 'a_groupadd', 'a_groupdel')
 			 ->willReturn(false)
 		;
+		$this->auth->expects($this->any())
+			 ->method('acl_get')
+			 ->willReturnMap([
+					['u_mention', 0, true],
+					['f_mention', 1, true],
+				]);
 
 		// Config
-		$config = new \phpbb\config\config(array(
+		$this->config = new \phpbb\config\config(array(
 			'allow_mentions'      => true,
 			'mention_batch_size'  => 8,
 			'mention_names_limit' => 3,
@@ -65,8 +71,8 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 		$cache_driver = new \phpbb\cache\driver\dummy();
 		$cache = new \phpbb\cache\service(
 			$cache_driver,
-			$config,
-			$db,
+			$this->config,
+			$this->db,
 			$phpbb_dispatcher,
 			$phpbb_root_path,
 			$phpEx
@@ -86,41 +92,41 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 		);
 
 		// Request
-		$this->request = $request = $this->createMock('\phpbb\request\request');
+		$this->request = $this->createMock('\phpbb\request\request');
 
-		$request->expects($this->any())
+		$this->request->expects($this->any())
 				->method('is_ajax')
 				->willReturn(true);
 		$avatar_helper = $this->getMockBuilder('\phpbb\avatar\helper')
 			->disableOriginalConstructor()
 			->getMock();
 
-		$user_loader = new \phpbb\user_loader($avatar_helper, $db, $phpbb_root_path, $phpEx, USERS_TABLE);
+		$user_loader = new \phpbb\user_loader($avatar_helper, $this->db, $phpbb_root_path, $phpEx, USERS_TABLE);
 
 		// Controller helper
-		$controller_helper = $this->createMock('\phpbb\controller\helper');
+		$this->controller_helper = $this->createMock('\phpbb\controller\helper');
 
 		// Container
-		$phpbb_container = new ContainerBuilder();
+		$this->container = new ContainerBuilder();
 
-		$loader = new YamlFileLoader($phpbb_container, new FileLocator(__DIR__ . '/fixtures'));
+		$loader = new YamlFileLoader($this->container, new FileLocator(__DIR__ . '/fixtures'));
 		$loader->load('services_mention.yml');
-		$phpbb_container->set('user_loader', $user_loader);
-		$phpbb_container->set('user', $user);
-		$phpbb_container->set('language', $lang);
-		$phpbb_container->set('config', $config);
-		$phpbb_container->set('dbal.conn', $db);
-		$phpbb_container->set('auth', $auth);
-		$phpbb_container->set('cache.driver', $cache_driver);
-		$phpbb_container->set('cache', $cache);
-		$phpbb_container->set('request', $request);
-		$phpbb_container->set('controller.helper', $controller_helper);
-		$phpbb_container->set('group_helper', new \phpbb\group\helper(
+		$this->container->set('user_loader', $user_loader);
+		$this->container->set('user', $user);
+		$this->container->set('language', $lang);
+		$this->container->set('config', $this->config);
+		$this->container->set('dbal.conn', $this->db);
+		$this->container->set('auth', $this->auth);
+		$this->container->set('cache.driver', $cache_driver);
+		$this->container->set('cache', $cache);
+		$this->container->set('request', $this->request);
+		$this->container->set('controller.helper', $this->controller_helper);
+		$this->container->set('group_helper', new \phpbb\group\helper(
 			$this->getMockBuilder('\phpbb\auth\auth')->disableOriginalConstructor()->getMock(),
 			$avatar_helper,
-			$db,
+			$this->db,
 			$cache,
-			$config,
+			$this->config,
 			new \phpbb\language\language(
 				new phpbb\language\language_file_loader($phpbb_root_path, $phpEx)
 			),
@@ -136,32 +142,40 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			$this->getMockBuilder('\phpbb\template\template')->disableOriginalConstructor()->getMock(),
 			$user
 		));
-		$phpbb_container->set('text_formatter.utils', new \phpbb\textformatter\s9e\utils());
-		$phpbb_container->set(
+		$this->container->set('text_formatter.utils', new \phpbb\textformatter\s9e\utils());
+		$this->container->set(
 			'text_formatter.s9e.mention_helper',
 			new \phpbb\textformatter\s9e\mention_helper(
 				$this->db,
-				$auth,
+				$this->auth,
 				$user,
 				$phpbb_root_path,
 				$phpEx
 			)
 		);
-		$phpbb_container->setParameter('core.root_path', $phpbb_root_path);
-		$phpbb_container->setParameter('core.php_ext', $phpEx);
-		$phpbb_container->addCompilerPass(new phpbb\di\pass\markpublic_pass());
-		$phpbb_container->compile();
+		$this->container->setParameter('core.root_path', $phpbb_root_path);
+		$this->container->setParameter('core.php_ext', $phpEx);
+		$this->container->addCompilerPass(new phpbb\di\pass\markpublic_pass());
+		$this->container->compile();
 
 		// Mention Sources
 		$mention_sources = array('friend', 'group', 'team', 'topic', 'user', 'usergroup');
-		$mention_sources_array = array();
+		$mention_sources_array = new \phpbb\di\service_collection($this->container);
 		foreach ($mention_sources as $source)
 		{
-			$class = $phpbb_container->get('mention.source.' . $source);
-			$mention_sources_array['mention.source.' . $source] = $class;
+			$mention_sources_array->add('mention.source.' . $source);
 		}
 
-		$this->controller = new \phpbb\mention\controller\mention($mention_sources_array, $request, $controller_helper, $phpbb_root_path, $phpEx);
+		$this->controller = new \phpbb\mention\controller\mention(
+			$this->auth,
+			$this->config,
+			$this->db,
+			$mention_sources_array,
+			$this->request,
+			$this->controller_helper,
+			$phpbb_root_path,
+			$phpEx
+		);
 	}
 
 	public static function handle_data()
@@ -552,11 +566,224 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			->willReturnCallback(function() use ($keyword, $topic_id) {
 				$args = func_get_args();
 				return match($args) {
-				['keyword', '', true, \phpbb\request\request_interface::REQUEST] => $keyword,
-				['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => $topic_id,
-			};});
+					['keyword', '', true, \phpbb\request\request_interface::REQUEST] => $keyword,
+					['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => $topic_id,
+					['forum_id', 0, false, \phpbb\request\request_interface::REQUEST] => 1,
+				};
+			});
 
 		$data = json_decode($this->controller->handle()->getContent(), true);
 		$this->assertEquals($expected_result, $data);
+	}
+
+	public function test_redirect_not_ajax()
+	{
+		$this->controller_helper->method('route')
+			->with('phpbb_index_controller')
+			->willReturn('/index.php');
+
+		$this->request = $this->getMockBuilder('\phpbb\request\request')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->request->method('is_ajax')
+			->willReturn(false);
+		$this->request->expects($this->atLeast(2))
+			->method('variable')
+			->willReturnCallback(function() {
+				$args = func_get_args();
+				return match($args) {
+					['keyword', '', true, \phpbb\request\request_interface::REQUEST] => 'admin',
+					['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => 2,
+					['forum_id', 0, false, \phpbb\request\request_interface::REQUEST] => 1,
+				};
+			});
+
+		$this->controller = new \phpbb\mention\controller\mention(
+			$this->auth,
+			$this->config,
+			$this->db,
+			new \phpbb\di\service_collection($this->container),
+			$this->request,
+			$this->controller_helper,
+			'',
+			''
+		);
+
+		$response = $this->controller->handle();
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+	}
+
+	public function test_redirect_no_forum_no_topic()
+	{
+		$this->controller_helper->method('route')
+			->with('phpbb_index_controller')
+			->willReturn('/index.php');
+
+		$this->request = $this->getMockBuilder('\phpbb\request\request')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->request->method('is_ajax')
+			->willReturn(true);
+		$this->request->expects($this->atLeast(2))
+			->method('variable')
+			->willReturnCallback(function() {
+				$args = func_get_args();
+				return match($args) {
+					['keyword', '', true, \phpbb\request\request_interface::REQUEST] => 'admin',
+					['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => 0,
+					['forum_id', 0, false, \phpbb\request\request_interface::REQUEST] => 0,
+				};
+			});
+
+		$this->controller = new \phpbb\mention\controller\mention(
+			$this->auth,
+			$this->config,
+			$this->db,
+			new \phpbb\di\service_collection($this->container),
+			$this->request,
+			$this->controller_helper,
+			'',
+			''
+		);
+
+		$response = $this->controller->handle();
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+	}
+
+	public function test_redirect_invalid_topic_id()
+	{
+		$this->controller_helper->method('route')
+			->with('phpbb_index_controller')
+			->willReturn('/index.php');
+
+		$this->request = $this->getMockBuilder('\phpbb\request\request')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->request->method('is_ajax')
+			->willReturn(true);
+		$this->request->expects($this->atLeast(2))
+			->method('variable')
+			->willReturnCallback(function() {
+				$args = func_get_args();
+				return match($args) {
+					['keyword', '', true, \phpbb\request\request_interface::REQUEST] => 'admin',
+					['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => 9999,
+					['forum_id', 0, false, \phpbb\request\request_interface::REQUEST] => 0,
+				};
+			});
+
+		$this->controller = new \phpbb\mention\controller\mention(
+			$this->auth,
+			$this->config,
+			$this->db,
+			new \phpbb\di\service_collection($this->container),
+			$this->request,
+			$this->controller_helper,
+			'',
+			''
+		);
+
+		$response = $this->controller->handle();
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+	}
+
+	public function test_redirect_no_u_mention()
+	{
+		$this->controller_helper->method('route')
+			->with('phpbb_index_controller')
+			->willReturn('/index.php');
+
+		$this->request = $this->getMockBuilder('\phpbb\request\request')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->request->method('is_ajax')
+			->willReturn(true);
+		$this->request->expects($this->atLeast(2))
+			->method('variable')
+			->willReturnCallback(function() {
+				$args = func_get_args();
+				return match($args) {
+					['keyword', '', true, \phpbb\request\request_interface::REQUEST] => 'admin',
+					['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => 2,
+					['forum_id', 0, false, \phpbb\request\request_interface::REQUEST] => 1,
+				};
+			});
+
+		$this->auth = $this->createMock('\phpbb\auth\auth');
+		$this->auth->expects($this->any())
+			->method('acl_gets')
+			->with('a_group', 'a_groupadd', 'a_groupdel')
+			->willReturn(false)
+		;
+		$this->auth->expects($this->any())
+			->method('acl_get')
+			->willReturnMap([
+				['u_mention', 0, false],
+				['f_mention', 1, true],
+			]);
+
+		$this->controller = new \phpbb\mention\controller\mention(
+			$this->auth,
+			$this->config,
+			$this->db,
+			new \phpbb\di\service_collection($this->container),
+			$this->request,
+			$this->controller_helper,
+			'',
+			''
+		);
+
+		$response = $this->controller->handle();
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+	}
+
+	public function test_redirect_no_f_mention()
+	{
+		$this->controller_helper->method('route')
+			->with('phpbb_index_controller')
+			->willReturn('/index.php');
+
+		$this->request = $this->getMockBuilder('\phpbb\request\request')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->request->method('is_ajax')
+			->willReturn(true);
+		$this->request->expects($this->atLeast(2))
+			->method('variable')
+			->willReturnCallback(function() {
+				$args = func_get_args();
+				return match($args) {
+					['keyword', '', true, \phpbb\request\request_interface::REQUEST] => 'admin',
+					['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => 2,
+					['forum_id', 0, false, \phpbb\request\request_interface::REQUEST] => 1,
+				};
+			});
+
+		$this->auth = $this->createMock('\phpbb\auth\auth');
+		$this->auth->expects($this->any())
+			->method('acl_gets')
+			->with('a_group', 'a_groupadd', 'a_groupdel')
+			->willReturn(false)
+		;
+		$this->auth->expects($this->any())
+			->method('acl_get')
+			->willReturnMap([
+				['u_mention', 0, true],
+				['f_mention', 1, false],
+			]);
+
+		$this->controller = new \phpbb\mention\controller\mention(
+			$this->auth,
+			$this->config,
+			$this->db,
+			new \phpbb\di\service_collection($this->container),
+			$this->request,
+			$this->controller_helper,
+			'',
+			''
+		);
+
+		$response = $this->controller->handle();
+		$this->assertInstanceOf(RedirectResponse::class, $response);
 	}
 }

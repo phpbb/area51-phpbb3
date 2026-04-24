@@ -3,6 +3,9 @@ services:
     mention.controller:
         class: phpbb\mention\controller\mention
         arguments:
+            - '@auth'
+            - '@config'
+            - '@dbal.conn'
             - '@mention.source_collection'
             - '@request'
             - '@controller.helper'

@@ -655,7 +655,7 @@ class phpbb_test_case_helpers
 		$renderer->configure_quote_helper($quote_helper);
 		$renderer->configure_mention_helper($mention_helper);
 		$renderer->configure_smilies_path($config, $path_helper);
-		$renderer->configure_user($user, $config, $auth);
+		$renderer->configure_user($auth, $config, $user, 0);
 
 		$container->set('text_formatter.renderer', $renderer);
 		$container->set('text_formatter.s9e.renderer', $renderer);
