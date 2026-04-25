@@ -292,8 +292,25 @@
 					// Return names to callback
 					callback(data.names);
 				})
-				.fail(() => {
-					// Return empty array to callback on error, error is handled silently
+				.fail((jqXHR, textStatus, errorThrown) => {
+					// Handle different error scenarios
+					if (jqXHR.status === 500) {
+						// Server error
+						console.error('Mentions: Server error (500) while fetching names');
+					} else if (jqXHR.status === 403) {
+						// Forbidden - possibly token expired
+						console.error('Mentions: Access forbidden (403) - form token may have expired');
+					} else if (jqXHR.status === 302 || jqXHR.status === 301) {
+						// Redirect - user might have been logged out
+						console.error('Mentions: Redirect detected - user may need to re-login');
+					} else if (jqXHR.status === 0) {
+						// Network error or request aborted
+						console.error('Mentions: Network error or request aborted');
+					} else {
+						console.error('Mentions: Error ' + jqXHR.status + ' - ' + errorThrown);
+					}
+
+					// Return empty array to callback on error
 					callback([]);
 				})
 				.always(() => {
