@@ -132,7 +132,9 @@ class mention
 		// Retrieve forum_id for topic_id
 		if ($topic_id)
 		{
-			$sql = 'SELECT forum_id FROM ' . TOPICS_TABLE . ' WHERE topic_id = ' . (int) $topic_id;
+			$sql = 'SELECT forum_id
+				FROM ' . TOPICS_TABLE . '
+				WHERE topic_id = ' . (int) $topic_id;
 			$result = $this->db->sql_query($sql);
 			$forum_id = (int) $this->db->sql_fetchfield('forum_id');
 			$this->db->sql_freeresult($result);
