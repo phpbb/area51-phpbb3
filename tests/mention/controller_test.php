@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class phpbb_mention_controller_test extends phpbb_database_test_case
 {
-	protected $controller_helper, $db, $container, $user, $config, $auth, $cache;
+	protected $controller_helper, $db, $container, $user, $config, $auth, $cache, $form_helper;
 
 	/**
 	 * @var \phpbb\mention\controller\mention
@@ -64,6 +64,17 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			'mention_batch_size'  => 8,
 			'mention_names_limit' => 3,
 		));
+
+		$this->form_helper = $this->getMockBuilder('\phpbb\form\form_helper')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->form_helper->method('get_form_tokens')
+			->willReturn([
+				'creation_time' => 1777098416,
+				'form_token' => 'test_token',
+			]);
+		$this->form_helper->method('check_form_tokens')
+			->willReturn(true);
 
 		// Event dispatcher
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
@@ -121,6 +132,7 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 		$this->container->set('cache', $cache);
 		$this->container->set('request', $this->request);
 		$this->container->set('controller.helper', $this->controller_helper);
+		$this->container->set('form_helper', $this->form_helper);
 		$this->container->set('group_helper', new \phpbb\group\helper(
 			$this->getMockBuilder('\phpbb\auth\auth')->disableOriginalConstructor()->getMock(),
 			$avatar_helper,
@@ -170,6 +182,7 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			$this->auth,
 			$this->config,
 			$this->db,
+			$this->form_helper,
 			$mention_sources_array,
 			$this->request,
 			$this->controller_helper,
@@ -302,6 +315,10 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 					],
 				],
 				'all'   => false,
+				'form_tokens' => [
+					'form_token' => 'test_token',
+					'creation_time' => 1777098416,
+				],
 			]],
 			['', 1, [
 				'names' => [
@@ -435,6 +452,10 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 					],
 				],
 				'all'   => false,
+				'form_tokens' => [
+					'form_token' => 'test_token',
+					'creation_time' => 1777098416,
+				],
 			]],
 			['t', 1, [
 				'names' => [
@@ -504,6 +525,10 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 					],
 				],
 				'all'   => true,
+				'form_tokens' => [
+					'form_token' => 'test_token',
+					'creation_time' => 1777098416,
+				],
 			]],
 			['test', 1, [
 				'names' => [
@@ -541,6 +566,10 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 					],
 				],
 				'all'   => true,
+				'form_tokens' => [
+					'form_token' => 'test_token',
+					'creation_time' => 1777098416,
+				],
 			]],
 			['test1', 1, [
 				'names' => [[
@@ -552,6 +581,10 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 					'priority' => 0,
 				]],
 				'all'   => true,
+				'form_tokens' => [
+					'form_token' => 'test_token',
+					'creation_time' => 1777098416,
+				],
 			]],
 		];
 	}
@@ -602,6 +635,7 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			$this->auth,
 			$this->config,
 			$this->db,
+			$this->form_helper,
 			new \phpbb\di\service_collection($this->container),
 			$this->request,
 			$this->controller_helper,
@@ -639,6 +673,56 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			$this->auth,
 			$this->config,
 			$this->db,
+			$this->form_helper,
+			new \phpbb\di\service_collection($this->container),
+			$this->request,
+			$this->controller_helper,
+			'',
+			''
+		);
+
+		$response = $this->controller->handle();
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+	}
+
+	public function test_redirect_invalid_form_token()
+	{
+		$this->controller_helper->method('route')
+			->with('phpbb_index_controller')
+			->willReturn('/index.php');
+
+		$this->request = $this->getMockBuilder('\phpbb\request\request')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->request->method('is_ajax')
+			->willReturn(true);
+		$this->request->expects($this->atLeast(2))
+			->method('variable')
+			->willReturnCallback(function() {
+				$args = func_get_args();
+				return match($args) {
+					['keyword', '', true, \phpbb\request\request_interface::REQUEST] => 'admin',
+					['topic_id', 0, false, \phpbb\request\request_interface::REQUEST] => 9999,
+					['forum_id', 0, false, \phpbb\request\request_interface::REQUEST] => 0,
+				};
+			});
+
+		$this->form_helper = $this->getMockBuilder('\phpbb\form\form_helper')
+			->disableOriginalConstructor()
+			->getMock();
+		$this->form_helper->method('get_form_tokens')
+			->willReturn([
+				'creation_time' => time(),
+				'form_token' => 'test_token',
+			]);
+		$this->form_helper->method('check_form_tokens')
+			->willReturn(false);
+
+		$this->controller = new \phpbb\mention\controller\mention(
+			$this->auth,
+			$this->config,
+			$this->db,
+			$this->form_helper,
 			new \phpbb\di\service_collection($this->container),
 			$this->request,
 			$this->controller_helper,
@@ -676,6 +760,7 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			$this->auth,
 			$this->config,
 			$this->db,
+			$this->form_helper,
 			new \phpbb\di\service_collection($this->container),
 			$this->request,
 			$this->controller_helper,
@@ -726,6 +811,7 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			$this->auth,
 			$this->config,
 			$this->db,
+			$this->form_helper,
 			new \phpbb\di\service_collection($this->container),
 			$this->request,
 			$this->controller_helper,
@@ -776,6 +862,7 @@ class phpbb_mention_controller_test extends phpbb_database_test_case
 			$this->auth,
 			$this->config,
 			$this->db,
+			$this->form_helper,
 			new \phpbb\di\service_collection($this->container),
 			$this->request,
 			$this->controller_helper,

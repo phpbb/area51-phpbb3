@@ -20,6 +20,7 @@
 	 */
 	function Mentions() {
 		const $mentionDataContainer = $('[data-mention-url]:first');
+		const $mentionsForm = $mentionDataContainer.closest('form');
 		const mentionURL = $mentionDataContainer.data('mentionUrl');
 		const mentionNamesLimit = $mentionDataContainer.data('mentionNamesLimit');
 		const mentionForumId = $mentionDataContainer.data('forumId');
@@ -206,6 +207,36 @@
 		}
 
 		/**
+		 * Get form tokens for request
+		 * @private
+		 * @return {object} Form tokens object
+		 */
+		function getFormTokens() {
+			return {
+				creation_time: $mentionsForm.find('input[name="creation_time"]').val(),
+				form_token: $mentionsForm.find('input[name="form_token"]').val(),
+			};
+		}
+
+		/**
+		 * Update form tokens in form
+		 * @private
+		 * @param {object} request_data Request data object
+		 * @return {void}
+		 */
+		function updateFormTokens(request_data) {
+			if (request_data.hasOwnProperty('form_tokens')) {
+				const form_tokens = request_data.form_tokens;
+				if (form_tokens.hasOwnProperty('form_token')) {
+					$mentionsForm.find('input[name="form_token"]').val(form_tokens.form_token);
+				}
+				if (form_tokens.hasOwnProperty('creation_time')) {
+					$mentionsForm.find('input[name="creation_time"]').val(form_tokens.creation_time);
+				}
+			}
+		}
+
+		/**
 		 * remoteFilter callback filter function
 		 * @param {string} query Query string
 		 * @param {function} callback Callback function for filtered items
@@ -242,14 +273,32 @@
 			queryInProgress = query;
 
 			// eslint-disable-next-line camelcase
-			const parameters = { keyword: query, topic_id: mentionTopicId, forum_id: mentionForumId, _referer: location.href };
-			$.post(mentionURL, parameters, data => {
-				cachedNames[query] = data.names;
-				cachedAll[query] = data.all;
-				callback(data.names);
-			}).always(() => {
-				queryInProgress = null;
-			});
+			const parameters = {
+				keyword: query,
+				topic_id: mentionTopicId,
+				forum_id: mentionForumId,
+				_referer: location.href,
+				...getFormTokens(),
+			};
+
+			$.post(mentionURL, parameters)
+				.done(data => {
+					updateFormTokens(data);
+
+					// Cache results
+					cachedNames[query] = data.names;
+					cachedAll[query] = data.all;
+
+					// Return names to callback
+					callback(data.names);
+				})
+				.fail(() => {
+					// Return empty array to callback on error, error is handled silently
+					callback([]);
+				})
+				.always(() => {
+					queryInProgress = null;
+				});
 		}
 
 		/**

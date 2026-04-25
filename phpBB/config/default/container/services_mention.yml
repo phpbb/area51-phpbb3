@@ -6,6 +6,7 @@ services:
             - '@auth'
             - '@config'
             - '@dbal.conn'
+            - '@form_helper'
             - '@mention.source_collection'
             - '@request'
             - '@controller.helper'
