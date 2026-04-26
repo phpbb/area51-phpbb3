@@ -126,7 +126,7 @@ class helper
 
 		$this->renderer->set_smilies_path($this->get_board_url() . '/' . $this->config['smilies_path']);
 
-		$this->renderer->configure_user($this->user, $this->config, $this->auth);
+		$this->renderer->configure_user($this->auth, $this->config, $this->user);
 
 		$content = generate_text_for_display($content, $uid, $bitfield, $options);
 
