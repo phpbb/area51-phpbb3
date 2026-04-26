@@ -35,6 +35,7 @@ services:
             - '@config'
             - '@controller.helper'
             - '@dbal.conn'
+            - '@event_dispatcher'
             - '@form_helper'
             - '@language'
             - '@notification_manager'
