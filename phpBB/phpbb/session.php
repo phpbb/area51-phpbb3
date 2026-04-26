@@ -174,45 +174,26 @@ class session
 		// Should be a string and lowered
 		$host = (string) strtolower($host);
 
-		// If host is equal the cookie domain or the server name (if config is set), then we assume it is valid
-		if ((isset($config['cookie_domain']) && $host === $config['cookie_domain']) || (isset($config['server_name']) && $host === $config['server_name']))
+		if (!empty($config['server_name']))
 		{
-			return $host;
+			return $config['server_name'];
 		}
 
-		// Is the host actually a IP? If so, we use the IP... (IPv4)
-		if (long2ip(ip2long($host)) === $host)
+		if (!empty($config['cookie_domain']))
 		{
-			return $host;
+			return (strpos($config['cookie_domain'], '.') === 0) ? substr($config['cookie_domain'], 1) : $config['cookie_domain'];
 		}
 
-		// Now return the hostname (this also removes any port definition). The http:// is prepended to construct a valid URL, hosts never have a scheme assigned
-		$host = @parse_url('http://' . $host);
+		// Try using provided host if neither cookie_domain nor server_name are set in config
+		$host = @parse_url('https://' . $host);
 		$host = (!empty($host['host'])) ? $host['host'] : '';
-
-		// Remove any portions not removed by parse_url (#)
-		$host = str_replace('#', '', $host);
-
-		// If, by any means, the host is now empty, we will use a "best approach" way to guess one
-		if (empty($host))
+		if (!empty($host))
 		{
-			if (!empty($config['server_name']))
-			{
-				$host = $config['server_name'];
-			}
-			else if (!empty($config['cookie_domain']))
-			{
-				$host = (strpos($config['cookie_domain'], '.') === 0) ? substr($config['cookie_domain'], 1) : $config['cookie_domain'];
-			}
-			else
-			{
-				// Set to OS hostname or localhost
-				$host = (function_exists('php_uname')) ? php_uname('n') : 'localhost';
-			}
+			return $host;
 		}
 
-		// It may be still no valid host, but for sure only a hostname (we may further expand on the cookie domain... if set)
-		return $host;
+		// Fallback to OS hostname or localhost
+		return (function_exists('php_uname')) ? php_uname('n') : 'localhost';
 	}
 
 	/**
