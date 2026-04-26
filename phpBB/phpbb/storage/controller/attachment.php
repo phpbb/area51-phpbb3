@@ -194,16 +194,12 @@ class attachment
 
 		$display_cat = $extensions[$attachment['extension']]['display_cat'];
 
-		if ($thumbnail)
+		if ($display_cat == attachment_category::IMAGE || $display_cat == attachment_category::THUMB)
 		{
-			$attachment['physical_filename'] = 'thumb_' . $attachment['physical_filename'];
-		}
-		else if ($display_cat == attachment_category::NONE && !$attachment['is_orphan'])
-		{
-			if (!(($display_cat == attachment_category::IMAGE || $display_cat == attachment_category::THUMB) && !$this->user->optionget('viewimg')))
+			// Do not display if either display inline is disabled or user is not allowed to view images
+			if (!$this->config['img_display_inlined'] || !$this->user->optionget('viewimg'))
 			{
-				// Update download count
-				$this->phpbb_increment_downloads($attachment['attach_id']);
+				$display_cat = ATTACHMENT_CATEGORY_NONE;
 			}
 		}
 
@@ -245,6 +241,16 @@ class attachment
 			throw new http_exception(404, 'ERROR_NO_ATTACHMENT');
 		}
 
+		if ($thumbnail)
+		{
+			$attachment['physical_filename'] = 'thumb_' . $attachment['physical_filename'];
+		}
+		else if ($display_cat == attachment_category::NONE && !$attachment['is_orphan'])
+		{
+			// Update download count
+			$this->phpbb_increment_downloads($attachment['attach_id']);
+		}
+
 		/**
 		 * Event to alter attachment before it is sent to browser.
 		 *
@@ -260,8 +266,10 @@ class attachment
 		];
 		extract($this->dispatcher->trigger_event('core.send_file_to_browser_before', compact($vars)));
 
-		// Display images in browser and force download for others
-		if ($display_cat == attachment_category::IMAGE && str_starts_with($attachment['mimetype'], 'image'))
+		$sec_fetch_dest = $this->request->header('Sec-Fetch-Dest');
+
+		// Only set inline if category is set to image, mimetype says it's an image, and browser either sends no Sec-Fetch-Dest header or explicitly marks the request as an image
+		if ($display_cat == attachment_category::IMAGE && str_starts_with($attachment['mimetype'], 'image') && (empty($sec_fetch_dest) || $sec_fetch_dest === 'image'))
 		{
 			$disposition = HeaderUtils::makeDisposition(
 				ResponseHeaderBag::DISPOSITION_INLINE,
@@ -315,6 +323,9 @@ class attachment
 		// Content-type and content-disposition headers
 		$response->headers->set('Content-Type', $attachment['mimetype']);
 		$response->headers->set('Content-Disposition', $disposition);
+
+		// Send restrictive CSP for file served to browser
+		$response->headers->set('Content-Security-Policy', "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; script-src 'none'; object-src 'none'; frame-src 'none';");
 
 		@set_time_limit(0);
 
