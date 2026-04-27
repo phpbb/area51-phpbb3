@@ -24,7 +24,6 @@ class v400a2 extends \phpbb\db\migration\migration
 	{
 		return [
 			'\phpbb\db\migration\data\v33x\v3316',
-			'\phpbb\db\migration\data\v400\rename_duplicated_index_names',
 			'\phpbb\db\migration\data\v400\disable_extensions',
 			'\phpbb\db\migration\data\v400\extensions_composer_4',
 		];
