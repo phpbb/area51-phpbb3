@@ -16,6 +16,7 @@ namespace phpbb\ucp\controller;
 use phpbb\config\config;
 use phpbb\controller\helper as controller_helper;
 use phpbb\db\driver\driver_interface;
+use phpbb\event\dispatcher_interface;
 use phpbb\exception\http_exception;
 use phpbb\form\form_helper;
 use phpbb\json\sanitizer as json_sanitizer;
@@ -46,6 +47,9 @@ class webpush
 
 	/** @var driver_interface */
 	protected $db;
+
+	/** @var dispatcher_interface */
+	protected $dispatcher;
 
 	/** @var form_helper */
 	protected $form_helper;
@@ -83,6 +87,7 @@ class webpush
 	 * @param config $config
 	 * @param controller_helper $controller_helper
 	 * @param driver_interface $db
+	 * @param dispatcher_interface $dispatcher
 	 * @param form_helper $form_helper
 	 * @param language $language
 	 * @param manager $notification_manager
@@ -94,12 +99,13 @@ class webpush
 	 * @param string $notification_webpush_table
 	 * @param string $push_subscriptions_table
 	 */
-	public function __construct(config $config, controller_helper $controller_helper, driver_interface $db, form_helper $form_helper, language $language, manager $notification_manager,
+	public function __construct(config $config, controller_helper $controller_helper, driver_interface $db, dispatcher_interface $dispatcher, form_helper $form_helper, language $language, manager $notification_manager,
 								path_helper $path_helper, request_interface $request, user_loader $user_loader, user $user, Environment $template, string $notification_webpush_table, string $push_subscriptions_table)
 	{
 		$this->config = $config;
 		$this->controller_helper = $controller_helper;
 		$this->db = $db;
+		$this->dispatcher = $dispatcher;
 		$this->form_helper = $form_helper;
 		$this->language = $language;
 		$this->notification_manager = $notification_manager;
@@ -166,7 +172,7 @@ class webpush
 			throw new http_exception(Response::HTTP_BAD_REQUEST, 'AJAX_ERROR_TEXT');
 		}
 
-		return $this->get_notification_data($notification_data);
+		return $this->get_notification_data($notification_data) ?: '';
 	}
 
 	/**
@@ -219,7 +225,7 @@ class webpush
 				{
 					$this->language->set_user_language($user_lang, true);
 				}
-				return $this->get_notification_data($notification_data);
+				return $this->get_notification_data($notification_data) ?: '';
 			}
 		}
 
@@ -231,9 +237,9 @@ class webpush
 	 *
 	 * @param string $notification_data Encoded data stored in database
 	 *
-	 * @return string Data for notification output with javascript
+	 * @return false|string Data for notification output with javascript
 	 */
-	private function get_notification_data(string $notification_data): string
+	private function get_notification_data(string $notification_data): false|string
 	{
 		$row_data = json_decode($notification_data, true);
 
@@ -316,7 +322,12 @@ class webpush
 	{
 		$this->check_subscribe_requests();
 
-		$data = json_sanitizer::decode($symfony_request->get('data', ''));
+		$data = json_sanitizer::decode($symfony_request->attributes->get('data', ''));
+
+		if (!$this->verify_endpoint($data['endpoint']))
+		{
+			throw new http_exception(Response::HTTP_BAD_REQUEST, 'NOTIFY_WEB_PUSH_UNSUPPORTED_SERVICE');
+		}
 
 		$sql = 'INSERT INTO ' . $this->push_subscriptions_table . ' ' . $this->db->sql_build_array('INSERT', [
 			'user_id'			=> $this->user->id(),
@@ -334,6 +345,64 @@ class webpush
 	}
 
 	/**
+	 * Verify that the endpoint is valid and belongs to a known push service
+	 *
+	 * @param string $endpoint Endpoint URL to verify
+	 * @return bool True if endpoint is valid URL and belongs to a known push service, false otherwise
+	 */
+	protected function verify_endpoint(string $endpoint): bool
+	{
+		$parts = parse_url($endpoint);
+
+		// Basic URL structural check
+		if (!$parts || !isset($parts['scheme'], $parts['host']))
+		{
+			return false;
+		}
+
+		// MUST be HTTPS: https://datatracker.ietf.org/doc/html/rfc8030#section-8
+		if (strtolower($parts['scheme']) !== 'https')
+		{
+			return false;
+		}
+
+		// Only allow endpoints for known push services (e.g. Mozilla, Google)
+		// See https://github.com/pushpad/known-push-services for list of known services
+		$allowed_services = [
+			'android.googleapis.com',
+			'fcm.googleapis.com',
+			'updates.push.services.mozilla.com',
+			'updates-autopush.stage.mozaws.net',
+			'updates-autopush.dev.mozaws.net',
+			'.notify.windows.com',
+			'.push.apple.com',
+		];
+
+		/**
+		 * Event to modify allowed services for web push notifications
+		 *
+		 * @event core.ucp_webpush_controller_verify_endpoint
+		 * @var array allowed_services Allowed service URLs
+		 * @since 4.0.0-a2
+		 */
+		$vars = [
+			'allowed_services',
+		];
+		extract($this->dispatcher->trigger_event('core.ucp_webpush_controller_verify_endpoint', compact($vars)));
+
+		foreach ($allowed_services as $allowed_host)
+		{
+			// Use str_ends_with to support subdomains like 'web.push.apple.com'
+			if (str_ends_with(strtolower($parts['host']), $allowed_host))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Handle unsubscribe requests
 	 *
 	 * @param symfony_request $symfony_request
@@ -343,7 +412,7 @@ class webpush
 	{
 		$this->check_subscribe_requests();
 
-		$data = json_sanitizer::decode($symfony_request->get('data', ''));
+		$data = json_sanitizer::decode($symfony_request->attributes->get('data', ''));
 
 		$endpoint = $data['endpoint'];
 

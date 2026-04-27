@@ -2,9 +2,9 @@
 
 <project name="phpBB" description="The phpBB forum software" default="all" basedir="../">
 	<!-- a few settings for the build -->
-	<property name="newversion" value="4.0.0-a2-dev" />
-	<property name="prevversion" value="3.3.15" />
-	<property name="olderversions" value="3.1.12, 3.2.11, 3.3.14, 4.0.0-a1" />
+	<property name="newversion" value="4.0.0-a2" />
+	<property name="prevversion" value="4.0.0-a1" />
+	<property name="olderversions" value="3.1.12, 3.2.11, 3.3.16" />
 	<!-- no configuration should be needed beyond this point -->
 
 	<property name="oldversions" value="${olderversions}, ${prevversion}" />
@@ -106,13 +106,22 @@
 				--ignore=${sniffIgnoreList}
 				phpBB"
 			dir="." returnProperty="retval-php-legacy" passthru="true" />
-		<exec command="phpBB/vendor/bin/phpcs
-				-s -p
-				--extensions=php
-				--standard=build/code_sniffer/ruleset-php-extensions.xml
-				--ignore=${project.basedir}/phpBB/ext/*/tests/*,${project.basedir}/phpBB/ext/*/vendor/*
-				phpBB/ext"
-			dir="." returnProperty="retval-php-ext" passthru="true" />
+		<exec command="find phpBB/ext -name '*.php' -type f | head -1" dir="." outputProperty="ext-php-files" />
+		<if>
+			<not><equals arg1="${ext-php-files}" arg2="" /></not>
+			<then>
+				<exec command="phpBB/vendor/bin/phpcs
+						-s -p
+						--extensions=php
+						--standard=build/code_sniffer/ruleset-php-extensions.xml
+						--ignore=${project.basedir}/phpBB/ext/*/tests/*,${project.basedir}/phpBB/ext/*/vendor/*
+						phpBB/ext"
+					dir="." returnProperty="retval-php-ext" passthru="true" />
+			</then>
+			<else>
+				<property name="retval-php-ext" value="0" />
+			</else>
+		</if>
 		<if>
 			<or>
 				<not><equals arg1="${retval-php-strict}" arg2="0" /></not>

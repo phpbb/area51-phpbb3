@@ -33,8 +33,10 @@ class phpbb_functions_user_whois_test extends phpbb_test_case
 	public static function ips_data()
 	{
 		return [
-			['2001:4860:4860::8888'], // Google public DNS
-			['64.233.161.139'], // google.com
+			['2001:4860:4860::8888'], // Google public DNS (ARIN)
+			['64.233.161.139'], // google.com (ARIN)
+			['1.1.1.1'], // Cloudflare (APNIC via whois:// referral)
+			['213.133.116.44'], // Hetzner (RIPE via non-whois:// referral)
 		];
 	}
 
@@ -44,8 +46,18 @@ class phpbb_functions_user_whois_test extends phpbb_test_case
 	public function test_ip_whois($ip)
 	{
 		$ip_whois = user_ipwhois($ip);
+
+		if (preg_match('/%ERROR:201:\s*access denied/i', $ip_whois)
+			|| stripos($ip_whois, 'daily limit of controlled objects') !== false
+			|| stripos($ip_whois, 'Access from your host has been temporarily denied') !== false
+		)
+		{
+			$this->markTestSkipped('WHOIS provider temporarily denied access due to rate limiting (RIPE ERROR:201).');
+		}
+
 		$this->assertStringNotContainsString('Query terms are ambiguous', $ip_whois);
 		$this->assertStringNotContainsString('no entries found', $ip_whois);
 		$this->assertStringNotContainsString('ERROR', $ip_whois);
+		$this->assertStringNotContainsString('Allocated to RIPE NCC', $ip_whois); // This only shows if the referral isn't found
 	}
 }

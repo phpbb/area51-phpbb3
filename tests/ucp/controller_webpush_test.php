@@ -26,6 +26,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 	protected $controller;
 	protected $controller_helper;
 	protected $db;
+	protected $dispatcher;
 	protected $form_helper;
 	protected $language;
 	protected $notification_manager;
@@ -60,6 +61,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$config = $this->config;
 		$this->controller_helper = $this->createMock(\phpbb\controller\helper::class);
 		$this->db = $this->new_dbal();
+		$this->dispatcher = $this->createMock(\phpbb\event\dispatcher::class);
 		$this->form_helper = $this->createMock(\phpbb\form\form_helper::class);
 		$lang_loader = new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx);
 		$this->language = new \phpbb\language\language($lang_loader);
@@ -79,6 +81,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 			$this->config,
 			$this->controller_helper,
 			$this->db,
+			$this->dispatcher,
 			$this->form_helper,
 			$this->language,
 			$this->notification_manager,
@@ -164,7 +167,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->request->method('is_ajax')->willReturn($is_ajax);
 		$this->request->expects($this->any())
 			->method('variable')
-			->will($this->returnValueMap($request_data));
+			->willReturnMap($request_data);
 		$this->user->data = [
 			'is_bot'		=> $is_bot,
 			'user_type'		=> $user_type,
@@ -188,6 +191,8 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->notification_manager->method('get_item_type_class')
 			->willReturnCallback(function(string $type_name, array $row_data) {
 				$notification_type = new quote(
+					$this->avatar_helper,
+					$this->controller_helper,
 					$this->db,
 					$this->language,
 					$this->user,
@@ -206,11 +211,11 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->request->expects($this->any())
 			->method('variable')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				['token', '', false, request_interface::REQUEST, 'foobar'],
 				['item_id', 0, false, request_interface::REQUEST, 1],
 				['type_id', 0, false, request_interface::REQUEST, 4],
-			]));
+			]);
 		$this->user->data = [
 			'is_bot'		=> false,
 			'user_type'		=> USER_NORMAL,
@@ -242,6 +247,8 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->notification_manager->method('get_item_type_class')
 			->willReturnCallback(function(string $type_name, array $row_data) {
 				$notification_type = new quote(
+					$this->avatar_helper,
+					$this->controller_helper,
 					$this->db,
 					$this->language,
 					$this->user,
@@ -260,12 +267,12 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->request->expects($this->any())
 			->method('variable')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				['token', '', false, request_interface::REQUEST, '0ccf8fcd96a66297b77b66109cbe9870e1a6fa66e42b9bf36d1f2c7263240058'],
 				['item_id', 0, false, request_interface::REQUEST, 1],
 				['type_id', 0, false, request_interface::REQUEST, 4],
 				['user_id', 0, false, request_interface::REQUEST, 2],
-			]));
+			]);
 		$this->user->data = [
 			'is_bot'		=> false,
 			'user_type'		=> USER_NORMAL,
@@ -297,6 +304,8 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->notification_manager->method('get_item_type_class')
 			->willReturnCallback(function(string $type_name, array $row_data) {
 				$notification_type = new quote(
+					$this->avatar_helper,
+					$this->controller_helper,
 					$this->db,
 					$this->language,
 					$this->user,
@@ -315,12 +324,12 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->request->expects($this->any())
 			->method('variable')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				['token', '', false, request_interface::REQUEST, '488c17afe4f18714c235b395e21b78df1c3d78bf1e13d0633ed9425d2eebf967'],
 				['item_id', 0, false, request_interface::REQUEST, 1],
 				['type_id', 0, false, request_interface::REQUEST, 4],
 				['user_id', 0, false, request_interface::REQUEST, 2],
-			]));
+			]);
 		$this->user->data = [
 			'is_bot'		=> false,
 			'user_type'		=> USER_NORMAL,
@@ -345,6 +354,8 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->notification_manager->method('get_item_type_class')
 			->willReturnCallback(function(string $type_name, array $row_data) {
 				$notification_type = new quote(
+					$this->avatar_helper,
+					$this->controller_helper,
 					$this->db,
 					$this->language,
 					$this->user,
@@ -363,11 +374,11 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->request->expects($this->any())
 			->method('variable')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				['token', '', false, request_interface::REQUEST, 'foobar'],
 				['item_id', 0, false, request_interface::REQUEST, 2],
 				['type_id', 0, false, request_interface::REQUEST, 4],
-			]));
+			]);
 		$this->user->data = [
 			'is_bot'		=> false,
 			'user_type'		=> USER_NORMAL,
@@ -440,6 +451,14 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 	public function test_subscribe_success()
 	{
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				return $args;
+			});
 		$this->form_helper->method('check_form_tokens')->willReturn(true);
 		$this->request->method('is_ajax')->willReturn(true);
 		$this->user->data['user_id'] = 2;
@@ -447,8 +466,9 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->user->data['user_type'] = USER_NORMAL;
 
 		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
-		$symfony_request->method('get')->willReturn(json_encode([
-			'endpoint' => 'test_endpoint',
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'expiration_time' => 0,
 			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
 		]));
@@ -468,7 +488,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 		$this->assertEquals([
 			'user_id' => '2',
-			'endpoint' => 'test_endpoint',
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'p256dh' => 'test_p256dh',
 			'auth' => 'test_auth',
 			'expiration_time' => 0,
@@ -476,7 +496,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		], $row);
 	}
 
-	public function test_unsubscribe_success()
+	public function test_subscribe_unsupported_endpoint()
 	{
 		$this->form_helper->method('check_form_tokens')->willReturn(true);
 		$this->request->method('is_ajax')->willReturn(true);
@@ -485,8 +505,128 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		$this->user->data['user_type'] = USER_NORMAL;
 
 		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
-		$symfony_request->method('get')->willReturn(json_encode([
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
 			'endpoint' => 'test_endpoint',
+			'expiration_time' => 0,
+			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
+		]));
+
+		$this->expectException(http_exception::class);
+		$this->expectExceptionMessage('NOTIFY_WEB_PUSH_UNSUPPORTED_SERVICE');
+
+		$this->controller->subscribe($symfony_request);
+	}
+	public static function data_provider_subscribe_supported_endpoint(): array
+	{
+		return [
+			'fcm' => ['https://fcm.googleapis.com/fcm/send/test_endpoint'],
+			'apns' => ['https://api.push.apple.com/3/device/test_endpoint'],
+			'apns_sandbox' => ['https://api.sandbox.push.apple.com/3/device/test_endpoint'],
+		];
+	}
+
+	/**
+	 * @dataProvider data_provider_subscribe_supported_endpoint
+	 */
+	public function test_subscribe_supported_endpoint($data_provider)
+	{
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				return $args;
+			});
+		$this->form_helper->method('check_form_tokens')->willReturn(true);
+		$this->request->method('is_ajax')->willReturn(true);
+		$this->user->data['user_id'] = 2;
+		$this->user->data['is_bot'] = false;
+		$this->user->data['user_type'] = USER_NORMAL;
+
+		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => $data_provider,
+			'expiration_time' => 0,
+			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
+		]));
+
+		$response = $this->controller->subscribe($symfony_request);
+
+		$this->assertInstanceOf(JsonResponse::class, $response);
+	}
+
+	public function test_subscribe_success_event_endpoint()
+	{
+		// Mock triggering of expected event and add new valid endpoint
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				$args['allowed_services'][] = 'test.endpoint.com';
+				return $args;
+			});
+		$this->form_helper->method('check_form_tokens')->willReturn(true);
+		$this->request->method('is_ajax')->willReturn(true);
+		$this->user->data['user_id'] = 2;
+		$this->user->data['is_bot'] = false;
+		$this->user->data['user_type'] = USER_NORMAL;
+
+		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => 'https://test.endpoint.com/send/candy/test_endpoint',
+			'expiration_time' => 0,
+			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
+		]));
+
+		$response = $this->controller->subscribe($symfony_request);
+
+		$this->assertEquals(['success' => true, 'form_tokens' => $this->form_helper->get_form_tokens(webpush::FORM_TOKEN_UCP)], json_decode($response->getContent(), true));
+
+		// Get subscription data from database
+		$sql = 'SELECT *
+				FROM phpbb_push_subscriptions
+				WHERE user_id = 2
+				ORDER BY subscription_id DESC';
+		$result = $this->db->sql_query_limit($sql, 1);
+		$row = $this->db->sql_fetchrow($result);
+		$this->db->sql_freeresult($result);
+
+		$this->assertEquals([
+			'user_id' => '2',
+			'endpoint' => 'https://test.endpoint.com/send/candy/test_endpoint',
+			'p256dh' => 'test_p256dh',
+			'auth' => 'test_auth',
+			'expiration_time' => 0,
+			'subscription_id' => $row['subscription_id'] ?? 0, // will have to take ID from database
+		], $row);
+	}
+
+	public function test_unsubscribe_success()
+	{
+		$this->dispatcher->method('trigger_event')
+			->with(
+				$this->equalTo('core.ucp_webpush_controller_verify_endpoint'),
+				$this->anything()
+			)
+			->willReturnCallback(function($event_name, $args) {
+				return $args;
+			});
+		$this->form_helper->method('check_form_tokens')->willReturn(true);
+		$this->request->method('is_ajax')->willReturn(true);
+		$this->user->data['user_id'] = 2;
+		$this->user->data['is_bot'] = false;
+		$this->user->data['user_type'] = USER_NORMAL;
+
+		$symfony_request = $this->createMock(\phpbb\symfony_request::class);
+		$symfony_request->attributes = $this->createMock(\Symfony\Component\HttpFoundation\ParameterBag::class);
+		$symfony_request->attributes->method('get')->willReturn(json_encode([
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'expiration_time' => 0,
 			'keys' => ['p256dh' => 'test_p256dh', 'auth' => 'test_auth']
 		]));
@@ -506,7 +646,7 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 
 		$this->assertEquals([
 			'user_id' => '2',
-			'endpoint' => 'test_endpoint',
+			'endpoint' => 'https://fcm.googleapis.com/fcm/send/test_endpoint',
 			'p256dh' => 'test_p256dh',
 			'auth' => 'test_auth',
 			'expiration_time' => 0,
@@ -522,7 +662,8 @@ class test_ucp_controller_webpush_test extends phpbb_database_test_case
 		// Get subscription data from database
 		$sql = 'SELECT *
 				FROM phpbb_push_subscriptions
-				WHERE user_id = 2';
+				WHERE user_id = 2
+				  AND subscription_id = 1';
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
 		$this->db->sql_freeresult($result);

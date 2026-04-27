@@ -182,8 +182,7 @@
 	.wrap {
 		border: none;
 		border-radius: 0;
-		min-width: 390px;
-		margin: 0 !important;
+		box-sizing: border-box;
 		padding: 0 5px;
 	}
 
@@ -575,6 +574,12 @@
 		max-height: 32px;
 	}
 
+	.postprofile .avatar-placeholder {
+		font-size: 1rem;
+		width: 32px;
+		height: 32px;
+	}
+
 	.has-profile .postbody h3 {
 		margin-right: 0 !important;
 		margin-left: 0 !important;
@@ -781,7 +786,6 @@
 		display: block !important;
 	}
 
-	.nav-footer.linklist .responsive-menu,
 	.nav-main.linklist .responsive-menu .in-menu {
 		display: none !important;
 	}
@@ -863,7 +867,7 @@
 	}
 }
 
-@media (max-width: 1220px) {
+@media (min-width: 751px) and (max-width: 1200px) {
 	.wrap {
 		margin: 0 12px;
 	}

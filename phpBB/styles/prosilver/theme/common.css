@@ -5,8 +5,6 @@
 /* stylelint-disable selector-no-qualifying-type */
 
 html {
-	font-size: 100%;
-
 	/* Always show a scrollbar for short pages - stops the jump when the scrollbar appears. non-IE browsers */
 	height: 101%;
 }
@@ -154,7 +152,7 @@ a:hover {
 	border: solid transparent;
 	border-width: 0 1px 1px;
 	border-radius: 0 0 8px 8px;
-	min-width: 625px;
+	min-width: 320px;
 	max-width: 1152px;
 	margin: 0 auto;
 	padding: 0 15px 15px;
@@ -320,6 +318,10 @@ ul.linklist li.responsive-menu {
 	margin: 0 5px 0 0;
 }
 
+.nav-footer .responsive-menu {
+	display: none;
+}
+
 .hasjs ul.linklist.leftside,
 .hasjs ul.linklist.rightside {
 	max-width: 48%;
@@ -384,11 +386,18 @@ a.header-avatar:hover {
 	text-decoration: none;
 }
 
-a.header-avatar img {
+a.header-avatar img,
+a.header-avatar .avatar-placeholder {
 	vertical-align: middle;
 	width: auto;
 	max-height: 20px;
 	margin-bottom: 2px;
+}
+
+a.header-avatar .avatar-placeholder {
+	font-size: var(--ps-font-tiny);
+	display: inline-flex;
+	width: 20px;
 }
 
 /* Dropdown menu

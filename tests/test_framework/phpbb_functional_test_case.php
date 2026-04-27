@@ -129,11 +129,40 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$this->bootstrap();
 
 		self::$cookieJar = new CookieJar;
-		// Force native client on windows platform
-		self::$http_client = strtolower(substr(PHP_OS, 0, 3)) === 'win' ? new NativeHttpClient() : HttpClient::create();
-		self::$http_client->withOptions([
-			'timeout' => 60,
-		]);
+
+		// Configure SSL verification for local development with self-signed certificates
+		$http_options = [];
+		if (isset(self::$config['path_to_ssl_cert']))
+		{
+			if (self::$config['path_to_ssl_cert'] === false)
+			{
+				// Disable SSL verification
+				$http_options['verify_peer'] = false;
+				$http_options['verify_host'] = false;
+			}
+			else
+			{
+				// Use custom CA certificate
+				$http_options['verify_peer'] = true;
+				$http_options['verify_host'] = true;
+				$http_options['cafile'] = self::$config['path_to_ssl_cert'];
+			}
+		}
+
+		// Optimize HTTP client for Windows platform
+		if (stripos(PHP_OS_FAMILY, 'win') === 0)
+		{
+			self::$http_client = new NativeHttpClient(array_merge([
+				'timeout' => 30,
+				'max_duration' => 60,
+			], $http_options));
+		}
+		else
+		{
+			self::$http_client = HttpClient::create(array_merge([
+				'timeout' => 60,
+			], $http_options));
+		}
 		self::$client = new HttpBrowser(self::$http_client, null, self::$cookieJar);
 
 		// Clear the language array so that things
@@ -553,7 +582,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$iohandler->set_input('smtp_pass', 'nxpass');
 		$iohandler->set_input('submit_email', 'submit');
 
-		$iohandler->set_input('cookie_secure', '0');
+		$iohandler->set_input('cookie_secure', (strpos(self::$root_url, 'https://') === 0) ? '1' : '0');
 		$iohandler->set_input('server_protocol', '0');
 		$iohandler->set_input('force_server_vars', $parseURL['scheme'] . '://');
 		$iohandler->set_input('server_name', $parseURL['host']);
@@ -955,10 +984,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$db = $this->get_db();
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 
-		$user = $this->createMock('\phpbb\user', array(), array(
-			new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx)),
-			'\phpbb\datetime'
-		));
+		$user = $this->createMock('\phpbb\user');
 		$user->data['user_id'] = 2; // admin
 		$user->ip = '';
 
@@ -996,10 +1022,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$db = $this->get_db();
 		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 
-		$user = $this->createMock('\phpbb\user', array(), array(
-			new \phpbb\language\language(new \phpbb\language\language_file_loader($phpbb_root_path, $phpEx)),
-			'\phpbb\datetime'
-		));
+		$user = $this->createMock('\phpbb\user');
 		$user->data['user_id'] = 2; // admin
 		$user->ip = '';
 
@@ -1682,7 +1705,7 @@ class phpbb_functional_test_case extends phpbb_test_case
 		$is_logged_in = strpos($crawler->filter('div[class="navbar"]')->text(), 'Login') === false;
 		if ($is_logged_in)
 		{
-			$username_logged_in = $crawler->filter('li[id="username_logged_in"] > div > a > span')->text();
+			$username_logged_in = $crawler->filter('li[id="username_logged_in"] > div > a > span:not(.avatar)')->text();
 		}
 		return $username_logged_in;
 	}

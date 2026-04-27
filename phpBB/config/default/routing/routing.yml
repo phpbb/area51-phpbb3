@@ -4,9 +4,13 @@
 #     path: /foo
 #     defaults: { _controller: foo_sevice:method }
 #
-# The above will be accessed via app.php?controller=foo and it will
+# The above will be accessed via index.php?controller=foo and it will
 # instantiate the 'foo_service' service and call the 'method' method.
 #
+
+phpbb_index_controller:
+    path: /
+    defaults: { _controller: forum.controller.index:handle }
 
 phpbb_cron_routing:
     resource: cron.yml
@@ -28,10 +32,18 @@ phpbb_manifest_controller:
     path: /manifest
     defaults: { _controller: manifest.controller:handle }
 
+phpbb_members_routing:
+    resource: members.yml
+    prefix: /members
+
 phpbb_mention_controller:
     path: /mention
     methods: [GET, POST]
     defaults: { _controller: mention.controller:handle }
+
+phpbb_notifications:
+    resource: notifications.yml
+    prefix: /notifications
 
 phpbb_report_routing:
     resource: report.yml

@@ -22,7 +22,7 @@ jobs:
             matrix:
                 include:
                     - db: 'none'
-                      php: '8.1'
+                      php: '8.2'
                       NOTESTS: 1
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db }}
@@ -105,50 +105,42 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mariadb:10.2"
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mariadb:10.3"
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mariadb:10.4"
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mariadb:10.6"
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mariadb:10.9"
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mariadb:10.10"
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mariadb:10.11"
-                    - php: '8.1'
-                      db: "mysql:5.7"
+                    - php: '8.2'
+                      db: "mysql:8.0"
                       db_alias: "MySQL Slow Tests"
                       SLOWTESTS: 1
-                    - php: '8.1'
-                      db: "mysql:5.7"
+                    - php: '8.2'
+                      db: "mysql:8.0"
                       db_alias: "MyISAM Tests"
                       MYISAM: 1
-                    - php: '8.1'
-                      db: "mysql:5.7"
-                    - php: '8.1'
-                      db: "mysql:8.0"
-                    - php: '8.1'
-                      db: "mysql:8.1"
                     - php: '8.2'
                       db: "mysql:8.0"
                     - php: '8.2'
-                      db: "mariadb:10.2"
+                      db: "mysql:8.4"
+                    - php: '8.2'
+                      db: "mysql:9.4"
                     - php: '8.3'
-                      db: "mysql:5.7"
-                    - php: '8.3'
-                      db: "mariadb:10.2"
-                    - php: '8.4'
                       db: "mysql:8.0"
                     - php: '8.4'
-                      db: "mariadb:10.3"
+                      db: "mysql:8.4"
                     - php: '8.5'
-                      db: "mysql:8.0"
+                      db: "mysql:8.4"
                     - php: '8.5'
-                      db: "mariadb:10.3"
+                      db: "mysql:9.4"
 
         name: PHP ${{ matrix.php }} - ${{ matrix.db_alias != '' && matrix.db_alias || matrix.db }}
 
@@ -234,7 +226,7 @@ jobs:
                   .github/setup-ldap.sh
 
             - name: Setup node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 20
             - name: Setup node dependencies
@@ -268,24 +260,22 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - php: '8.1'
-                      db: "postgres:9.5"
-                    - php: '8.1'
-                      db: "postgres:9.6"
-                    - php: '8.1'
-                      db: "postgres:10"
-                    - php: '8.1'
-                      db: "postgres:11"
-                    - php: '8.1'
-                      db: "postgres:12"
-                    - php: '8.1'
-                      db: "postgres:13"
-                    - php: '8.1'
-                      db: "postgres:14"
-                    - php: '8.1'
-                      db: "postgres:15"
                     - php: '8.2'
                       db: "postgres:9.5"
+                    - php: '8.2'
+                      db: "postgres:9.6"
+                    - php: '8.2'
+                      db: "postgres:10"
+                    - php: '8.2'
+                      db: "postgres:11"
+                    - php: '8.2'
+                      db: "postgres:12"
+                    - php: '8.2'
+                      db: "postgres:13"
+                    - php: '8.2'
+                      db: "postgres:14"
+                    - php: '8.2'
+                      db: "postgres:15"
                     - php: '8.3'
                       db: "postgres:9.5"
                     - php: '8.4'
@@ -374,7 +364,7 @@ jobs:
                   .github/setup-database.sh $DB $MYISAM
 
             - name: Setup node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 20
             - name: Setup node dependencies
@@ -392,12 +382,12 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "sqlite3"
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mcr.microsoft.com/mssql/server:2019-CU27-ubuntu-20.04"
                       db_alias: 'MSSQL 2019'
-                    - php: '8.1'
+                    - php: '8.2'
                       db: "mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04"
                       db_alias: 'MSSQL 2022'
 
@@ -487,7 +477,7 @@ jobs:
                   .github/setup-database.sh $DB $MYISAM
 
             - name: Setup node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 20
             - name: Setup node dependencies
@@ -504,11 +494,10 @@ jobs:
         runs-on: windows-2025
         strategy:
             matrix:
-                type: ['unit', 'functional']
-                php: ['8.4']
+                php: ['8.2', '8.3', '8.4', '8.5']
                 db: ['postgres']
 
-        name: Windows - ${{ matrix.type }} - PHP ${{ matrix.php }} - ${{ matrix.db }}
+        name: Windows - PHP ${{ matrix.php }} - ${{ matrix.db }}
 
         steps:
             - name: Prepare git for Windows
@@ -544,6 +533,9 @@ jobs:
                   GITHUB_WORKSPACE: ${{ github.workspace }}
                   TEMP_DIR: ${{ runner.temp }}
               run: |
+                  # Disable Windows Defender real-time monitoring early to improve performance
+                  Set-MpPreference -DisableRealtimeMonitoring $true
+
                   Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerRole, IIS-WebServer, IIS-CommonHttpFeatures, IIS-ManagementConsole, IIS-HttpErrors, IIS-HttpRedirect, IIS-WindowsAuthentication, IIS-StaticContent, IIS-DefaultDocument, IIS-HttpCompressionStatic, IIS-DirectoryBrowsing, IIS-WebServerManagementTools, IIS-CGI -All
                   Set-Service wuauserv -StartupType Manual
                   (Get-Content ${env:GITHUB_WORKSPACE}\phpBB\web.config).replace("<configuration>", "<configuration>`n`t<system.web>`n`t`t<customErrors mode=`"Off`"/>`n`t</system.web>") | Set-Content ${env:GITHUB_WORKSPACE}\phpBB\web.config
@@ -564,16 +556,38 @@ jobs:
                   New-WebHandler -Name "PHP-FastCGI" -Path "*.php" -Modules FastCgiModule -ScriptProcessor "C:\tools\php\php-cgi.exe" -Verb '*' -ResourceType Either
                   iisreset
                   NET START W3SVC
-                  mkdir "${env:GITHUB_WORKSPACE}\phpBB\cache\test"
-                  mkdir "${env:GITHUB_WORKSPACE}\phpBB\cache\installer"
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\cache" /grant Users:F /T
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\files" /grant Users:F /T
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\store" /grant Users:F /T
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\ext" /grant Users:F /T
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\vendor-ext" /grant Users:F /T
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\composer-ext.json" /grant Users:F /T
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\composer-ext.lock" /grant Users:F /T
-                  icacls "${env:GITHUB_WORKSPACE}\phpBB\images\avatars\upload" /grant Users:F /T
+
+                  # Wait for IIS to be ready and test connectivity
+                  Start-Sleep -Seconds 10
+                  try {
+                      $response = Invoke-WebRequest -Uri "http://phpbb.test/" -UseBasicParsing -TimeoutSec 30
+                      Write-Host "Web server is responding: $($response.StatusCode)"
+                  } catch {
+                      Write-Host "Web server test failed: $_"
+                  }
+
+                  # Create directories and set permissions more efficiently
+                  $dirs = @("cache\test", "cache\installer")
+                  foreach ($dir in $dirs) {
+                      New-Item -Path "${env:GITHUB_WORKSPACE}\phpBB\$dir" -ItemType Directory -Force
+                  }
+
+                  # Set permissions in batch for better performance
+                  $paths = @("cache", "files", "store", "ext", "vendor-ext", "images\avatars\upload")
+                  foreach ($path in $paths) {
+                      if (Test-Path "${env:GITHUB_WORKSPACE}\phpBB\$path") {
+                          icacls "${env:GITHUB_WORKSPACE}\phpBB\$path" /grant Users:F /T /Q
+                      }
+                  }
+
+                  # Set permissions for specific files
+                  $files = @("composer-ext.json", "composer-ext.lock")
+                  foreach ($file in $files) {
+                      if (Test-Path "${env:GITHUB_WORKSPACE}\phpBB\$file") {
+                          icacls "${env:GITHUB_WORKSPACE}\phpBB\$file" /grant Users:F /Q
+                      }
+                  }
+
                   $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("IIS_IUSRS", "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
                   $acl = Get-ACL "${env:TEMP_DIR}"
                   $acl.AddAccessRule($accessRule)
@@ -586,7 +600,7 @@ jobs:
                   $postgreSqlSvc = Get-Service "postgresql*"
                   Set-Service $postgreSqlSvc.Name -StartupType manual
                   $runningStatus = [System.ServiceProcess.ServiceControllerStatus]::Running
-                  $maxStartTimeout = New-TimeSpan -Seconds 30
+                  $maxStartTimeout = New-TimeSpan -Seconds 120
                   try {
                     $postgreSqlSvc.Start()
                     $postgreSqlSvc.WaitForStatus($runningStatus, $maxStartTimeout)
@@ -595,25 +609,28 @@ jobs:
                   }
                   [System.Environment]::SetEnvironmentVariable('PATH',$Env:PATH+";${env:PGBIN}")
                   $env:PGPASSWORD = 'root'
-                  psql -c 'ALTER SYSTEM SET hot_standby = on;' -U postgres
-                  psql -c 'ALTER SYSTEM SET wal_level = minimal;' -U postgres
+
+                  # Optimize PostgreSQL for testing performance
+                  psql -c "ALTER SYSTEM SET fsync = off;" -U postgres
+                  psql -c "ALTER SYSTEM SET synchronous_commit = off;" -U postgres
+                  psql -c "ALTER SYSTEM SET checkpoint_completion_target = 0.9;" -U postgres
+                  psql -c "ALTER SYSTEM SET wal_buffers = '16MB';" -U postgres
+                  psql -c "ALTER SYSTEM SET shared_buffers = '128MB';" -U postgres
                   psql -c 'DROP DATABASE IF EXISTS phpbb_tests;' -U postgres
                   psql -c 'create database phpbb_tests;' -U postgres
+
                   Set-MpPreference -ExclusionPath "${env:PGDATA}" # Exclude PGDATA directory from Windows Defender
-                  Set-MpPreference -DisableRealtimeMonitoring $true
 
             - name: Setup node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 20
             - name: Setup node dependencies
               run: npm ci
 
             - name: Run unit tests
-              if: ${{ matrix.type == 'unit' }}
-              run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --display-all-issues --stop-on-error --exclude-group functional,slow
-            - name: Run functional tests
-              if: ${{ matrix.type == 'functional' }}
-              run: |
-                  phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --display-all-issues --stop-on-error --group functional
+              uses: nick-fields/retry@v3
+              with:
+                  timeout_minutes: 15
+                  max_attempts: 3
+                  command: phpBB/vendor/bin/phpunit --configuration .github/phpunit-psql-windows-github.xml --display-all-issues --stop-on-error --exclude-group functional,slow

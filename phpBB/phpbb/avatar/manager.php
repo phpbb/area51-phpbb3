@@ -202,9 +202,15 @@ class manager
 			return self::$default_row;
 		}
 
+		$required_keys = ['user_id', 'group_id', 'username'];
 		$output = [];
 		foreach ($row as $key => $value)
 		{
+			if (!str_starts_with($key, $prefix ? "{$prefix}_avatar": 'avatar') && !in_array($key, $required_keys))
+			{
+				continue;
+			}
+
 			$key = preg_replace("#^(?:{$prefix}_)#", '', (string) $key);
 			$output[$key] = $value;
 		}

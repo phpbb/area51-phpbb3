@@ -53,7 +53,11 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 			$phpEx
 		);
 
-		$imagesize = new \FastImageSize\FastImageSize();
+		$imagesize = $this->getMockBuilder('\FastImageSize\FastImageSize')
+			->onlyMethods(['getImageSize'])
+			->getMock();
+		$imagesize->method('getImageSize')
+			->willReturn(['width' => 80, 'height' => 80, 'mime' => 'image/jpeg']);
 
 		$dispatcher = new phpbb_mock_event_dispatcher();
 		$phpbb_dispatcher = $dispatcher;
@@ -216,13 +220,7 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 					'user_avatar_height'	=> '',
 					'group_avatar'		=> '',
 				),
-				array(
-					'user_avatar'		=> '',
-					'user_avatar_type'	=> '',
-					'user_avatar_width'	=> '',
-					'user_avatar_height'	=> '',
-					'group_avatar'		=> '',
-				),
+				array(),
 				'foobar',
 			),
 			array(
@@ -241,7 +239,6 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 					'group_id'	=> 4,
 				),
 				array(
-					'user_avatar'	=> '',
 					'user_id'	=> 5,
 					'group_id'	=> 4,
 				),
@@ -285,6 +282,11 @@ class phpbb_avatar_manager_test extends \phpbb_database_test_case
 		{
 			$this->assertArrayHasKey($key, $cleaned_row);
 			$this->assertEquals($cleaned_row[$key], $value);
+		}
+
+		if (empty($output))
+		{
+			$this->assertEquals($output, $cleaned_row);
 		}
 	}
 
