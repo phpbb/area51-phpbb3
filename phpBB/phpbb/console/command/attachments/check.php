@@ -91,7 +91,7 @@ class check extends command
 	 *
 	 * @return int 0 if all is ok, 1 otherwise
 	 */
-	protected function execute(InputInterface $input, OutputInterface $output)
+	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
 		$dry_run = $input->getOption('dry-run');
 
