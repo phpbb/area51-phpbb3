@@ -59,7 +59,7 @@
 		"symfony/twig-bridge": "^7.4",
 		"symfony/yaml": "^7.4",
 		"twig/twig": "^3.14",
-		"phpbb/teamsecurity": "dev-master@dev",
+		"phpbb/teamsecurity": "dev-master@dev"
 	},
 	"require-dev": {
 		"misantron/dbunit": "~5.0",
