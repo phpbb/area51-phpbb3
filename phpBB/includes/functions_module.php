@@ -392,7 +392,7 @@ class p_master
 	*/
 	static function module_auth($module_auth, $forum_id)
 	{
-		global $auth, $config;
+		global $auth, $config, $phpbb_container;
 		global $request, $phpbb_extension_manager, $phpbb_dispatcher;
 
 		$module_auth = trim($module_auth);
@@ -416,6 +416,7 @@ class p_master
 			'\$id'							=> '(int) $forum_id',
 			'aclf_([a-z0-9_]+)'				=> '(int) $auth->acl_getf_global(\'\\1\')',
 			'cfg_([a-z0-9_]+)'				=> '(int) $config[\'\\1\']',
+			'diparam_([a-z0-9_\.]+)'		=> '(int) ($phpbb_container->hasParameter(\'\\1\') && $phpbb_container->getParameter(\'\\1\'))',
 			'request_([a-zA-Z0-9_]+)'		=> '$request->variable(\'\\1\', false)',
 			'ext_([a-zA-Z0-9_/]+)'			=> 'array_key_exists(\'\\1\', $phpbb_extension_manager->all_enabled())',
 			'authmethod_([a-z0-9_\\\\]+)'		=> '($config[\'auth_method\'] === \'\\1\')',

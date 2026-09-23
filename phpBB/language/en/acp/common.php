@@ -628,6 +628,7 @@ $lang = array_merge($lang, array(
 	'LOG_TOPIC_TYPE_CHANGED'	=> '<strong>Changed topic type</strong><br />» %s',
 	'LOG_UNLOCK'				=> '<strong>Unlocked topic</strong><br />» %s',
 	'LOG_UNLOCK_POST'			=> '<strong>Unlocked post</strong><br />» %s',
+	'LOG_VERSION_CHECK_FAIL'	=> '<strong>Version check failed</strong>',
 
 	'LOG_DISALLOW_ADD'		=> '<strong>Added disallowed username</strong><br />» %s',
 	'LOG_DISALLOW_DELETE'	=> '<strong>Deleted disallowed username</strong>',
@@ -761,6 +762,8 @@ $lang = array_merge($lang, array(
 	'LOG_STYLE_EXPORT'			=> '<strong>Exported style</strong><br />» %s',
 
 	'LOG_STORAGE_UPDATE'		=> '<strong>Storage updated</strong><br />» %s',
+	'LOG_STORAGE_COPY_ERROR'	=> '<strong>Failed to copy file during storage migration</strong><br />» %1$s: %2$s',
+	'LOG_STORAGE_DELETE_ERROR'	=> '<strong>Failed to remove file during storage migration</strong><br />» %1$s: %2$s',
 
 	'LOG_UPDATE_DATABASE'	=> '<strong>Updated Database from version %1$s to version %2$s</strong>',
 	'LOG_UPDATE_PHPBB'		=> '<strong>Updated phpBB from version %1$s to version %2$s</strong>',

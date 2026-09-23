@@ -1238,6 +1238,13 @@ mcp_topic_postrow_attachments_before
 * Since: 3.2.2-RC1
 * Purpose: Show additional content before attachments in mcp topic review
 
+mcp_topic_postrow_post_after
+===
+* Locations:
+    + styles/prosilver/template/mcp_topic.html
+* Since: 3.3.18-RC1
+* Purpose: Show additional content after postrow ends in mcp topic review
+
 mcp_topic_postrow_post_before
 ===
 * Locations:
@@ -1584,6 +1591,20 @@ memberlist_view_zebra_before
     + styles/prosilver/template/memberlist_view.html
 * Since: 3.1.9-RC1
 * Purpose: Add content before the user friends/foes links
+
+navbar_footer_right_side_append
+===
+* Locations:
+    + styles/prosilver/template/navbar_footer.html
+* Since: 4.0.0-a3
+* Purpose: Append contents after the right side navbar/menu links
+
+navbar_footer_right_side_prepend
+===
+* Locations:
+    + styles/prosilver/template/navbar_footer.html
+* Since: 4.0.0-a3
+* Purpose: Prepend contents before the right side navbar/menu links
 
 navbar_header_logged_out_content
 ===
